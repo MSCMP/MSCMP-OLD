@@ -4,7 +4,7 @@ using System;
 using HutongGames.PlayMaker;
 
 namespace MSCMP {
-	class MPGameObject : MonoBehaviour {
+	class MPController : MonoBehaviour {
 		GameObject[] gos = null;
 
 		Texture2D fillText = new Texture2D(1, 1);
@@ -112,10 +112,8 @@ namespace MSCMP {
 		GameObject spawnedGo = null;
 
 		void OnGUI() {
-			GUI.color = Color.red;
-			GUI.Label(new Rect(1, 1, 500, 20), "MSCMP Development Build <3");
-
-
+			GUI.color = Color.white;
+			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP 0.1");
 
 
 			foreach (GameObject go in gos) {
@@ -223,7 +221,7 @@ namespace MSCMP {
 					for (int i = 0; i < level; ++i) builder.Append("    ");
 					builder.Append(text + "\n");
 				});
-				System.IO.File.WriteAllText("J:\\projects\\MSCMP\\MSCMP\\Debug\\localPlayer.txt", builder.ToString());
+				System.IO.File.WriteAllText(Client.GetPath("localPlayer.txt"), builder.ToString());
 			}
 
 
@@ -272,13 +270,13 @@ namespace MSCMP {
 						for (int i = 0; i < level; ++i) builder.Append("    ");
 						bldr.Append(text + "\n");
 					});
-					System.IO.File.WriteAllText("J:\\projects\\MSCMP\\MSCMP\\Debug\\WorldDump\\" + go.name + ".txt", bldr.ToString());
+					System.IO.File.WriteAllText(Client.GetPath("WorldDump/" + go.name + ".txt"), bldr.ToString());
 
 					builder.Append(go.name + ", Trans: " + trans.position.ToString() + "\n");
 					++index;
 				}
 
-				System.IO.File.WriteAllText("J:\\projects\\MSCMP\\MSCMP\\Debug\\gos.txt", builder.ToString());
+				System.IO.File.WriteAllText(Client.GetPath("gos.txt"), builder.ToString());
 			}
 		}
 	}
