@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using UnityEngine;
 
@@ -9,7 +8,6 @@ namespace MSCMP
     {
 
 		public static void Start() {
-
 
 			GameObject go = new GameObject("Multiplayer Controller");
 			go.AddComponent<MPController>();

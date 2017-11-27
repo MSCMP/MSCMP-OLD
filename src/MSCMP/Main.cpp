@@ -60,6 +60,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 
 	const char installFolder[] = "J:\\Games\\steamapps\\common\\My Summer Car";
+	//const char installFolder[] = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\My Summer Car";
 	const char ExecutableName[] = "mysummercar.exe";
 
 	char gameExePath[MAX_PATH] = { 0 };
@@ -69,7 +70,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PROCESS_INFORMATION processInformation = { 0 };
 	startupInfo.cb = sizeof(startupInfo);
 
-	SetEnvironmentVariable("SteamAppID", "55230");
+	SetEnvironmentVariable("SteamAppID", "516750");
 
 	if (GetFileAttributes(gameExePath) == INVALID_FILE_ATTRIBUTES) {
 		MessageBox(NULL, "Unable to find game .exe file.", "Fatal error", MB_ICONERROR);
