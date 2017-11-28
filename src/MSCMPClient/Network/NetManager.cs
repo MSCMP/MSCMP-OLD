@@ -41,6 +41,7 @@ namespace MSCMP.Network {
 		private NetPlayer[] players = new NetPlayer[MAX_PLAYERS];
 
 		public NetManager(StreamWriter logFile) {
+			this.logFile = logFile;
 			state = State.Idle;
 
 			// Setup local player.
@@ -92,6 +93,10 @@ namespace MSCMP.Network {
 		}
 
 		public void SendPacket(byte[] data, Steamworks.EP2PSend sendType, int channel = 0) {
+			if (players[1] == null) {
+				logFile.WriteLine("Failed to send packet - no player found.");
+				return;
+			}
 			players[1].SendPacket(data, sendType, channel);
 		}
 
@@ -136,6 +141,10 @@ namespace MSCMP.Network {
 		}
 
 		public void Update() {
+			if (!IsOnline) {
+				return;
+			}
+
 			uint size = 0;
 			while (Steamworks.SteamNetworking.IsP2PPacketAvailable(out size)) {
 				if (size == 0) {
@@ -143,6 +152,7 @@ namespace MSCMP.Network {
 					continue;
 				}
 
+				logFile.WriteLine("A");
 				byte[] data = new byte[size];
 
 				uint msgSize = 0;
@@ -151,7 +161,7 @@ namespace MSCMP.Network {
 					continue;
 				}
 
-
+				logFile.WriteLine("B");
 				// TODO: Joining?
 				if (msgSize != size || msgSize == 0) {
 					logFile.WriteLine("Invalid packet size");
@@ -159,16 +169,18 @@ namespace MSCMP.Network {
 				}
 
 				PacketId packetID = (PacketId)data[0];
-
+				logFile.WriteLine("C");
 				switch (packetID) {
 					case PacketId.Handshake:
 						HandleHandshake(senderSteamId);
 						break;
 
 					case PacketId.Synchronize:
-						if (players[1].SteamId == senderSteamId) {
+						if (players[1] != null && players[1].SteamId == senderSteamId) {
 							MemoryStream stream = new MemoryStream(data);
 							BinaryReader reader = new BinaryReader(stream);
+
+							reader.ReadByte();// make sure we don't have packet id here
 							players[1].HandleSynchronize(reader);
 						}
 						break;
@@ -176,7 +188,17 @@ namespace MSCMP.Network {
 			}
 
 			foreach (NetPlayer player in players) {
-				player.Update();
+				if (player != null) {
+					player.Update();
+				}
+			}
+		}
+
+		public void DrawDebugGUI() {
+			foreach (NetPlayer player in players) {
+				if (player != null) {
+					player.DrawDebugGUI();
+				}
 			}
 		}
 
@@ -191,8 +213,6 @@ namespace MSCMP.Network {
 				// Setup THE PLAYER.
 
 				players[1] = new NetPlayer(this, senderSteamId);
-				players[1].hasHandshake = true;
-				players[1].Spawn();
 
 				SendPacket(SetupPacket(PacketId.Handshake), Steamworks.EP2PSend.k_EP2PSendReliable);
 			}
@@ -203,9 +223,14 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				players[1].hasHandshake = true;
 				logFile.WriteLine("CONNECTION ESTABLISHED!");
+
+				Application.LoadLevel("GAME");
 			}
+
+
+			players[1].hasHandshake = true;
+			players[1].Spawn();
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Text;
+using System.IO;
 
 namespace MSCMP {
 	class DevTools {
@@ -152,9 +153,10 @@ namespace MSCMP {
 			if (Input.GetKeyDown(KeyCode.F5) && gos != null) {
 
 
-
 				GUI.color = Color.white;
 				int index = 0;
+
+				Directory.CreateDirectory(Client.GetPath("WorldDump"));
 
 				StringBuilder builder = new StringBuilder();
 				foreach (GameObject go in gos) {
@@ -168,9 +170,13 @@ namespace MSCMP {
 						for (int i = 0; i < level; ++i) builder.Append("    ");
 						bldr.Append(text + "\n");
 					});
-					System.IO.File.WriteAllText(Client.GetPath("WorldDump/" + go.name + ".txt"), bldr.ToString());
 
-					builder.Append(go.name + ", Trans: " + trans.position.ToString() + "\n");
+					string SanitizedName = go.name;
+					SanitizedName = SanitizedName.Replace("\\", "_SLASH_");
+
+					System.IO.File.WriteAllText(Client.GetPath("WorldDump/" + SanitizedName + ".txt"), bldr.ToString());
+
+					builder.Append(go.name + " (" + SanitizedName + "), Trans: " + trans.position.ToString() + "\n");
 					++index;
 				}
 

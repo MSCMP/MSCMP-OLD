@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 using MSCMP.Network;
+using System;
 
 namespace MSCMP {
 	class MPController : MonoBehaviour {
@@ -23,11 +24,11 @@ namespace MSCMP {
 
 			netManager = new NetManager(logFile);
 
-
+			// Application.LoadLevel("GAME");
 		}
 
 		void OnLevelSwitch(string newLevelName) {
-			if (newLevelName == "GAME") {
+			if (newLevelName == "GAME" && !netManager.IsOnline) {
 				netManager.SetupLobby();
 			}
 			else if (newLevelName == "Main Menu") {
@@ -48,6 +49,7 @@ namespace MSCMP {
 			GUI.color = Color.white;
 			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP 0.1");
 
+
 			if (netManager.IsOnline) {
 				GUI.color = Color.green;
 				GUI.Label(new Rect(2, 2, 500, 20), "ONLINE " + (netManager.IsHost ? "HOST" : "PLAYER"));
@@ -57,7 +59,6 @@ namespace MSCMP {
 				GUI.Label(new Rect(2, 2, 500, 20), "OFFLINE");
 			}
 			GUI.color = Color.white;
-
 
 			// Friends widget.
 
@@ -73,7 +74,7 @@ namespace MSCMP {
 					Steamworks.CSteamID friendSteamId = Steamworks.SteamFriends.GetFriendByIndex(i, friendFlags);
 
 					if (Steamworks.SteamFriends.GetFriendPersonaState(friendSteamId) == Steamworks.EPersonaState.k_EPersonaStateOffline) {
-						logFile.WriteLine(Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId));
+						// logFile.WriteLine(Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId));
 						continue;
 					}
 
@@ -85,7 +86,7 @@ namespace MSCMP {
 				friendsScrollViewPos = GUI.BeginScrollView(new Rect(0, 30.0f, 270.0f, 400.0f), friendsScrollViewPos, new Rect(0, 0, 260.0f, 20.0f * (1 + onlineFriendsCount)));
 
 				for (int i = 0; i < onlineFriendsCount; ++i) {
-					Steamworks.CSteamID friendSteamId = Steamworks.SteamFriends.GetFriendByIndex(i, friendFlags);
+					Steamworks.CSteamID friendSteamId = onlineFriends[i];
 
 					string friendName = Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId);
 
@@ -118,28 +119,35 @@ namespace MSCMP {
 
 
 			devTools.OnGUI(localPlayer);
+			netManager.DrawDebugGUI();
 		}
 
 
 		void Update() {
-			Steamworks.SteamAPI.RunCallbacks();
-			netManager.Update();
+			try {
+				Steamworks.SteamAPI.RunCallbacks();
 
-			string loadedLevelName = Application.loadedLevelName;
-			if (loadedLevelName != currentLevelName) {
-				OnLevelSwitch(loadedLevelName);
-				currentLevelName = loadedLevelName;
+				netManager.Update();
+
+				string loadedLevelName = Application.loadedLevelName;
+				if (loadedLevelName != currentLevelName) {
+					OnLevelSwitch(loadedLevelName);
+					currentLevelName = loadedLevelName;
+				}
+				devTools.Update();
+
+				if (localPlayer == null) {
+					localPlayer = GameObject.Find("PLAYER");
+				}
+				else {
+					devTools.UpdatePlayer(localPlayer);
+				}
 			}
-
-			devTools.Update();
-
-			if (localPlayer == null) {
-				localPlayer = GameObject.Find("PLAYER");
+			catch (Exception e) {
+				logFile.WriteLine("Exception during update: " + e.Message);
+				logFile.WriteLine(e.StackTrace);
+				Application.Quit();
 			}
-			else {
-				devTools.UpdatePlayer(localPlayer);
-			}
-
 		}
 	}
 }
