@@ -149,17 +149,20 @@ namespace MSCMP.Network {
 
 				// Go to main menu if we are normal player - the session just closed.
 
-				logFile.WriteLine("OH NO MY FRIEND JUST LOST HIS LIFE ;-;");
 				if (IsPlayer) {
-					logFile.WriteLine("AND I NEED TO GO TO MAIN MENU ;-;");
 					LeaveLobby();
 
 					Application.LoadLevel("MainMenu");
 				}
 			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
+				NetLocalPlayer localPlayer = (NetLocalPlayer)players[0];
+				localPlayer.OpenDoors(msg.doorName, msg.open);
+			});
 		}
 
-		private ulong GetNetworkClock() {
+		public ulong GetNetworkClock() {
 			return (ulong)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds);
 		}
 
@@ -202,7 +205,9 @@ namespace MSCMP.Network {
 			}
 
 			logFile.WriteLine("Setup player.");
+
 			// Setup remote player. The HOST.
+			timeSinceLastHeartbeat = 0.0f;
 			players[1] = new NetPlayer(this, request.m_steamIDFriend);
 
 			lobbyEnterCallResult.Set(apiCall);
@@ -348,6 +353,7 @@ namespace MSCMP.Network {
 
 				// Setup THE PLAYER.
 
+				timeSinceLastHeartbeat = 0.0f;
 				players[1] = new NetPlayer(this, senderSteamId);
 
 				Messages.HandshakeMessage message = new Messages.HandshakeMessage();

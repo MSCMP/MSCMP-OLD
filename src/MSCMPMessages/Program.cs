@@ -12,6 +12,7 @@
 			generator.GenerateMessage(typeof(Messages.HeartbeatResponseMessage));
 			generator.GenerateMessage(typeof(Messages.DisconnectMessage));
 			generator.GenerateMessage(typeof(Messages.PlayerSyncMessage));
+			generator.GenerateMessage(typeof(Messages.OpenDoorsMessage));
 
 			generator.EndGeneration();
 		}

@@ -10,6 +10,7 @@ namespace MSCMPMessages.Messages {
 		Heartbeat,
 		HeartbeatResponse,
 		Disconnect,
-		PlayerSync
+		PlayerSync,
+		OpenDoors
 	}
 }

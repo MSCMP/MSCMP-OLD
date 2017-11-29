@@ -14,8 +14,24 @@ namespace MSCMP.Network {
 		private GameObject go = null;
 		public bool hasHandshake = false;
 
-		public Vector3 pos = new Vector3();
-		public Quaternion rot = new Quaternion();
+		public Vector3 currentPos = new Vector3();
+		public Quaternion currentRot = new Quaternion();
+
+		public Vector3 sourcePos = new Vector3();
+		public Quaternion sourceRot = new Quaternion();
+		public Vector3 targetPos = new Vector3();
+		public Quaternion targetRot = new Quaternion();
+
+
+		/// <summary>
+		/// Interpolation time in miliseconds.
+		/// </summary>
+		public const ulong INTERPOLATION_TIME = NetLocalPlayer.SYNC_INTERVAL;
+
+		/// <summary>
+		/// Network time when sync packet was received.
+		/// </summary>
+		private ulong syncReceiveTime = 0;
 
 		private bool spawned = true;
 
@@ -46,22 +62,20 @@ namespace MSCMP.Network {
 			if (spawned && !go) {
 				GameObject prefab = GameObject.Find("Hullu");
 				if (prefab) {
-					go = (GameObject)GameObject.Instantiate((GameObject)prefab, pos, rot);
+					go = (GameObject)GameObject.Instantiate((GameObject)prefab, currentPos, currentRot);
 					GameObject.DontDestroyOnLoad(go);
 
-					// Remove walking fsm (if exists)
-					PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(go, "Move");
-					if (fsm != null) {
-						GameObject.Destroy(fsm);
+					Action<string> RemoveFSM = (string name) => {
+						PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(go, name);
+						if (fsm != null) {
+							GameObject.Destroy(fsm);
 
-						MPController.logFile.WriteLine("REMOVED Move FSM!");
-					}
-					fsm = Utils.GetPlaymakerScriptByName(go, "Obstacle");
-					if (fsm != null) {
-						GameObject.Destroy(fsm);
-
-						MPController.logFile.WriteLine("REMOVED Obstacle FSM!");
-					}
+							MPController.logFile.WriteLine("REMOVED " + name + " FSM!");
+						}
+					};
+					RemoveFSM("Move");
+					RemoveFSM("Obstacle");
+					RemoveFSM("Raycast");
 
 
 					Animation anim = go.GetComponent<Animation>();
@@ -74,27 +88,52 @@ namespace MSCMP.Network {
 					}
 				}
 			}
+
+			// Some naive interpolation.
+
+			if (spawned && go && syncReceiveTime > 0) {
+				float progress = (float)(netManager.GetNetworkClock() - syncReceiveTime) / INTERPOLATION_TIME;
+				if (progress >= 2.0f) {
+					return;
+				}
+
+				currentPos = Vector3.Lerp(sourcePos, targetPos, progress);
+				currentRot = Quaternion.Slerp(sourceRot, targetRot, progress);
+
+				go.transform.position = currentPos;
+				go.transform.rotation = currentRot;
+			}
 		}
 		public virtual void DrawDebugGUI() {
-			GUI.Label(new Rect(300, 200, 300, 200), "Remote player (position: " + pos.ToString() + ")");
+			float progress = (float)(netManager.GetNetworkClock() - syncReceiveTime) / INTERPOLATION_TIME;
+			GUI.Label(new Rect(300, 200, 300, 200), "Remote player\ncurrentPos = " + currentPos.ToString() + "\n" +
+				"sourcePos = " + sourcePos.ToString() + "\n" +
+				"targetPos =  " + targetPos.ToString() + "\n" +
+				"progress =  " + progress + "\n"
+			);
+
 		}
 
 		public void HandleSynchronize(Messages.PlayerSyncMessage msg) {
-			pos.x = msg.position.x;
-			pos.y = msg.position.y;
-			pos.z = msg.position.z;
+			targetPos.x = msg.position.x;
+			targetPos.y = msg.position.y;
+			targetPos.z = msg.position.z;
 
-			rot.w = msg.rotation.w;
-			rot.x = msg.rotation.x;
-			rot.y = msg.rotation.y;
-			rot.z = msg.rotation.z;
+			targetRot.w = msg.rotation.w;
+			targetRot.x = msg.rotation.x;
+			targetRot.y = msg.rotation.y;
+			targetRot.z = msg.rotation.z;
+
+			sourcePos = currentPos;
+			sourceRot = currentRot;
+
+			syncReceiveTime = netManager.GetNetworkClock();
 
 			if (! go) {
+				currentPos = targetPos;
+				currentRot = targetRot;
 				return;
 			}
-
-			go.transform.position = pos;
-			go.transform.rotation = rot;
 		}
 	}
 }

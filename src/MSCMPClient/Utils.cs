@@ -16,56 +16,75 @@ namespace MSCMP {
 				if (component is PlayMakerFSM) {
 					PlayMakerFSM pmfsm = (PlayMakerFSM)component;
 					print(level + 1, "PMFSM Name: " + pmfsm.FsmName);
+					print(level + 1, "Active state: " + pmfsm.ActiveStateName);
 
 					FsmEvent[] events = pmfsm.FsmEvents;
 					foreach (FsmEvent e in events) {
-						print(level + 2, "  Event Name: " + e.Name);
+						print(level + 2, "Event Name: " + e.Name + " (" + e.Path + ")");
 					}
+
+					foreach (FsmTransition t in pmfsm.FsmGlobalTransitions) {
+						print(level + 2, "Global transition: " + t.EventName + " > " + t.ToState);
+					}
+
+
 
 					FsmState[] states = pmfsm.FsmStates;
 					foreach (FsmState s in states) {
-						print(level + 2, "  State Name: " + s.Name);
+						print(level + 2, "State Name: " + s.Name);
+						foreach (FsmTransition t in s.Transitions) {
+							print(level + 3, "Transition: " + t.EventName + " > " + t.ToState);
+						}
+
+						try {
+							foreach (FsmStateAction a in s.ActionData.LoadActions(s)) {
+								print(level + 3, "Action Name: " + a.Name);
+							}
+						}
+						catch {
+							MPController.logFile.Write("Failed to dump actions for state: " + s.Name);
+						}
 					}
 
 					FsmVariables variables = pmfsm.FsmVariables;
 					foreach (var v in variables.BoolVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.ColorVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.FloatVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.GameObjectVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.IntVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.MaterialVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.ObjectVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.QuaternionVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.RectVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.StringVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.TextureVariables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.Vector2Variables) {
 						print(level + 2, "  Variable Name: " + v.Name);
 					}
 					foreach (var v in variables.Vector3Variables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, "Variable Name: " + v.Name);
 					}
 				}
 			}

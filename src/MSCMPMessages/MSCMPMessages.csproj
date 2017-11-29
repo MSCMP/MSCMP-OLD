@@ -49,6 +49,7 @@
     <Compile Include="Messages\HeartbeatMessage.cs" />
     <Compile Include="Messages\HeartbeatResponseMessage.cs" />
     <Compile Include="Messages\MessageIds.cs" />
+    <Compile Include="Messages\OpenDoorsMessage.cs" />
     <Compile Include="Messages\PlayerSyncMessage.cs" />
     <Compile Include="Messages\QuaternionMessage.cs" />
     <Compile Include="Messages\Vector3Message.cs" />

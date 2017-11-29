@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Text;
 using System.IO;
+using System;
 
 namespace MSCMP {
 	class DevTools {
@@ -172,9 +173,18 @@ namespace MSCMP {
 					});
 
 					string SanitizedName = go.name;
-					SanitizedName = SanitizedName.Replace("\\", "_SLASH_");
+					MPController.logFile.WriteLine(SanitizedName);
+					SanitizedName = SanitizedName.Replace(@"\", "_SLASH_");
+					MPController.logFile.WriteLine(SanitizedName);
+					string dumpFilePath = Client.GetPath("WorldDump/" + SanitizedName + ".txt");
 
-					System.IO.File.WriteAllText(Client.GetPath("WorldDump/" + SanitizedName + ".txt"), bldr.ToString());
+					try {
+						System.IO.File.WriteAllText(dumpFilePath, bldr.ToString());
+					}
+					catch (Exception e) {
+						builder.Append("Unable to dump objects: " + SanitizedName + "\n");
+						builder.Append(e.Message + "\n");
+					}
 
 					builder.Append(go.name + " (" + SanitizedName + "), Trans: " + trans.position.ToString() + "\n");
 					++index;
