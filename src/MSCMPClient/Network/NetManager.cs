@@ -38,6 +38,36 @@ namespace MSCMP.Network {
 		delegate void HandleMessageLowLevel(Steamworks.CSteamID sender, BinaryReader reader);
 		private Dictionary<byte, HandleMessageLowLevel> messageHandlers = new Dictionary<byte, HandleMessageLowLevel>();
 
+		/// <summary>
+		/// The interval between sending individual heartbeat.
+		/// </summary>
+		const float HEARTBEAT_INTERVAL = 5.0f;
+
+		/// <summary>
+		/// Timeout time of the connection.
+		/// </summary>
+		const float TIMEOUT_TIME = 20.0f;
+
+		/// <summary>
+		/// How many seconds left before sending next heartbeat?
+		/// </summary>
+		float timeToSendHeartbeat = 0.0f;
+
+		/// <summary>
+		/// How many seconds passed since last heart beat was received.
+		/// </summary>
+		float timeSinceLastHeartbeat = 0.0f;
+
+		/// <summary>
+		/// The value of the clock on the remote players' computer.
+		/// </summary>
+		ulong remoteClock = 0;
+
+		/// <summary>
+		/// Current ping value.
+		/// </summary>
+		uint ping = 0;
+
 		public NetManager(StreamWriter logFile) {
 			this.logFile = logFile;
 			state = State.Idle;
@@ -83,14 +113,49 @@ namespace MSCMP.Network {
 				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 			});
 
-			logFile.WriteLine("Network setup!");
-
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.HandshakeMessage msg) => {
+				remoteClock = msg.clock;
 				HandleHandshake(sender);
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
+				if (players[1] == null) {
+					logFile.WriteLine("Received synchronization packet but no remote player is currently connected.");
+					return;
+				}
+
 				players[1].HandleSynchronize(msg);
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.HeartbeatMessage msg) => {
+				var message = new Messages.HeartbeatResponseMessage();
+				message.clientClock = msg.clientClock;
+				message.clock = GetNetworkClock();
+				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.HeartbeatResponseMessage msg) => {
+				ping = (uint)(GetNetworkClock() - msg.clientClock);
+
+				// TODO: Some smart lag compensation.
+				remoteClock = msg.clock;
+
+				timeSinceLastHeartbeat = 0.0f;
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.DisconnectMessage msg) => {
+
+				CleanupPlayer();
+
+				// Go to main menu if we are normal player - the session just closed.
+
+				logFile.WriteLine("OH NO MY FRIEND JUST LOST HIS LIFE ;-;");
+				if (IsPlayer) {
+					logFile.WriteLine("AND I NEED TO GO TO MAIN MENU ;-;");
+					LeaveLobby();
+
+					Application.LoadLevel("MainMenu");
+				}
 			});
 		}
 
@@ -157,11 +222,11 @@ namespace MSCMP.Network {
 			return true;
 		}
 
-		public void LeaveLobby() {
+		private void LeaveLobby() {
 			Steamworks.SteamMatchmaking.LeaveLobby(currentLobbyId);
 			currentLobbyId = Steamworks.CSteamID.Nil;
 			state = State.Idle;
-			logFile.WriteLine("Leaved lobby.");
+			logFile.WriteLine("Left lobby.");
 		}
 
 		public bool InviteToMyLobby(Steamworks.CSteamID invitee) {
@@ -171,11 +236,44 @@ namespace MSCMP.Network {
 			return Steamworks.SteamMatchmaking.InviteUserToLobby(currentLobbyId, invitee);
 		}
 
-		public void Update() {
-			if (!IsOnline) {
+		public bool IsNetworkPlayerConnected() {
+			return players[1] != null;
+		}
+
+		public void CleanupPlayer() {
+			Steamworks.SteamNetworking.CloseP2PSessionWithUser(players[1].SteamId);
+			players[1].Dispose();
+			players[1] = null;
+		}
+
+		public void Disconnect() {
+			BroadcastMessage(new Messages.DisconnectMessage(), Steamworks.EP2PSend.k_EP2PSendReliable);
+			LeaveLobby();
+		}
+
+		private void UpdateHeartbeat() {
+			if (!IsNetworkPlayerConnected()) {
 				return;
 			}
 
+			timeSinceLastHeartbeat += Time.deltaTime;
+
+			if (timeSinceLastHeartbeat >= TIMEOUT_TIME) {
+				CleanupPlayer();
+			}
+			else {
+				timeToSendHeartbeat -= Time.deltaTime;
+				if (timeToSendHeartbeat <= 0.0f) {
+					Messages.HeartbeatMessage message = new Messages.HeartbeatMessage();
+					message.clientClock = GetNetworkClock();
+					BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
+
+					timeToSendHeartbeat = HEARTBEAT_INTERVAL;
+				}
+			}
+		}
+
+		private void ProcessMessages() {
 			uint size = 0;
 			while (Steamworks.SteamNetworking.IsP2PPacketAvailable(out size)) {
 				if (size == 0) {
@@ -205,6 +303,15 @@ namespace MSCMP.Network {
 					messageHandlers[messageId](senderSteamId, reader);
 				}
 			}
+		}
+
+		public void Update() {
+			if (!IsOnline) {
+				return;
+			}
+
+			UpdateHeartbeat();
+			ProcessMessages();
 
 			foreach (NetPlayer player in players) {
 				if (player != null) {
@@ -219,6 +326,18 @@ namespace MSCMP.Network {
 					player.DrawDebugGUI();
 				}
 			}
+
+			Rect debugPanel = new Rect(10, 50, 500, 20);
+			GUI.Label(debugPanel, "Time since last heartbeat: " + timeSinceLastHeartbeat);
+			debugPanel.y += 20.0f;
+			GUI.Label(debugPanel, "Time to send next heartbeat: " + timeToSendHeartbeat);
+			debugPanel.y += 20.0f;
+			GUI.Label(debugPanel, "Ping: " + ping);
+			debugPanel.y += 20.0f;
+			GUI.Label(debugPanel, "My clock: " + GetNetworkClock());
+			debugPanel.y += 20.0f;
+			GUI.Label(debugPanel, "Remote clock: " + remoteClock);
+			debugPanel.y += 20.0f;
 		}
 
 		private void HandleHandshake(Steamworks.CSteamID senderSteamId) {

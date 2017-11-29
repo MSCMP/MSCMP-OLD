@@ -1,9 +1,8 @@
-﻿
-using System.IO;
+﻿using System;
 using UnityEngine;
 
 namespace MSCMP.Network {
-	class NetPlayer {
+	class NetPlayer : IDisposable {
 
 		private Steamworks.CSteamID steamId = Steamworks.CSteamID.Nil;
 		public Steamworks.CSteamID SteamId {
@@ -27,6 +26,15 @@ namespace MSCMP.Network {
 
 		public void Spawn() {
 			spawned = true;
+		}
+
+		public void Dispose() {
+			// Destroy player model on disconnect/timeout.
+
+			if (go != null) {
+				GameObject.Destroy(go);
+				go = null;
+			}
 		}
 
 		public bool SendPacket(byte[] data, Steamworks.EP2PSend sendType, int channel = 0) {

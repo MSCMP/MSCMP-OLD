@@ -44,7 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Generator.cs" />
+    <Compile Include="Messages\DisconnectMessage.cs" />
     <Compile Include="Messages\HandshakeMessage.cs" />
+    <Compile Include="Messages\HeartbeatMessage.cs" />
+    <Compile Include="Messages\HeartbeatResponseMessage.cs" />
     <Compile Include="Messages\MessageIds.cs" />
     <Compile Include="Messages\PlayerSyncMessage.cs" />
     <Compile Include="Messages\QuaternionMessage.cs" />

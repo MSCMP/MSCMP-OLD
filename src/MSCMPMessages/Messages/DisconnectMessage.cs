@@ -5,11 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MSCMPMessages.Messages {
-	public enum MessageIds {
-		Handshake,
-		Heartbeat,
-		HeartbeatResponse,
-		Disconnect,
-		PlayerSync
+	[NetMessageDesc(MessageIds.Disconnect)]
+	class DisconnectMessage {
 	}
 }

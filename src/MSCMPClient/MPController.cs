@@ -28,12 +28,14 @@ namespace MSCMP {
 		}
 
 		void OnLevelSwitch(string newLevelName) {
+			logFile.WriteLine(newLevelName);
+
 			if (newLevelName == "GAME" && !netManager.IsOnline) {
 				netManager.SetupLobby();
 			}
-			else if (newLevelName == "Main Menu") {
+			else if (newLevelName == "MainMenu") {
 				if (netManager.IsOnline) {
-					netManager.LeaveLobby();
+					netManager.Disconnect();
 				}
 			}
 		}
