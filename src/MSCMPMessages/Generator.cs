@@ -20,6 +20,50 @@ namespace MSCMPMessages {
 			writer.Flush();
 		}
 
+		private string GetEnumValueAsString(Type enumType, string valueName) {
+			Type underlyingType = enumType.GetEnumUnderlyingType();
+			return Convert.ChangeType(Enum.Parse(enumType, valueName), underlyingType).ToString();
+		}
+
+		public void GenerateEnum(Type enumType) {
+
+			if (!enumType.IsEnum) {
+				throw new Exception("The type must be enum.");
+			}
+			Type enumUnderlyingType = enumType.GetEnumUnderlyingType();
+
+			Array values = Enum.GetValues(enumType);
+			BeginBlock("public enum " + enumType.Name + " : " + enumUnderlyingType.FullName);
+			{
+				for (int i = 0; i < values.Length; ++i) {
+					string valueName = values.GetValue(i).ToString();
+					WriteLine(valueName + " = " + GetEnumValueAsString(enumType, valueName) + ",");
+				}
+			}
+			EndBlock();
+
+			BeginBlock("public class " + enumType.Name + "Helpers");
+			{
+				BeginBlock("public static bool IsValueValid(" + enumUnderlyingType.FullName + " value)");
+				{
+					BeginBlock("switch (value)");
+					{
+						for (int i = 0; i < values.Length; ++i) {
+							string valueName = values.GetValue(i).ToString();
+							WriteLine("case " + GetEnumValueAsString(enumType, valueName) + ":");
+						}
+
+						WriteLine("\treturn true;");
+					}
+					EndBlock();
+
+					WriteLine("return false;");
+				}
+				EndBlock();
+			}
+			EndBlock();
+		}
+
 		public void GenerateMessage(Type messageType) {
 			var descriptor = messageType.GetCustomAttribute<NetMessageDesc>();
 			string interfaceName = "";
@@ -27,14 +71,14 @@ namespace MSCMPMessages {
 				interfaceName = ": INetMessage";
 			}
 
-			BeginBlock("public class " + messageType.Name + interfaceName + " {");
+			BeginBlock("public class " + messageType.Name + interfaceName);
 			{
 				// Message info.
 
 
 				if (descriptor != null) {
-					BeginBlock("public byte MessageId {");
-					BeginBlock("get {");
+					BeginBlock("public byte MessageId");
+					BeginBlock("get");
 					WriteLine("return " + (byte)descriptor.messageId + ";");
 					EndBlock();
 					EndBlock();
@@ -44,7 +88,7 @@ namespace MSCMPMessages {
 
 				// Write constructor.
 
-				BeginBlock("public " + messageType.Name + "() {");
+				BeginBlock("public " + messageType.Name + "()");
 				{
 					foreach (FieldInfo field in fields) {
 						Type fieldType = field.FieldType;
@@ -74,27 +118,31 @@ namespace MSCMPMessages {
 
 				// Write method.
 
-				BeginBlock("public bool Write(BinaryWriter writer) {");
+				BeginBlock("public bool Write(BinaryWriter writer)");
 				{
-					BeginBlock("try {");
+					BeginBlock("try");
 					{
 						foreach (FieldInfo field in fields) {
-							if (field.FieldType.Namespace == "MSCMPMessages.Messages") {
-								BeginBlock("if (!" + field.Name + ".Write(writer)) {");
+							Type fieldType = field.FieldType;
+							if (fieldType.IsEnum) {
+								WriteLine("writer.Write((" + fieldType.GetEnumUnderlyingType().FullName + ")" + field.Name + ");");
+							}
+							else if (fieldType.Namespace == "MSCMPMessages.Messages") {
+								BeginBlock("if (!" + field.Name + ".Write(writer))");
 								{
 									WriteLine("return false;");
 								}
 								EndBlock();
 							}
 							else {
-								WriteLine("writer.Write((" + field.FieldType.FullName + ")" + field.Name + ");");
+								WriteLine("writer.Write((" + fieldType.FullName + ")" + field.Name + ");");
 							}
 						}
 
 						WriteLine("return true;");
 					}
 					EndBlock();
-					BeginBlock("catch (System.Exception) {");
+					BeginBlock("catch (System.Exception)");
 					{
 						WriteLine("return false;");
 					}
@@ -104,27 +152,40 @@ namespace MSCMPMessages {
 
 				// Read method.
 
-				BeginBlock("public bool Read(BinaryReader reader) {");
+				BeginBlock("public bool Read(BinaryReader reader)");
 				{
-					BeginBlock("try {");
+					BeginBlock("try");
 					{
 						foreach (FieldInfo field in fields) {
-							if (field.FieldType.Namespace == "MSCMPMessages.Messages") {
-								BeginBlock("if (!" + field.Name + ".Read(reader)) {");
+							Type fieldType = field.FieldType;
+							if (fieldType.IsEnum) {
+								string valueVarName = "_" + field.Name + "Value";
+								Type enumUnderlayingType = fieldType.GetEnumUnderlyingType();
+								WriteLine(enumUnderlayingType.FullName + " " + valueVarName + " = reader.Read" + enumUnderlayingType.Name + "();");
+								BeginBlock("if (!" + fieldType.Name + "Helpers.IsValueValid(" + valueVarName + "))");
+								{
+									WriteLine("return false;");
+								}
+								EndBlock();
+
+								WriteLine(field.Name + " = (" + fieldType.Name + ")" + valueVarName + ";");
+							}
+							else if (fieldType.Namespace == "MSCMPMessages.Messages") {
+								BeginBlock("if (!" + field.Name + ".Read(reader))");
 								{
 									WriteLine("return false;");
 								}
 								EndBlock();
 							}
 							else {
-								WriteLine(field.Name + " = reader.Read" + field.FieldType.Name + "();");
+								WriteLine(field.Name + " = reader.Read" + fieldType.Name + "();");
 							}
 						}
 
 						WriteLine("return true;");
 					}
 					EndBlock();
-					BeginBlock("catch (System.Exception) {");
+					BeginBlock("catch (System.Exception)");
 					{
 						WriteLine("return false;");
 					}
@@ -139,7 +200,7 @@ namespace MSCMPMessages {
 			WriteLine("// Generated at " + DateTime.Now.ToString());
 			WriteLine("using System.IO;");
 
-			BeginBlock("namespace MSCMP.Network.Messages {");
+			BeginBlock("namespace MSCMP.Network.Messages");
 		}
 
 		private void WriteFooter() {
@@ -160,7 +221,7 @@ namespace MSCMPMessages {
 		}
 
 		private void BeginBlock(string text) {
-			writer.WriteLine(identation + text);
+			writer.WriteLine(identation + text + " {");
 			identation += "\t";
 		}
 
