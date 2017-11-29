@@ -11,7 +11,7 @@ namespace MSCMP {
 
 		DevTools devTools = new DevTools();
 
-		StreamWriter logFile = new StreamWriter(Client.GetPath("clientLog.txt"), false);
+		public static StreamWriter logFile = new StreamWriter(Client.GetPath("clientLog.txt"), false);
 
 		NetManager netManager = null;
 
