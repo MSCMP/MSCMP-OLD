@@ -160,9 +160,7 @@ namespace MSCMP.Network {
 		}
 
 		private ulong GetNetworkClock() {
-			long epochTicks = new DateTime(1970, 1, 1).Ticks;
-			long unixTime = ((DateTime.UtcNow.Ticks - epochTicks) / TimeSpan.TicksPerSecond);
-			return (ulong)unixTime;
+			return (ulong)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds);
 		}
 
 		delegate void MessageHandler<T>(Steamworks.CSteamID Sender, T Message);
