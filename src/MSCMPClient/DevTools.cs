@@ -167,7 +167,7 @@ namespace MSCMP {
 					StringBuilder bldr = new StringBuilder();
 					Utils.PrintTransformTree(trans, 0, (int level, string text) => {
 
-						for (int i = 0; i < level; ++i) builder.Append("    ");
+						for (int i = 0; i < level; ++i) bldr.Append("    ");
 						bldr.Append(text + "\n");
 					});
 
