@@ -92,7 +92,7 @@ namespace MSCMPMessages {
 				{
 					foreach (FieldInfo field in fields) {
 						Type fieldType = field.FieldType;
-						if (fieldType.Namespace == "MSCMPMessages.Messages") {
+						if (fieldType.Namespace == "MSCMPMessages.Messages" && fieldType.IsClass) {
 							WriteLine(field.Name + " = new " + fieldType.Name + "();");
 						}
 					}
