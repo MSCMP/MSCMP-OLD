@@ -303,3 +303,6 @@ __pycache__/
 
 # OpenCover UI analysis results
 OpenCover/
+
+# Generated network messages.
+NetMessages.generated.cs

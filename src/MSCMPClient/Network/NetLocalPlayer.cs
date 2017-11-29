@@ -23,20 +23,17 @@ namespace MSCMP.Network {
 				if (!obj.transform) return;
 				Vector3 position = obj.transform.position;
 				Quaternion rotation = obj.transform.rotation;
-				MemoryStream stream = new MemoryStream();
-				BinaryWriter writer = new BinaryWriter(stream);
 
-				writer.Write((byte)NetManager.PacketId.Synchronize);
-				writer.Write((double)position.x);
-				writer.Write((double)position.y);
-				writer.Write((double)position.z);
-				writer.Write((double)rotation.w);
-				writer.Write((double)rotation.x);
-				writer.Write((double)rotation.y);
-				writer.Write((double)rotation.z);
-				stream.Flush();
+				Messages.PlayerSyncMessage message = new Messages.PlayerSyncMessage();
+				message.position.x = position.x;
+				message.position.y = position.y;
+				message.position.z = position.z;
 
-				netManager.SendPacket(stream.GetBuffer(), Steamworks.EP2PSend.k_EP2PSendUnreliable);
+				message.rotation.w = rotation.w;
+				message.rotation.x = rotation.x;
+				message.rotation.y = rotation.y;
+				message.rotation.z = rotation.z;
+				netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable);
 
 				timeToUpdate = 1.0f / 10.0f;
 			}

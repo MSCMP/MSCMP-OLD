@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace MSCMP.Network {
@@ -29,16 +31,12 @@ namespace MSCMP.Network {
 			get { return state != State.Idle; }
 		}
 
-		public enum PacketId {
-			Handshake,
-
-			Synchronize
-		}
-
-
 		private Steamworks.CSteamID currentLobbyId = Steamworks.CSteamID.Nil;
 
 		private NetPlayer[] players = new NetPlayer[MAX_PLAYERS];
+
+		delegate void HandleMessageLowLevel(Steamworks.CSteamID sender, BinaryReader reader);
+		private Dictionary<byte, HandleMessageLowLevel> messageHandlers = new Dictionary<byte, HandleMessageLowLevel>();
 
 		public NetManager(StreamWriter logFile) {
 			this.logFile = logFile;
@@ -80,24 +78,57 @@ namespace MSCMP.Network {
 				state = State.Player;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
 
-				SendPacket(SetupPacket(PacketId.Handshake), Steamworks.EP2PSend.k_EP2PSendReliable);
+				Messages.HandshakeMessage message = new Messages.HandshakeMessage();
+				message.clock = GetNetworkClock();
+				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 			});
 
 			logFile.WriteLine("Network setup!");
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.HandshakeMessage msg) => {
+				HandleHandshake(sender);
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
+				players[1].HandleSynchronize(msg);
+			});
 		}
 
-		public byte[] SetupPacket(PacketId packetId, int size = 0) {
-			byte[] data = new byte[size + 1];
-			data[0] = (byte)packetId;
-			return data;
+		private ulong GetNetworkClock() {
+			long epochTicks = new DateTime(1970, 1, 1).Ticks;
+			long unixTime = ((DateTime.UtcNow.Ticks - epochTicks) / TimeSpan.TicksPerSecond);
+			return (ulong)unixTime;
 		}
 
-		public void SendPacket(byte[] data, Steamworks.EP2PSend sendType, int channel = 0) {
+		delegate void MessageHandler<T>(Steamworks.CSteamID Sender, T Message);
+
+		private void BindMessageHandler<T>(MessageHandler<T> Handler) where T: INetMessage, new() {
+			T message = new T();
+
+			messageHandlers.Add(message.MessageId, (Steamworks.CSteamID sender, BinaryReader reader) => {
+				if (! message.Read(reader)) {
+					logFile.WriteLine("Failed to read network message " + message.MessageId + " received from " + sender.ToString());
+					return;
+				}
+				Handler(sender, message);
+			});
+		}
+
+		public bool BroadcastMessage<T>(T message, Steamworks.EP2PSend sendType, int channel = 0) where T : INetMessage {
 			if (players[1] == null) {
-				logFile.WriteLine("Failed to send packet - no player found.");
-				return;
+				return false;
 			}
-			players[1].SendPacket(data, sendType, channel);
+			MemoryStream stream = new MemoryStream();
+			BinaryWriter writer = new BinaryWriter(stream);
+
+			writer.Write((byte)message.MessageId);
+			if (! message.Write(writer)) {
+				logFile.WriteLine("Failed to write network message " + message.MessageId);
+				return false;
+			}
+
+			players[1].SendPacket(stream.GetBuffer(), sendType, channel);
+			return true;
 		}
 
 		private void OnGameLobbyJoinRequested(Steamworks.GameLobbyJoinRequested_t request) {
@@ -152,7 +183,6 @@ namespace MSCMP.Network {
 					continue;
 				}
 
-				logFile.WriteLine("A");
 				byte[] data = new byte[size];
 
 				uint msgSize = 0;
@@ -161,29 +191,18 @@ namespace MSCMP.Network {
 					continue;
 				}
 
-				logFile.WriteLine("B");
 				// TODO: Joining?
 				if (msgSize != size || msgSize == 0) {
 					logFile.WriteLine("Invalid packet size");
 					continue;
 				}
 
-				PacketId packetID = (PacketId)data[0];
-				logFile.WriteLine("C");
-				switch (packetID) {
-					case PacketId.Handshake:
-						HandleHandshake(senderSteamId);
-						break;
+				MemoryStream stream = new MemoryStream(data);
+				BinaryReader reader = new BinaryReader(stream);
 
-					case PacketId.Synchronize:
-						if (players[1] != null && players[1].SteamId == senderSteamId) {
-							MemoryStream stream = new MemoryStream(data);
-							BinaryReader reader = new BinaryReader(stream);
-
-							reader.ReadByte();// make sure we don't have packet id here
-							players[1].HandleSynchronize(reader);
-						}
-						break;
+				byte messageId = reader.ReadByte();
+				if (messageHandlers.ContainsKey(messageId)) {
+					messageHandlers[messageId](senderSteamId, reader);
 				}
 			}
 
@@ -214,7 +233,9 @@ namespace MSCMP.Network {
 
 				players[1] = new NetPlayer(this, senderSteamId);
 
-				SendPacket(SetupPacket(PacketId.Handshake), Steamworks.EP2PSend.k_EP2PSendReliable);
+				Messages.HandshakeMessage message = new Messages.HandshakeMessage();
+				message.clock = GetNetworkClock();
+				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 			}
 			else {
 				if (players[1] == null) {

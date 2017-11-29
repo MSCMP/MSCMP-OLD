@@ -40,6 +40,30 @@ namespace MSCMP.Network {
 				if (prefab) {
 					go = (GameObject)GameObject.Instantiate((GameObject)prefab, pos, rot);
 					GameObject.DontDestroyOnLoad(go);
+
+					// Remove walking fsm (if exists)
+					PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(go, "Move");
+					if (fsm != null) {
+						GameObject.Destroy(fsm);
+
+						MPController.logFile.WriteLine("REMOVED Move FSM!");
+					}
+					fsm = Utils.GetPlaymakerScriptByName(go, "Obstacle");
+					if (fsm != null) {
+						GameObject.Destroy(fsm);
+
+						MPController.logFile.WriteLine("REMOVED Obstacle FSM!");
+					}
+
+
+					Animation anim = go.GetComponent<Animation>();
+					if (anim != null) {
+						// TODO: BULLSHIT HERE
+
+						MPController.logFile.WriteLine("Have animation component! " + anim.GetClipCount());
+
+
+					}
 				}
 			}
 		}
@@ -47,15 +71,15 @@ namespace MSCMP.Network {
 			GUI.Label(new Rect(300, 200, 300, 200), "Remote player (position: " + pos.ToString() + ")");
 		}
 
-		public void HandleSynchronize(BinaryReader reader) {
-			pos.x = (float)reader.ReadDouble();
-			pos.y = (float)reader.ReadDouble();
-			pos.z = (float)reader.ReadDouble();
+		public void HandleSynchronize(Messages.PlayerSyncMessage msg) {
+			pos.x = msg.position.x;
+			pos.y = msg.position.y;
+			pos.z = msg.position.z;
 
-			rot.w = (float)reader.ReadDouble();
-			rot.x = (float)reader.ReadDouble();
-			rot.y = (float)reader.ReadDouble();
-			rot.z = (float)reader.ReadDouble();
+			rot.w = msg.rotation.w;
+			rot.x = msg.rotation.x;
+			rot.y = msg.rotation.y;
+			rot.z = msg.rotation.z;
 
 			if (! go) {
 				return;
