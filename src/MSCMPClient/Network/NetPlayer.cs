@@ -28,6 +28,25 @@ namespace MSCMP.Network {
 		private GameObject characterGameObject = null;
 
 		/// <summary>
+		/// Cached animation component.
+		/// </summary>
+		private Animation characterAnimationComponent = null;
+
+		/// <summary>
+		/// The animation ids.
+		/// </summary>
+		enum AnimationId {
+			Idle,
+			Walking
+		}
+
+		/// <summary>
+		/// Currently played animation id.
+		/// </summary>
+		private AnimationId currentAnim = AnimationId.Idle;
+
+
+		/// <summary>
 		/// Did this player handshake with us during this session?
 		/// </summary>
 		public bool hasHandshake = false;
@@ -94,14 +113,11 @@ namespace MSCMP.Network {
 			RemoveFSM("Raycast"); // Snaps character to ground.
 			RemoveFSM("CarHit"); // Spawns ragdoll when character gets hit by car.
 
+			characterAnimationComponent = characterGameObject.GetComponentInChildren<Animation>();
+			if (characterAnimationComponent != null) {
+				// Force character to stand.
 
-			Animation anim = characterGameObject.GetComponentInChildren<Animation>();
-			if (anim != null) {
-				// TODO: SOME DEBUG SHIT HERE
-
-				MPController.logFile.WriteLine("Have animation component! " + anim.GetClipCount());
-
-
+				PlayAnimation(AnimationId.Idle, true);
 			}
 		}
 
@@ -129,6 +145,42 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
+		/// Convert animation id to it's name.
+		/// </summary>
+		/// <param name="animation">The id of the animation.</param>
+		/// <returns>Name of the animation.</returns>
+		private string GetAnimationName(AnimationId animation) {
+			switch (animation) {
+				case AnimationId.Idle: return "fat_standing";
+				case AnimationId.Walking: return "fat_walk";
+			}
+			return "";
+		}
+
+		/// <summary>
+		/// Play selected animation.
+		/// </summary>
+		/// <param name="animation"></param>
+		/// <param name="force"></param>
+		private void PlayAnimation(AnimationId animation, bool force = false) {
+			if (!force && currentAnim == animation) {
+				return;
+			}
+
+			currentAnim = animation;
+			if (characterAnimationComponent == null) {
+				return;
+			}
+
+			if (force) {
+				characterAnimationComponent.Play(GetAnimationName(animation));
+			}
+			else {
+				characterAnimationComponent.CrossFade(GetAnimationName(animation));
+			}
+		}
+
+		/// <summary>
 		/// Updates state of the player.
 		/// </summary>
 		public virtual void Update() {
@@ -137,15 +189,24 @@ namespace MSCMP.Network {
 
 			if (characterGameObject && syncReceiveTime > 0) {
 				float progress = (float)(netManager.GetNetworkClock() - syncReceiveTime) / INTERPOLATION_TIME;
-				if (progress >= 2.0f) {
-					return;
+
+				float speed = 0.0f;
+				if (progress <= 2.0f) {
+					Vector3 oldPos = currentPos;
+					currentPos = Vector3.Lerp(sourcePos, targetPos, progress);
+					currentRot = Quaternion.Slerp(sourceRot, targetRot, progress);
+					speed = (currentPos - oldPos).magnitude;
+
+					characterGameObject.transform.position = currentPos;
+					characterGameObject.transform.rotation = currentRot;
 				}
 
-				currentPos = Vector3.Lerp(sourcePos, targetPos, progress);
-				currentRot = Quaternion.Slerp(sourceRot, targetRot, progress);
-
-				characterGameObject.transform.position = currentPos;
-				characterGameObject.transform.rotation = currentRot;
+				if (speed > 0.001f) {
+					PlayAnimation(AnimationId.Walking);
+				}
+				else {
+					PlayAnimation(AnimationId.Idle);
+				}
 			}
 		}
 
