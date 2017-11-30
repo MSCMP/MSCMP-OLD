@@ -5,8 +5,15 @@ using System.Reflection;
 using UnityEngine;
 
 namespace MSCMP.Network {
+
+	/// <summary>
+	/// Class handling local player state.
+	/// </summary>
 	class NetLocalPlayer : NetPlayer {
 
+		/// <summary>
+		/// How much time in seconds left until next synchronization packet will be sent.
+		/// </summary>
 		private float timeToUpdate = 0.0f;
 
 		/// <summary>
@@ -14,17 +21,37 @@ namespace MSCMP.Network {
 		/// </summary>
 		public const ulong SYNC_INTERVAL = 100;
 
-		public NetLocalPlayer(NetManager netManager, Steamworks.CSteamID steamId) : base(netManager, steamId) {
 
+		/// <summary>
+		/// Constructor.
+		/// </summary>
+		/// <param name="netManager">The network manager owning this player.</param>
+		/// <param name="steamId">The steam id of the player.</param>
+		public NetLocalPlayer(NetManager netManager, Steamworks.CSteamID steamId) : base(netManager, steamId) {
 		}
+
+#if !PUBLIC_RELEASE
+		/// <summary>
+		/// Update debug IMGUI for the player.
+		/// </summary>
 		public override void DrawDebugGUI() {
 			GUI.Label(new Rect(300, 10, 300, 200), "Local player (time to update: " + timeToUpdate + ")");
 		}
+#endif
 
+		/// <summary>
+		/// The game object representing front doors of the yard.
+		/// </summary>
 		GameObject frontDoors = null;
 
+		/// <summary>
+		/// Delegate called when PlayMaker state action enters.
+		/// </summary>
 		delegate void OnEnterDelegate();
 
+		/// <summary>
+		/// Hooking wrapper for PlayMaker state action.
+		/// </summary>
 		private class StateActionProxy : FsmStateAction {
 
 			FsmStateAction originalAction = null;
@@ -110,6 +137,12 @@ namespace MSCMP.Network {
 			}
 		}
 
+		/// <summary>
+		/// Adds new event into the given PlayMaker FSM.
+		/// </summary>
+		/// <param name="fsm">The PlayMaker FSM to add the event to.</param>
+		/// <param name="name">The name of the event to add.</param>
+		/// <returns>Added event object.</returns>
 		private FsmEvent AddNewEvent(PlayMakerFSM fsm, string name) {
 			FsmEvent[] oldEvents = fsm.Fsm.Events;
 			List<FsmEvent> temp = new List<FsmEvent>();
@@ -123,7 +156,13 @@ namespace MSCMP.Network {
 			return ev;
 		}
 
-		private void AddNewTransition(PlayMakerFSM fsm, FsmEvent ev, string stateName) {
+		/// <summary>
+		/// Add new global transition from the given event to the state name to the given PlayMaker FSM.
+		/// </summary>
+		/// <param name="fsm">The PlayMaker FSM to add global transition for.</param>
+		/// <param name="ev">The event triggering the transition.</param>
+		/// <param name="stateName">The state this transition activates.</param>
+		private void AddNewGlobalTransition(PlayMakerFSM fsm, FsmEvent ev, string stateName) {
 			FsmTransition[] oldTransitions = fsm.FsmGlobalTransitions;
 			List<FsmTransition> temp = new List<FsmTransition>();
 			foreach (FsmTransition t in oldTransitions) {
@@ -137,6 +176,11 @@ namespace MSCMP.Network {
 			fsm.Fsm.GlobalTransitions = temp.ToArray();
 		}
 
+		/// <summary>
+		/// Open the given doors.
+		/// </summary>
+		/// <param name="doorsName">The name of the doors object to open.</param>
+		/// <param name="open">Should the doors be opened?</param>
 		public void OpenDoors(string doorsName, bool open) {
 			if (frontDoors != null) {
 				PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(frontDoors, "Use");
@@ -149,6 +193,9 @@ namespace MSCMP.Network {
 			}
 		}
 
+		/// <summary>
+		/// Update network doors state.
+		/// </summary>
 		public void UpdateDoors() {
 			if (frontDoors == null) {
 				frontDoors = GameObject.Find("DoorFront");
@@ -159,8 +206,8 @@ namespace MSCMP.Network {
 					FsmEvent mpOpenEvent = AddNewEvent(fsm, "MPOPEN");
 					FsmEvent mpCloseEvent = AddNewEvent(fsm, "MPCLOSE");
 
-					AddNewTransition(fsm, mpOpenEvent, "Open door");
-					AddNewTransition(fsm, mpCloseEvent, "Close door");
+					AddNewGlobalTransition(fsm, mpOpenEvent, "Open door");
+					AddNewGlobalTransition(fsm, mpCloseEvent, "Close door");
 
 					foreach (FsmState s in fsm.FsmStates) {
 
@@ -200,9 +247,13 @@ namespace MSCMP.Network {
 			}
 		}
 
-
+		/// <summary>
+		/// Update state of the local player.
+		/// </summary>
 		public override void Update() {
 			UpdateDoors();
+
+			// Synchronization sending.
 
 			timeToUpdate -= Time.deltaTime;
 			if (timeToUpdate <= 0.0f) {

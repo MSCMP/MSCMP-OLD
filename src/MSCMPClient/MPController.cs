@@ -6,14 +6,49 @@ using MSCMP.Network;
 using System;
 
 namespace MSCMP {
+	/// <summary>
+	/// Main multiplayer mode controller component.
+	/// </summary>
 	class MPController : MonoBehaviour {
 
+		public const string MOD_VERSION_STRING = "0.1";
 
+#if !PUBLIC_RELEASE
+		/// <summary>
+		/// Various utilities used for development.
+		/// </summary>
 		DevTools devTools = new DevTools();
+#endif
 
+		/// <summary>
+		/// The file used for logging. TODO: Proper logger.
+		/// </summary>
 		public static StreamWriter logFile = new StreamWriter(Client.GetPath("clientLog.txt"), false);
 
+		/// <summary>
+		/// Object managing whole networking.
+		/// </summary>
 		NetManager netManager = null;
+
+		/// <summary>
+		/// Name of the currently loaded level.
+		/// </summary>
+		string currentLevelName = "";
+
+		/// <summary>
+		/// Game object representing local player.
+		/// </summary>
+		GameObject localPlayer = null;
+
+		/// <summary>
+		/// Current scroll value of the invite panel.
+		/// </summary>
+		Vector2 friendsScrollViewPos = new Vector2();
+
+		/// <summary>
+		/// State override of the friend list.
+		/// </summary>
+		Dictionary<Steamworks.CSteamID, string> friendStateOverride = new Dictionary<Steamworks.CSteamID, string>();
 
 		void Start() {
 			logFile.AutoFlush = true;
@@ -23,15 +58,15 @@ namespace MSCMP {
 			DontDestroyOnLoad(this.gameObject);
 
 			netManager = new NetManager(logFile);
-
-			// Application.LoadLevel("GAME");
 		}
 
+		/// <summary>
+		/// Callback called when unity loads new event.
+		/// </summary>
+		/// <param name="newLevelName"></param>
 		void OnLevelSwitch(string newLevelName) {
-			logFile.WriteLine(newLevelName);
-
-			if (newLevelName == "GAME" && !netManager.IsOnline) {
-				netManager.SetupLobby();
+			if (newLevelName == "GAME") {
+				netManager.OnGameWorldLoad();
 			}
 			else if (newLevelName == "MainMenu") {
 				if (netManager.IsOnline) {
@@ -39,18 +74,15 @@ namespace MSCMP {
 				}
 			}
 		}
-		string currentLevelName = "";
 
-		GameObject localPlayer = null;
-
-
-		Vector2 friendsScrollViewPos = new Vector2();
-		Dictionary<Steamworks.CSteamID, string> friendStateOverride = new Dictionary<Steamworks.CSteamID, string>();
-
+		/// <summary>
+		/// Updates IMGUI of the multiplayer.
+		/// </summary>
 		void OnGUI() {
 			GUI.color = Color.white;
-			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP 0.1");
+			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP " + MOD_VERSION_STRING);
 
+			// Draw online state.
 
 			if (netManager.IsOnline) {
 				GUI.color = Color.green;
@@ -60,70 +92,83 @@ namespace MSCMP {
 				GUI.color = Color.red;
 				GUI.Label(new Rect(2, 2, 500, 20), "OFFLINE");
 			}
-			GUI.color = Color.white;
 
 			// Friends widget.
 
-			if (netManager.IsHost) {
+			UpdateInvitePanel();
 
-
-				Steamworks.EFriendFlags friendFlags = Steamworks.EFriendFlags.k_EFriendFlagImmediate;
-				int friendsCount = Steamworks.SteamFriends.GetFriendCount(friendFlags);
-
-				List<Steamworks.CSteamID> onlineFriends = new List<Steamworks.CSteamID>();
-				for (int i = 0; i < friendsCount; ++i) {
-
-					Steamworks.CSteamID friendSteamId = Steamworks.SteamFriends.GetFriendByIndex(i, friendFlags);
-
-					if (Steamworks.SteamFriends.GetFriendPersonaState(friendSteamId) == Steamworks.EPersonaState.k_EPersonaStateOffline) {
-						// logFile.WriteLine(Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId));
-						continue;
-					}
-
-
-					onlineFriends.Add(friendSteamId);
-				}
-
-				int onlineFriendsCount = onlineFriends.Count;
-				friendsScrollViewPos = GUI.BeginScrollView(new Rect(0, 30.0f, 270.0f, 400.0f), friendsScrollViewPos, new Rect(0, 0, 260.0f, 20.0f * (1 + onlineFriendsCount)));
-
-				for (int i = 0; i < onlineFriendsCount; ++i) {
-					Steamworks.CSteamID friendSteamId = onlineFriends[i];
-
-					string friendName = Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId);
-
-					Rect friendRect = new Rect(2, 1 + 20 * i, 200.0f, 20);
-
-					// TODO: Draw nice state here - for now let's assume all players are ready to join.
-					string state = "";
-					if (friendStateOverride.ContainsKey(friendSteamId)) {
-						state = " - " + friendStateOverride[friendSteamId];
-					}
-
-					GUI.Label(friendRect, friendName + state);
-
-					friendRect.x += 200.0f;
-					friendRect.width = 50.0f;
-
-					if (GUI.Button(friendRect, "Invite")) {
-						if (netManager.InviteToMyLobby(friendSteamId)) {
-							friendStateOverride.Add(friendSteamId, "INVITED!");
-						}
-						else {
-							friendStateOverride.Add(friendSteamId, "FAILED TO INVITE");
-						}
-
-					}
-				}
-
-				GUI.EndScrollView();
-			}
-
-
+#if !PUBLIC_RELEASE
 			devTools.OnGUI(localPlayer);
+
 			netManager.DrawDebugGUI();
+#endif
 		}
 
+		/// <summary>
+		/// Updates invite panel IMGUI.
+		/// </summary>
+		private void UpdateInvitePanel() {
+
+			if (!netManager.IsHost || netManager.IsNetworkPlayerConnected()) {
+				friendStateOverride.Clear();
+				return;
+			}
+
+			GUI.color = Color.white;
+
+			Steamworks.EFriendFlags friendFlags = Steamworks.EFriendFlags.k_EFriendFlagImmediate;
+			int friendsCount = Steamworks.SteamFriends.GetFriendCount(friendFlags);
+
+			List<Steamworks.CSteamID> onlineFriends = new List<Steamworks.CSteamID>();
+			for (int i = 0; i < friendsCount; ++i) {
+
+				Steamworks.CSteamID friendSteamId = Steamworks.SteamFriends.GetFriendByIndex(i, friendFlags);
+
+				if (Steamworks.SteamFriends.GetFriendPersonaState(friendSteamId) == Steamworks.EPersonaState.k_EPersonaStateOffline) {
+					continue;
+				}
+
+				onlineFriends.Add(friendSteamId);
+			}
+
+			int onlineFriendsCount = onlineFriends.Count;
+			friendsScrollViewPos = GUI.BeginScrollView(new Rect(0, 30.0f, 270.0f, 400.0f), friendsScrollViewPos, new Rect(0, 0, 260.0f, 20.0f * (1 + onlineFriendsCount)));
+
+			for (int i = 0; i < onlineFriendsCount; ++i) {
+				Steamworks.CSteamID friendSteamId = onlineFriends[i];
+
+				string friendName = Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId);
+
+				Rect friendRect = new Rect(2, 1 + 20 * i, 200.0f, 20);
+
+				// TODO: Draw nice state here - for now let's assume all players are ready to join.
+				string state = "";
+				if (friendStateOverride.ContainsKey(friendSteamId)) {
+					state = " - " + friendStateOverride[friendSteamId];
+				}
+
+				GUI.Label(friendRect, friendName + state);
+
+				friendRect.x += 200.0f;
+				friendRect.width = 50.0f;
+
+				if (GUI.Button(friendRect, "Invite")) {
+					if (netManager.InviteToMyLobby(friendSteamId)) {
+						friendStateOverride.Add(friendSteamId, "INVITED!");
+					}
+					else {
+						friendStateOverride.Add(friendSteamId, "FAILED TO INVITE");
+					}
+
+				}
+			}
+
+			GUI.EndScrollView();
+		}
+
+		/// <summary>
+		/// Update multiplayer state.
+		/// </summary>
 
 		void Update() {
 			try {
@@ -131,11 +176,16 @@ namespace MSCMP {
 
 				netManager.Update();
 
+				// Handle level changes.
+
 				string loadedLevelName = Application.loadedLevelName;
 				if (loadedLevelName != currentLevelName) {
 					OnLevelSwitch(loadedLevelName);
 					currentLevelName = loadedLevelName;
 				}
+
+				// Development stuff.
+#if !PUBLIC_RELEASE
 				devTools.Update();
 
 				if (localPlayer == null) {
@@ -144,6 +194,7 @@ namespace MSCMP {
 				else {
 					devTools.UpdatePlayer(localPlayer);
 				}
+#endif
 			}
 			catch (Exception e) {
 				logFile.WriteLine("Exception during update: " + e.Message);

@@ -68,8 +68,26 @@ namespace MSCMP.Network {
 		/// </summary>
 		uint ping = 0;
 
+		/// <summary>
+		/// Delegate type for network messages handler.
+		/// </summary>
+		/// <typeparam name="T">The type of the network message.</typeparam>
+		/// <param name="sender">Steam id that sent us the message.</param>
+		/// <param name="message">The deserialized image.</param>
+		delegate void MessageHandler<T>(Steamworks.CSteamID sender, T message);
+
+		/// <summary>
+		/// The time when network manager was created in UTC.
+		/// </summary>
+		DateTime netManagerCreationTime;
+
+		/// <summary>
+		/// Constructor.
+		/// </summary>
+		/// <param name="logFile">The log file used for logging.</param>
 		public NetManager(StreamWriter logFile) {
 			this.logFile = logFile;
+			this.netManagerCreationTime = DateTime.UtcNow;
 			state = State.Idle;
 
 			// Setup local player.
@@ -162,12 +180,20 @@ namespace MSCMP.Network {
 			});
 		}
 
+		/// <summary>
+		/// Get network clock with the milisecond resolution. (time since network manager was created)
+		/// </summary>
+		/// <returns>Network clock time in miliseconds.</returns>
 		public ulong GetNetworkClock() {
-			return (ulong)((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalMilliseconds);
+			return (ulong)((DateTime.UtcNow - this.netManagerCreationTime).TotalMilliseconds);
 		}
 
-		delegate void MessageHandler<T>(Steamworks.CSteamID Sender, T Message);
 
+		/// <summary>
+		/// Binds handler for the given message. (There can be only one handler per message)
+		/// </summary>
+		/// <typeparam name="T">The type of message to register handler for.</typeparam>
+		/// <param name="Handler">The handler lambda.</param>
 		private void BindMessageHandler<T>(MessageHandler<T> Handler) where T: INetMessage, new() {
 			T message = new T();
 
@@ -180,6 +206,14 @@ namespace MSCMP.Network {
 			});
 		}
 
+		/// <summary>
+		/// Broadcasts message to connected players.
+		/// </summary>
+		/// <typeparam name="T">The type of the message to broadcast.</typeparam>
+		/// <param name="message">The message to broadcast.</param>
+		/// <param name="sendType">The send type.</param>
+		/// <param name="channel">The channel used to deliver message.</param>
+		/// <returns></returns>
 		public bool BroadcastMessage<T>(T message, Steamworks.EP2PSend sendType, int channel = 0) where T : INetMessage {
 			if (players[1] == null) {
 				return false;
@@ -197,6 +231,10 @@ namespace MSCMP.Network {
 			return true;
 		}
 
+		/// <summary>
+		/// Callback called when client accepts lobby join request from other steam user.
+		/// </summary>
+		/// <param name="request">The request.</param>
 		private void OnGameLobbyJoinRequested(Steamworks.GameLobbyJoinRequested_t request) {
 			Steamworks.SteamAPICall_t apiCall = Steamworks.SteamMatchmaking.JoinLobby(request.m_steamIDLobby);
 			if (apiCall == Steamworks.SteamAPICall_t.Invalid) {
@@ -213,6 +251,10 @@ namespace MSCMP.Network {
 			lobbyEnterCallResult.Set(apiCall);
 		}
 
+		/// <summary>
+		/// Setup lobby to host a game.
+		/// </summary>
+		/// <returns>true if lobby setup request was properly sent, false otherwise</returns>
 		public bool SetupLobby() {
 			logFile.WriteLine("Setting up lobby.");
 			Steamworks.SteamAPICall_t apiCall = Steamworks.SteamMatchmaking.CreateLobby(Steamworks.ELobbyType.k_ELobbyTypeFriendsOnly, MAX_PLAYERS);
@@ -225,6 +267,9 @@ namespace MSCMP.Network {
 			return true;
 		}
 
+		/// <summary>
+		/// Leave current lobby.
+		/// </summary>
 		private void LeaveLobby() {
 			Steamworks.SteamMatchmaking.LeaveLobby(currentLobbyId);
 			currentLobbyId = Steamworks.CSteamID.Nil;
@@ -232,6 +277,12 @@ namespace MSCMP.Network {
 			logFile.WriteLine("Left lobby.");
 		}
 
+
+		/// <summary>
+		/// Invite player with given id to the lobby.
+		/// </summary>
+		/// <param name="invitee">The steam id of the player to invite.</param>
+		/// <returns>true if player was invited, false otherwise</returns>
 		public bool InviteToMyLobby(Steamworks.CSteamID invitee) {
 			if (!IsHost) {
 				return false;
@@ -239,21 +290,38 @@ namespace MSCMP.Network {
 			return Steamworks.SteamMatchmaking.InviteUserToLobby(currentLobbyId, invitee);
 		}
 
+
+
+		/// <summary>
+		/// Is another player connected and playing in the session?
+		/// </summary>
+		/// <returns>true if there is another player connected and playing in the session, false otherwise</returns>
 		public bool IsNetworkPlayerConnected() {
 			return players[1] != null;
 		}
 
+		/// <summary>
+		/// Cleanup remote player.
+		/// </summary>
 		public void CleanupPlayer() {
 			Steamworks.SteamNetworking.CloseP2PSessionWithUser(players[1].SteamId);
 			players[1].Dispose();
 			players[1] = null;
 		}
 
+
+		/// <summary>
+		/// Disconnect from the active multiplayer session.
+		/// </summary>
 		public void Disconnect() {
 			BroadcastMessage(new Messages.DisconnectMessage(), Steamworks.EP2PSend.k_EP2PSendReliable);
 			LeaveLobby();
 		}
 
+
+		/// <summary>
+		/// Update connection state.
+		/// </summary>
 		private void UpdateHeartbeat() {
 			if (!IsNetworkPlayerConnected()) {
 				return;
@@ -276,6 +344,10 @@ namespace MSCMP.Network {
 			}
 		}
 
+
+		/// <summary>
+		/// Process incomming network messages.
+		/// </summary>
 		private void ProcessMessages() {
 			uint size = 0;
 			while (Steamworks.SteamNetworking.IsP2PPacketAvailable(out size)) {
@@ -283,6 +355,8 @@ namespace MSCMP.Network {
 					logFile.WriteLine("Received empty p2p packet");
 					continue;
 				}
+
+				// TODO: Pre allocate this buffer and reuse it here - we don't want garbage collector to go crazy with that.
 
 				byte[] data = new byte[size];
 
@@ -292,9 +366,15 @@ namespace MSCMP.Network {
 					continue;
 				}
 
-				// TODO: Joining?
+				// TODO: Joining of the messages if are split?
+
 				if (msgSize != size || msgSize == 0) {
 					logFile.WriteLine("Invalid packet size");
+					continue;
+				}
+
+				if (players[1] != null && players[1].SteamId != senderSteamId) {
+					logFile.WriteLine("Received network message from user that is not in the session. (" + senderSteamId + ")");
 					continue;
 				}
 
@@ -308,6 +388,9 @@ namespace MSCMP.Network {
 			}
 		}
 
+		/// <summary>
+		/// Update network manager state.
+		/// </summary>
 		public void Update() {
 			if (!IsOnline) {
 				return;
@@ -323,7 +406,14 @@ namespace MSCMP.Network {
 			}
 		}
 
+#if !PUBLIC_RELEASE
+		/// <summary>
+		/// Update network debug IMGUI.
+		/// </summary>
 		public void DrawDebugGUI() {
+
+			GUI.color = Color.white;
+
 			foreach (NetPlayer player in players) {
 				if (player != null) {
 					player.DrawDebugGUI();
@@ -342,7 +432,12 @@ namespace MSCMP.Network {
 			GUI.Label(debugPanel, "Remote clock: " + remoteClock);
 			debugPanel.y += 20.0f;
 		}
+#endif
 
+		/// <summary>
+		/// Process handshake message received from the given steam id.
+		/// </summary>
+		/// <param name="senderSteamId">The steam id of the sender.</param>
 		private void HandleHandshake(Steamworks.CSteamID senderSteamId) {
 			if (IsHost) {
 				if (players[1] != null) {
@@ -351,10 +446,14 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				// Setup THE PLAYER.
+				// Setup THE PLAYER
 
 				timeSinceLastHeartbeat = 0.0f;
 				players[1] = new NetPlayer(this, senderSteamId);
+
+				// Player can be spawned here safely. Host is already in game and all game objects are here.
+
+				players[1].Spawn();
 
 				Messages.HandshakeMessage message = new Messages.HandshakeMessage();
 				message.clock = GetNetworkClock();
@@ -370,11 +469,29 @@ namespace MSCMP.Network {
 				logFile.WriteLine("CONNECTION ESTABLISHED!");
 
 				Application.LoadLevel("GAME");
+
+				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
 
-
 			players[1].hasHandshake = true;
-			players[1].Spawn();
+		}
+
+		/// <summary>
+		/// Callback called when game world gets loaded.
+		/// </summary>
+		public void OnGameWorldLoad() {
+			// If we are not online setup an lobby for players to connect.
+
+			if (!IsOnline) {
+				SetupLobby();
+				return;
+			}
+
+			// Otherwise spawn players that have to be spawned.
+
+			if (players[1] != null) {
+				players[1].Spawn();
+			}
 		}
 	}
 }

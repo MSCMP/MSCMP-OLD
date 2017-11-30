@@ -4,8 +4,11 @@ using System.IO;
 using System;
 
 namespace MSCMP {
+#if !PUBLIC_RELEASE
+	/// <summary>
+	/// Development tools.
+	/// </summary>
 	class DevTools {
-		GameObject[] gos = null;
 		Vector2 scrollViewVector = new Vector2();
 		Texture2D fillText = new Texture2D(1, 1);
 
@@ -22,7 +25,7 @@ namespace MSCMP {
 				return;
 			}
 
-			foreach (GameObject go in gos) {
+			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
 
 				if (localPlayer) {
 					if ((go.transform.position - localPlayer.transform.position).sqrMagnitude > 10) {
@@ -75,8 +78,6 @@ namespace MSCMP {
 			if (Input.GetKeyDown(KeyCode.F3)) {
 				devView = !devView;
 			}
-
-			gos = GameObject.FindObjectsOfType<GameObject>();
 		}
 
 		public void UpdatePlayer(GameObject localPlayer) {
@@ -151,47 +152,50 @@ namespace MSCMP {
 
 			}
 
-			if (Input.GetKeyDown(KeyCode.F5) && gos != null) {
-
-
-				GUI.color = Color.white;
-				int index = 0;
-
-				Directory.CreateDirectory(Client.GetPath("WorldDump"));
-
-				StringBuilder builder = new StringBuilder();
-				foreach (GameObject go in gos) {
-					Transform trans = go.GetComponent<Transform>();
-					if (trans == null || trans.parent != null) continue;
-
-
-					StringBuilder bldr = new StringBuilder();
-					Utils.PrintTransformTree(trans, 0, (int level, string text) => {
-
-						for (int i = 0; i < level; ++i) bldr.Append("    ");
-						bldr.Append(text + "\n");
-					});
-
-					string SanitizedName = go.name;
-					MPController.logFile.WriteLine(SanitizedName);
-					SanitizedName = SanitizedName.Replace(@"\", "_SLASH_");
-					MPController.logFile.WriteLine(SanitizedName);
-					string dumpFilePath = Client.GetPath("WorldDump/" + SanitizedName + ".txt");
-
-					try {
-						System.IO.File.WriteAllText(dumpFilePath, bldr.ToString());
-					}
-					catch (Exception e) {
-						builder.Append("Unable to dump objects: " + SanitizedName + "\n");
-						builder.Append(e.Message + "\n");
-					}
-
-					builder.Append(go.name + " (" + SanitizedName + "), Trans: " + trans.position.ToString() + "\n");
-					++index;
-				}
-
-				System.IO.File.WriteAllText(Client.GetPath("gos.txt"), builder.ToString());
+			if (Input.GetKeyDown(KeyCode.F5)) {
+				DumpWorld();
 			}
 		}
+
+		public void DumpWorld() {
+			GameObject []gos = gos = GameObject.FindObjectsOfType<GameObject>();
+
+			Directory.CreateDirectory(Client.GetPath("WorldDump"));
+
+			StringBuilder builder = new StringBuilder();
+			int index = 0;
+			foreach (GameObject go in gos) {
+				Transform trans = go.GetComponent<Transform>();
+				if (trans == null || trans.parent != null) continue;
+
+
+				StringBuilder bldr = new StringBuilder();
+				Utils.PrintTransformTree(trans, 0, (int level, string text) => {
+
+					for (int i = 0; i < level; ++i) bldr.Append("    ");
+					bldr.Append(text + "\n");
+				});
+
+				string SanitizedName = go.name;
+				MPController.logFile.WriteLine(SanitizedName);
+				SanitizedName = SanitizedName.Replace(@"\", "_SLASH_");
+				MPController.logFile.WriteLine(SanitizedName);
+				string dumpFilePath = Client.GetPath("WorldDump/" + SanitizedName + ".txt");
+
+				try {
+					System.IO.File.WriteAllText(dumpFilePath, bldr.ToString());
+				}
+				catch (Exception e) {
+					builder.Append("Unable to dump objects: " + SanitizedName + "\n");
+					builder.Append(e.Message + "\n");
+				}
+
+				builder.Append(go.name + " (" + SanitizedName + "), Trans: " + trans.position.ToString() + "\n");
+				++index;
+			}
+
+			System.IO.File.WriteAllText(Client.GetPath("WorldDump/dumpLog.txt"), builder.ToString());
+		}
 	}
+#endif
 }

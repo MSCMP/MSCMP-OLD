@@ -2,6 +2,9 @@
 using HutongGames.PlayMaker;
 
 namespace MSCMP {
+	/// <summary>
+	/// Various utilities.
+	/// </summary>
 	class Utils {
 
 		public delegate void PrintInfo(int level, string data);
