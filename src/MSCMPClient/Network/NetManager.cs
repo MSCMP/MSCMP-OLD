@@ -469,7 +469,12 @@ namespace MSCMP.Network {
 
 				logFile.WriteLine("CONNECTION ESTABLISHED!");
 
-				Application.LoadLevel("GAME");
+				if (Application.loadedLevelName == "GAME") {
+					OnGameWorldLoad();
+				}
+				else {
+					Application.LoadLevel("GAME");
+				}
 
 				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
