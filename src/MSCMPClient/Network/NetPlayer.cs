@@ -11,6 +11,11 @@ namespace MSCMP.Network {
 		private Steamworks.CSteamID steamId = Steamworks.CSteamID.Nil;
 
 		/// <summary>
+		/// Offset for the character model.
+		/// </summary>
+		private Vector3 CHARACTER_OFFSET = new Vector3(0.0f, -0.16f, 0.0f);
+
+		/// <summary>
 		/// Steam id of the player.
 		/// </summary>
 		public Steamworks.CSteamID SteamId {
@@ -197,7 +202,7 @@ namespace MSCMP.Network {
 					currentRot = Quaternion.Slerp(sourceRot, targetRot, progress);
 					speed = (currentPos - oldPos).magnitude;
 
-					characterGameObject.transform.position = currentPos;
+					characterGameObject.transform.position = currentPos + CHARACTER_OFFSET;
 					characterGameObject.transform.rotation = currentRot;
 				}
 
