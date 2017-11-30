@@ -58,9 +58,17 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	char installFolder[MAX_PATH] = { 0 };
 
-	const char installFolder[] = "J:\\Games\\steamapps\\common\\My Summer Car";
-	//const char installFolder[] = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\My Summer Car";
+	FILE *pathFile = fopen("path.txt", "r");
+	if (!pathFile) {
+		MessageBox(NULL, "Failed to open path.txt file.\nCreate it next to the launcher and put there in first line path to the my summer car.", "Fatal error", MB_ICONERROR);
+		return ERROR;
+	}
+
+	fread(installFolder, 1, MAX_PATH, pathFile);
+	fclose(pathFile);
+
 	const char ExecutableName[] = "mysummercar.exe";
 
 	char gameExePath[MAX_PATH] = { 0 };
