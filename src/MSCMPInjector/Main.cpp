@@ -19,12 +19,11 @@ void GetModulePath(HMODULE module, char *path)
 
 bool RunMP(const char *clientDllPath)
 {
-	MonoDomain* domain = nullptr;
-	do
+	MonoDomain* domain = mono.mono_domain_get();
+	if (! domain)
 	{
-		domain = mono.mono_domain_get();
+		return false;
 	}
-	while (! domain);
 
 	MonoAssembly* domainassembly = mono.mono_domain_assembly_open(domain, clientDllPath);
 	if (!domainassembly)
@@ -57,34 +56,11 @@ bool RunMP(const char *clientDllPath)
 	return true;
 }
 
+char monoDllPath[MAX_PATH] = { 0 };
+char ClientDllPath[MAX_PATH] = { 0 };
+
 void SetupMSCMP()
 {
-	// Make sure we have mono dll to work with.
-
-	char monoDllPath[MAX_PATH] = { 0 };
-	GetModulePath(GetModuleHandle(0), monoDllPath);
-	strcat(monoDllPath, "\\mysummercar_Data\\Mono\\mono.dll");
-
-	if (GetFileAttributes(monoDllPath) == INVALID_FILE_ATTRIBUTES)
-	{
-		MessageBox(NULL, "Unable to find mono.dll!", "MSCMP", MB_ICONERROR);
-		ExitProcess(0);
-		return;
-	}
-
-	// Now make sure we have client file. Do it here so we will not do any redundant processing.
-
-	char ClientDllPath[MAX_PATH] = { 0 };
-	GetModulePath(GetModuleHandle("MSCMPInjector.dll"), ClientDllPath);
-	strcat(ClientDllPath, "\\MSCMPClient.dll");
-
-	if (GetFileAttributes(ClientDllPath) == INVALID_FILE_ATTRIBUTES)
-	{
-		MessageBox(NULL, "Unable to find MSC MP Client files!", "MSCMP", MB_ICONERROR);
-		ExitProcess(0);
-		return;
-	}
-
 	if (!mono.Setup(monoDllPath))
 	{
 		MessageBox(NULL, "Unable to setup mono loader!", "MSCMP", MB_ICONERROR);
@@ -105,39 +81,72 @@ void SetupMSCMP()
 		return 1;
 	});
 
-	// Sleep a while so unit will initialize - this has to be done better with some hooks.
-	Sleep(1000);
-
-	MonoDomain *rootDomain = NULL;
-	do
-	{
-		rootDomain = mono.mono_get_root_domain();
-	}
-	while (! rootDomain);
-
-	mono.mono_thread_attach(rootDomain);
+	//MonoDomain *rootDomain = mono.mono_get_root_domain();
+	//mono.mono_thread_attach(rootDomain);
 
 	if (!RunMP(ClientDllPath))
 	{
 		MessageBox(NULL, "Failed to run multiplayer mod!", "MSCMP", MB_ICONERROR);
 		ExitProcess(0);
 	}
-
 }
 
-UINT __stdcall ThreadMain(void*)
+typedef int (*sub_6596C0_t)();
+sub_6596C0_t sub_6596C0 = 0;
+
+int _stdcall InitHook()
 {
+	int result = sub_6596C0();
 	SetupMSCMP();
-	return 0;
+	return result;
 }
-
 
 BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 {
 	switch (Reason) {
 	case DLL_PROCESS_ATTACH:
 		DisableThreadLibraryCalls(hModule);
-		_beginthreadex(0, 0, ThreadMain, 0, 0, 0);
+
+		// Make sure we have mono dll to work with.
+
+
+		GetModulePath(GetModuleHandle(0), monoDllPath);
+		strcat(monoDllPath, "\\mysummercar_Data\\Mono\\mono.dll");
+
+		if (GetFileAttributes(monoDllPath) == INVALID_FILE_ATTRIBUTES)
+		{
+			MessageBox(NULL, "Unable to find mono.dll!", "MSCMP", MB_ICONERROR);
+			ExitProcess(0);
+			return FALSE;
+		}
+
+		// Now make sure we have client file. Do it here so we will not do any redundant processing.
+
+		GetModulePath(GetModuleHandle("MSCMPInjector.dll"), ClientDllPath);
+		strcat(ClientDllPath, "\\MSCMPClient.dll");
+
+		if (GetFileAttributes(ClientDllPath) == INVALID_FILE_ATTRIBUTES)
+		{
+			MessageBox(NULL, "Unable to find MSC MP Client files!", "MSCMP", MB_ICONERROR);
+			ExitProcess(0);
+			return FALSE;
+		}
+
+		unsigned baseAddress = (unsigned)(GetModuleHandle(NULL)) - 0x400000;
+		sub_6596C0 = (sub_6596C0_t)(baseAddress + 0x006596C0);
+
+		// Install initialization hook.
+
+		unsigned hookAddress = baseAddress + 0x0065C2AE;
+
+		unsigned hookSize = 5;
+		DWORD oldProtection = NULL;
+		VirtualProtect((void *)hookAddress, hookSize, PAGE_EXECUTE_READWRITE, &oldProtection);
+
+		unsigned char *hookPlace = (unsigned char *)(hookAddress);
+		*hookPlace = 0xE8;
+		unsigned *address = (unsigned *)(hookPlace + 1);
+		*address = ((unsigned)InitHook - (hookAddress + hookSize));
 		break;
 	}
 	return TRUE;

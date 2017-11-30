@@ -16,6 +16,7 @@ typedef MonoObject* (__cdecl* mono_runtime_invoke_t)(MonoMethod* method, void* o
 typedef MonoAssembly* (__cdecl* mono_domain_assembly_open_t)(MonoDomain* mDomain, const char* filepath);
 typedef MonoImage* (__cdecl* mono_assembly_get_image_t)(MonoAssembly *assembly);
 typedef MonoDomain* (__cdecl* mono_domain_get_t)();
+typedef MonoThread* (_cdecl* mono_thread_get_main_t)();
 
 class Mono
 {
@@ -45,4 +46,5 @@ public:
 	mono_domain_assembly_open_t mono_domain_assembly_open = nullptr;
 	mono_assembly_get_image_t	mono_assembly_get_image = nullptr;
 	mono_domain_get_t			mono_domain_get			= nullptr;
+	mono_thread_get_main_t		mono_thread_get_main	= nullptr;
 };
