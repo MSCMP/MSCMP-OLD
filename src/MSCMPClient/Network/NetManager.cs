@@ -162,16 +162,7 @@ namespace MSCMP.Network {
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.DisconnectMessage msg) => {
-
-				CleanupPlayer();
-
-				// Go to main menu if we are normal player - the session just closed.
-
-				if (IsPlayer) {
-					LeaveLobby();
-
-					Application.LoadLevel("MainMenu");
-				}
+				HandleDisconnect();
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
@@ -187,7 +178,6 @@ namespace MSCMP.Network {
 		public ulong GetNetworkClock() {
 			return (ulong)((DateTime.UtcNow - this.netManagerCreationTime).TotalMilliseconds);
 		}
-
 
 		/// <summary>
 		/// Binds handler for the given message. (There can be only one handler per message)
@@ -277,7 +267,6 @@ namespace MSCMP.Network {
 			logFile.WriteLine("Left lobby.");
 		}
 
-
 		/// <summary>
 		/// Invite player with given id to the lobby.
 		/// </summary>
@@ -289,8 +278,6 @@ namespace MSCMP.Network {
 			}
 			return Steamworks.SteamMatchmaking.InviteUserToLobby(currentLobbyId, invitee);
 		}
-
-
 
 		/// <summary>
 		/// Is another player connected and playing in the session?
@@ -318,6 +305,20 @@ namespace MSCMP.Network {
 			LeaveLobby();
 		}
 
+		/// <summary>
+		/// Handle disconnect of the remote player.
+		/// </summary>
+		private void HandleDisconnect() {
+			CleanupPlayer();
+
+			// Go to main menu if we are normal player - the session just closed.
+
+			if (IsPlayer) {
+				LeaveLobby();
+
+				Application.LoadLevel("MainMenu");
+			}
+		}
 
 		/// <summary>
 		/// Update connection state.
@@ -330,7 +331,7 @@ namespace MSCMP.Network {
 			timeSinceLastHeartbeat += Time.deltaTime;
 
 			if (timeSinceLastHeartbeat >= TIMEOUT_TIME) {
-				CleanupPlayer();
+				HandleDisconnect();
 			}
 			else {
 				timeToSendHeartbeat -= Time.deltaTime;
