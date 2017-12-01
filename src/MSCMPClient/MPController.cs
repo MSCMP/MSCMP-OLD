@@ -56,14 +56,35 @@ namespace MSCMP {
 		/// Game animations database.
 		/// </summary>
 		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
+
+		/// <summary>
+		/// Asset bundle containing multiplayer mod content.
+		/// </summary>
+		AssetBundle assetBundle = null;
+
+		/// <summary>
+		/// The mod logo texture.
+		/// </summary>
+		Texture2D modLogo = null;
 		void Start() {
 			logFile.AutoFlush = true;
+
+			string assetBundlePath = Client.GetPath("../../data/mpdata");
+			if (!File.Exists(assetBundlePath)) {
+				logFile.WriteLine("Cannot find mpdata asset bundle.");
+				Process.GetCurrentProcess().Kill();
+				return;
+			}
+
+			assetBundle = AssetBundle.CreateFromFile(assetBundlePath);
 
 			Steamworks.SteamAPI.Init();
 
 			DontDestroyOnLoad(this.gameObject);
 
 			netManager = new NetManager(logFile);
+
+			modLogo = LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
 		}
 
 		/// <summary>
@@ -89,6 +110,9 @@ namespace MSCMP {
 		void OnGUI() {
 			GUI.color = Color.white;
 			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP " + MOD_VERSION_STRING);
+
+			GUI.color = new Color(1.0f, 1.0f, 1.0f, 0.25f);
+			GUI.DrawTexture(new Rect(2, Screen.height - 80, 76, 66), modLogo);
 
 			// Draw online state.
 
@@ -177,7 +201,6 @@ namespace MSCMP {
 		/// <summary>
 		/// Update multiplayer state.
 		/// </summary>
-
 		void Update() {
 			try {
 				Steamworks.SteamAPI.RunCallbacks();
@@ -209,6 +232,16 @@ namespace MSCMP {
 				logFile.WriteLine(e.StackTrace);
 				Application.Quit();
 			}
+		}
+
+		/// <summary>
+		/// Loads asset from multiplayer mod asset bundle.
+		/// </summary>
+		/// <typeparam name="T">The type of the asset to load.</typeparam>
+		/// <param name="name">The name of the asset to load.</param>
+		/// <returns>Loaded asset.</returns>
+		T LoadAsset<T>(string name) where T : UnityEngine.Object {
+			return assetBundle.LoadAsset<T>(name);
 		}
 	}
 }
