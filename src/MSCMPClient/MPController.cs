@@ -2,8 +2,10 @@
 
 using System.Collections.Generic;
 using System.IO;
-using MSCMP.Network;
 using System;
+using System.Diagnostics;
+using MSCMP.Network;
+using MSCMP.Game;
 
 namespace MSCMP {
 	/// <summary>
@@ -50,6 +52,10 @@ namespace MSCMP {
 		/// </summary>
 		Dictionary<Steamworks.CSteamID, string> friendStateOverride = new Dictionary<Steamworks.CSteamID, string>();
 
+		/// <summary>
+		/// Game animations database.
+		/// </summary>
+		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
 		void Start() {
 			logFile.AutoFlush = true;
 
@@ -66,6 +72,8 @@ namespace MSCMP {
 		/// <param name="newLevelName"></param>
 		void OnLevelSwitch(string newLevelName) {
 			if (newLevelName == "GAME") {
+				gameAnimDatabase.Rebuild();
+
 				netManager.OnGameWorldLoad();
 			}
 			else if (newLevelName == "MainMenu") {

@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="DevTools.cs" />
+    <Compile Include="Game\GameAnimDatabase.cs" />
     <Compile Include="MPController.cs" />
     <Compile Include="Network\INetMessage.cs" />
     <Compile Include="Network\NetLocalPlayer.cs" />
