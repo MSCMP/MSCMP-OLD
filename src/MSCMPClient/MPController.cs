@@ -15,6 +15,8 @@ namespace MSCMP {
 
 		public const string MOD_VERSION_STRING = "0.1";
 
+		public static MPController Instance = null;
+
 #if !PUBLIC_RELEASE
 		/// <summary>
 		/// Various utilities used for development.
@@ -66,6 +68,15 @@ namespace MSCMP {
 		/// The mod logo texture.
 		/// </summary>
 		Texture2D modLogo = null;
+
+		MPController() {
+			Instance = this;
+		}
+
+		~MPController() {
+			Instance = null;
+		}
+
 		void Start() {
 			logFile.AutoFlush = true;
 
