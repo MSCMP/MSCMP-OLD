@@ -90,6 +90,12 @@ namespace MSCMP {
 						print(level + 2, "Variable Name: " + v.Name);
 					}
 				}
+				else if (component is Animation) {
+					var anim = (Animation)component;
+					foreach (AnimationState state in anim) {
+						print(level + 1, "Animation state: " + state.name);
+					}
+				}
 			}
 
 			for (int i = 0; i < trans.childCount; ++i) {
