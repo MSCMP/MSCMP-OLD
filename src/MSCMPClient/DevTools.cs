@@ -82,7 +82,9 @@ namespace MSCMP {
 
 		public void UpdatePlayer(GameObject localPlayer) {
 
-
+			if (!devView) {
+				return;
+			}
 
 			// Pseudo AirBrk
 			if (Input.GetKeyDown(KeyCode.KeypadPlus) && localPlayer) {
