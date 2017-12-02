@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MSCMP.Game;
+using System;
 using UnityEngine;
 
 namespace MSCMP.Network {
@@ -38,17 +39,27 @@ namespace MSCMP.Network {
 		private Animation characterAnimationComponent = null;
 
 		/// <summary>
+		/// The current animation state.
+		/// </summary>
+		private AnimationState activeAnimationState = null;
+
+		/// <summary>
 		/// The animation ids.
 		/// </summary>
 		enum AnimationId {
-			Idle,
-			Walking
+			Walk,
+			Standing,
 		}
+
+		private string[] AnimationNames = new string[] {
+			"fat_walk",
+			"fat_standing"
+		};
 
 		/// <summary>
 		/// Currently played animation id.
 		/// </summary>
-		private AnimationId currentAnim = AnimationId.Idle;
+		private AnimationId currentAnim = AnimationId.Standing;
 
 
 		/// <summary>
@@ -64,7 +75,6 @@ namespace MSCMP.Network {
 		public Quaternion sourceRot = new Quaternion();
 		public Vector3 targetPos = new Vector3();
 		public Quaternion targetRot = new Quaternion();
-
 
 		/// <summary>
 		/// Interpolation time in miliseconds.
@@ -122,7 +132,7 @@ namespace MSCMP.Network {
 			if (characterAnimationComponent != null) {
 				// Force character to stand.
 
-				PlayAnimation(AnimationId.Idle, true);
+				PlayAnimation(AnimationId.Standing, true);
 			}
 		}
 
@@ -155,11 +165,7 @@ namespace MSCMP.Network {
 		/// <param name="animation">The id of the animation.</param>
 		/// <returns>Name of the animation.</returns>
 		private string GetAnimationName(AnimationId animation) {
-			switch (animation) {
-				case AnimationId.Idle: return "fat_standing";
-				case AnimationId.Walking: return "fat_walk";
-			}
-			return "";
+			return AnimationNames[(int)animation];
 		}
 
 		/// <summary>
@@ -177,12 +183,15 @@ namespace MSCMP.Network {
 				return;
 			}
 
+			string animName = GetAnimationName(animation);
 			if (force) {
-				characterAnimationComponent.Play(GetAnimationName(animation));
+				characterAnimationComponent.Play(animName);
 			}
 			else {
-				characterAnimationComponent.CrossFade(GetAnimationName(animation));
+				characterAnimationComponent.CrossFade(animName);
 			}
+
+			activeAnimationState = characterAnimationComponent[animName];
 		}
 
 		/// <summary>
@@ -200,17 +209,23 @@ namespace MSCMP.Network {
 					Vector3 oldPos = currentPos;
 					currentPos = Vector3.Lerp(sourcePos, targetPos, progress);
 					currentRot = Quaternion.Slerp(sourceRot, targetRot, progress);
-					speed = (currentPos - oldPos).magnitude;
+					Vector3 delta = (currentPos - oldPos);
+					delta.y = 0.0f;
+					speed = delta.magnitude;
 
 					characterGameObject.transform.position = currentPos + CHARACTER_OFFSET;
 					characterGameObject.transform.rotation = currentRot;
 				}
 
 				if (speed > 0.001f) {
-					PlayAnimation(AnimationId.Walking);
+					PlayAnimation(AnimationId.Walk);
+
+					// Set speed of the animation according to the speed of movement.
+
+					activeAnimationState.speed = (speed * 60.0f) / activeAnimationState.length;
 				}
 				else {
-					PlayAnimation(AnimationId.Idle);
+					PlayAnimation(AnimationId.Standing);
 				}
 			}
 		}
@@ -224,7 +239,9 @@ namespace MSCMP.Network {
 			GUI.Label(new Rect(300, 200, 300, 200), "Remote player\ncurrentPos = " + currentPos.ToString() + "\n" +
 				"sourcePos = " + sourcePos.ToString() + "\n" +
 				"targetPos =  " + targetPos.ToString() + "\n" +
-				"progress =  " + progress + "\n"
+				"progress =  " + progress + "\n" +
+				"anim = " + currentAnim + "\n" +
+				"animSpeed = " + activeAnimationState.speed + "\n"
 			);
 		}
 #endif
