@@ -1,5 +1,9 @@
 #include <Windows.h>
 #include <stdio.h>
+#include <assert.h>
+
+#define VERSION_SAFE_STEAM_API_INTERFACES
+#include "steam_api.h"
 
 /**
  * Inject DLL into process.
@@ -51,6 +55,39 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
 	return true;
 }
 
+//! Steam api wrapper.
+struct SteamWrapper
+{
+	CSteamAPIContext *context;
+
+	SteamWrapper(void)
+		: context(nullptr)
+	{
+	}
+
+	bool Init(void)
+	{
+		if (!SteamAPI_IsSteamRunning()) {
+			MessageBox(NULL, "To run Saints Row The Third Multiplayer your Steam client must be running.", "Fatal error", MB_ICONERROR);
+			return false;
+		}
+
+		assert(SteamAPI_InitSafe());
+
+		context = new CSteamAPIContext();
+		context->Init();
+		return true;
+	}
+
+	~SteamWrapper(void)
+	{
+		if (context) {
+			delete context;
+			context = nullptr;
+		}
+	}
+};
+
 /**
  * Launcher entry point.
  *
@@ -58,16 +95,21 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
  */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	char installFolder[MAX_PATH] = { 0 };
-
-	FILE *pathFile = fopen("path.txt", "r");
-	if (!pathFile) {
-		MessageBox(NULL, "Failed to open path.txt file.\nCreate it next to the launcher and put there in first line path to the my summer car.", "Fatal error", MB_ICONERROR);
-		return ERROR;
+	SteamWrapper steam;
+	if (!steam.Init()) {
+		return 0;
 	}
 
-	fread(installFolder, 1, MAX_PATH, pathFile);
-	fclose(pathFile);
+	ISteamApps *const steamApps = steam.context->SteamApps();
+	const AppId_t appid = 516750;
+
+	if (!steamApps->BIsAppInstalled(appid)) {
+		MessageBox(NULL, "To run My Summer Car Multiplayer you need to have installed Saints Row The Third game.", "Fatal error", MB_ICONERROR);
+		return 0;
+	}
+
+	char installFolder[MAX_PATH] = { 0 };
+	steamApps->GetAppInstallDir(appid, installFolder, MAX_PATH);
 
 	const char ExecutableName[] = "mysummercar.exe";
 

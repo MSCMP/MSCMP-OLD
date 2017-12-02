@@ -52,6 +52,8 @@ Source: "..\..\bin\Release\System.Windows.Forms.dll"; DestDir: "{app}\bin\Releas
 Source: "..\..\bin\Release\UnityEngine.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\UnityEngine.UI.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\UnityScript.Lang.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
+Source: "..\..\bin\Release\steam_api.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
+Source: "..\..\bin\Release\steam_appid.txt"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 
 Source: "..\..\data\mpdata"; DestDir: "{app}\data"; Flags: ignoreversion
 
