@@ -10,7 +10,7 @@ namespace MSCMP {
 		public delegate void PrintInfo(int level, string data);
 
 		public static void PrintTransformTree(Transform trans, int level, PrintInfo print) {
-			print(level, "> " + trans.name);
+			print(level, "> " + trans.name + " (" + trans.GetInstanceID() + ")");
 
 			Component[] components = trans.GetComponents<Component>();
 			foreach (Component component in components) {
@@ -121,5 +121,22 @@ namespace MSCMP {
 			return null;
 		}
 
+
+		public static Network.Messages.Vector3Message GameVec3ToNet(Vector3 v3) {
+			var msg = new Network.Messages.Vector3Message();
+			msg.x = v3.x;
+			msg.y = v3.y;
+			msg.z = v3.z;
+			return msg;
+		}
+
+
+		public static Vector3 NetVec3ToGame(Network.Messages.Vector3Message msg) {
+			var vec = new Vector3();
+			vec.x = msg.x;
+			vec.y = msg.y;
+			vec.z = msg.z;
+			return vec;
+		}
 	}
 }
