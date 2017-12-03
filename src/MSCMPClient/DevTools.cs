@@ -9,7 +9,6 @@ namespace MSCMP {
 	/// Development tools.
 	/// </summary>
 	class DevTools {
-		Vector2 scrollViewVector = new Vector2();
 		Texture2D fillText = new Texture2D(1, 1);
 
 		bool devView = false;
@@ -33,9 +32,6 @@ namespace MSCMP {
 					}
 				}
 
-				//if (go.transform.parent != null) {
-				//	continue;
-				//}
 				Vector3 pos = Camera.main.WorldToScreenPoint(go.transform.position);
 				if (pos.z < 0.0f) {
 					continue;
@@ -43,34 +39,6 @@ namespace MSCMP {
 
 
 				GUI.Label(new Rect(pos.x, Screen.height - pos.y, 500, 20), go.name);
-			}
-
-			if (spawnedGo) {
-				Transform trans = spawnedGo.GetComponent<Transform>();
-				string parentName = trans.parent != null ? trans.parent.name : "(no parent)";
-				if (Utils.GetPlaymakerScriptByName(spawnedGo, "LOD")) {
-					parentName += " has lod";
-				}
-				GUI.Label(new Rect(1, 50, 500, 20), "spawnedGo pos: " + trans.position.ToString() + " " + parentName);
-			}
-
-			if (localPlayer != null) {
-				Transform trans = localPlayer.GetComponent<Transform>();
-
-				GUI.Label(new Rect(1, 30, 500, 20), "Character pos: " + trans.position.ToString());
-
-				GUI.backgroundColor = Color.red;
-				scrollViewVector = GUI.BeginScrollView(new Rect(1, 40, 500, 300), scrollViewVector, new Rect(0, 0, 500, 7000));
-				int index = 0;
-				GUI.color = Color.white;
-				Utils.PrintTransformTree(trans, 0, (int level, string text) => {
-					GUI.Label(new Rect(level * 10, index * 18, 500, 20), text);
-					index++;
-				});
-				GUI.EndScrollView();
-
-				GUI.color = new Color(0.0f, 0.0f, 0.0f, 0.5f);
-				GUI.DrawTexture(new Rect(1, 40, 500, 300), fillText, ScaleMode.StretchToFill, true);
 			}
 		}
 
