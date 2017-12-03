@@ -65,6 +65,9 @@
     <Compile Include="Game\GameDoorsManager.cs" />
     <Compile Include="Game\GameWorld.cs" />
     <Compile Include="Game\Objects\GameDoor.cs" />
+    <Compile Include="Math\QuaternionInterpolator.cs" />
+    <Compile Include="Math\TransformInterpolator.cs" />
+    <Compile Include="Math\Vector3Interpolator.cs" />
     <Compile Include="MPController.cs" />
     <Compile Include="Network\INetMessage.cs" />
     <Compile Include="Network\NetLocalPlayer.cs" />
