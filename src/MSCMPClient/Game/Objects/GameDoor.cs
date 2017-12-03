@@ -62,7 +62,7 @@ namespace MSCMP.Game.Objects {
 			go = gameObject;
 			fsm = Utils.GetPlaymakerScriptByName(go, "Use");
 			if (fsm.Fsm.HasEvent(OPEN_EVENT_NAME)) {
-				MPController.logFile.WriteLine("Failed to hook game door " + go.name + ". It is already hooked.");
+				Logger.Log("Failed to hook game door " + go.name + ". It is already hooked.");
 				return;
 			}
 

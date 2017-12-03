@@ -25,11 +25,6 @@ namespace MSCMP {
 #endif
 
 		/// <summary>
-		/// The file used for logging. TODO: Proper logger.
-		/// </summary>
-		public static StreamWriter logFile = new StreamWriter(Client.GetPath("clientLog.txt"), false);
-
-		/// <summary>
 		/// Object managing whole networking.
 		/// </summary>
 		NetManager netManager = null;
@@ -83,11 +78,8 @@ namespace MSCMP {
 		}
 
 		void Start() {
-			logFile.AutoFlush = true;
-
 			string assetBundlePath = Client.GetPath("../../data/mpdata");
 			if (!File.Exists(assetBundlePath)) {
-				logFile.WriteLine("Cannot find mpdata asset bundle.");
 				Process.GetCurrentProcess().Kill();
 				return;
 			}
@@ -98,7 +90,7 @@ namespace MSCMP {
 
 			DontDestroyOnLoad(this.gameObject);
 
-			netManager = new NetManager(logFile);
+			netManager = new NetManager();
 
 			modLogo = LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
 		}
@@ -245,8 +237,6 @@ namespace MSCMP {
 #endif
 			}
 			catch (Exception e) {
-				logFile.WriteLine("Exception during update: " + e.Message);
-				logFile.WriteLine(e.StackTrace);
 				Application.Quit();
 			}
 		}

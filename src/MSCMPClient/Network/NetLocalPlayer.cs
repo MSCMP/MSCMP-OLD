@@ -30,16 +30,12 @@ namespace MSCMP.Network {
 				Messages.OpenDoorsMessage msg = new Messages.OpenDoorsMessage();
 				msg.open = true;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
-
-				MPController.logFile.WriteLine("OPEN");
 			};
 
 			GameDoorsManager.Instance.onDoorsClose = () => {
 				Messages.OpenDoorsMessage msg = new Messages.OpenDoorsMessage();
 				msg.open = false;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
-
-				MPController.logFile.WriteLine("CLOSE");
 			};
 		}
 

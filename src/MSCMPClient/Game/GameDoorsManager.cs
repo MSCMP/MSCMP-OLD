@@ -87,7 +87,7 @@ namespace MSCMP.Game {
 					};
 					doors.Add(door);
 
-					MPController.logFile.WriteLine("Registered doors " + go.name);
+					Logger.Log("Registered doors " + go.name);
 				}
 			}
 		}

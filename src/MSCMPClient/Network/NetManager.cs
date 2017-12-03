@@ -10,9 +10,6 @@ namespace MSCMP.Network {
 		private Steamworks.Callback<Steamworks.P2PSessionRequest_t> p2pSessionRequestCallback = null;
 		private Steamworks.CallResult<Steamworks.LobbyCreated_t> lobbyCreatedCallResult = null;
 		private Steamworks.CallResult<Steamworks.LobbyEnter_t> lobbyEnterCallResult = null;
-
-		private StreamWriter logFile = null;
-
 		public enum Mode {
 			None,
 			Host,
@@ -94,9 +91,7 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		/// <param name="logFile">The log file used for logging.</param>
-		public NetManager(StreamWriter logFile) {
-			this.logFile = logFile;
+		public NetManager() {
 			this.netManagerCreationTime = DateTime.UtcNow;
 
 			// Setup local player.
@@ -104,7 +99,7 @@ namespace MSCMP.Network {
 
 			p2pSessionRequestCallback = Steamworks.Callback<Steamworks.P2PSessionRequest_t>.Create((Steamworks.P2PSessionRequest_t result) => {
 				if (!Steamworks.SteamNetworking.AcceptP2PSessionWithUser(result.m_steamIDRemote)) {
-					logFile.WriteLine("Accepted p2p session with " + result.m_steamIDRemote.ToString());
+					Logger.Log("Accepted p2p session with " + result.m_steamIDRemote.ToString());
 				}
 			});
 
@@ -112,11 +107,11 @@ namespace MSCMP.Network {
 
 			lobbyCreatedCallResult = new Steamworks.CallResult<Steamworks.LobbyCreated_t>((Steamworks.LobbyCreated_t result, bool ioFailure) => {
 				if (result.m_eResult != Steamworks.EResult.k_EResultOK) {
-					logFile.WriteLine("Oh my fucking god i failed to create a lobby for you. Please forgive me. (result: " + result.m_eResult + ")");
+					Logger.Log("Oh my fucking god i failed to create a lobby for you. Please forgive me. (result: " + result.m_eResult + ")");
 					return;
 				}
 
-				logFile.WriteLine("Hey you! I have lobby id for you! " + result.m_ulSteamIDLobby);
+				Logger.Log("Hey you! I have lobby id for you! " + result.m_ulSteamIDLobby);
 
 				mode = Mode.Host;
 				state = State.Playing;
@@ -125,13 +120,13 @@ namespace MSCMP.Network {
 
 			lobbyEnterCallResult = new Steamworks.CallResult<Steamworks.LobbyEnter_t>((Steamworks.LobbyEnter_t result, bool ioFailure) => {
 				if (result.m_EChatRoomEnterResponse != (uint)Steamworks.EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess) {
-					logFile.WriteLine("Oh my fucking god i failed to join the lobby for you. Please forgive me. (reponse: " + result.m_EChatRoomEnterResponse + ")");
+					Logger.Log("Oh my fucking god i failed to join the lobby for you. Please forgive me. (reponse: " + result.m_EChatRoomEnterResponse + ")");
 
 					players[1] = null;
 					return;
 				}
 
-				logFile.WriteLine("Oh hello! " + result.m_ulSteamIDLobby);
+				Logger.Log("Oh hello! " + result.m_ulSteamIDLobby);
 
 				mode = Mode.Player;
 				state = State.LoadingGameWorld;
@@ -149,7 +144,7 @@ namespace MSCMP.Network {
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
 				if (players[1] == null) {
-					logFile.WriteLine("Received synchronization packet but no remote player is currently connected.");
+					Logger.Log("Received synchronization packet but no remote player is currently connected.");
 					return;
 				}
 
@@ -179,7 +174,7 @@ namespace MSCMP.Network {
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
 				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(players[1].currentPos);
 				if (doors == null) {
-					MPController.logFile.WriteLine("Player tried to open doors however he is not close to any: " + players[1].currentPos);
+					Logger.Log("Player tried to open doors however he is not close to any: " + players[1].GetPosition());
 					return;
 				}
 				doors.Open(msg.open);
@@ -187,7 +182,7 @@ namespace MSCMP.Network {
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.FullWorldSyncMessage msg) => {
 				if (msg.doorsPosition.Length != msg.doorsOpen.Length) {
-					MPController.logFile.WriteLine("Malformed full world sync - doors arrays mismatch");
+					Logger.Log("Malformed full world sync - doors arrays mismatch");
 					Disconnect();
 					return;
 				}
@@ -195,7 +190,7 @@ namespace MSCMP.Network {
 				for (int i = 0; i < msg.doorsOpen.Length; ++i) {
 					Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.doorsPosition[i]));
 					if (doors == null) {
-						MPController.logFile.WriteLine("Unable to find doors at: " + players[1].currentPos);
+						Logger.Log("Unable to find doors at: " + doors.Position);
 						return;
 					}
 
@@ -247,7 +242,7 @@ namespace MSCMP.Network {
 
 			messageHandlers.Add(message.MessageId, (Steamworks.CSteamID sender, BinaryReader reader) => {
 				if (! message.Read(reader)) {
-					logFile.WriteLine("Failed to read network message " + message.MessageId + " received from " + sender.ToString());
+					Logger.Log("Failed to read network message " + message.MessageId + " received from " + sender.ToString());
 					return;
 				}
 				Handler(sender, message);
@@ -271,7 +266,7 @@ namespace MSCMP.Network {
 
 			writer.Write((byte)message.MessageId);
 			if (! message.Write(writer)) {
-				logFile.WriteLine("Failed to write network message " + message.MessageId);
+				Logger.Log("Failed to write network message " + message.MessageId);
 				return false;
 			}
 
@@ -286,11 +281,11 @@ namespace MSCMP.Network {
 		private void OnGameLobbyJoinRequested(Steamworks.GameLobbyJoinRequested_t request) {
 			Steamworks.SteamAPICall_t apiCall = Steamworks.SteamMatchmaking.JoinLobby(request.m_steamIDLobby);
 			if (apiCall == Steamworks.SteamAPICall_t.Invalid) {
-				logFile.WriteLine("Unable to join lobby.");
+				Logger.Log("Unable to join lobby.");
 				return;
 			}
 
-			logFile.WriteLine("Setup player.");
+			Logger.Log("Setup player.");
 
 			// Setup remote player. The HOST.
 			timeSinceLastHeartbeat = 0.0f;
@@ -304,13 +299,13 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <returns>true if lobby setup request was properly sent, false otherwise</returns>
 		public bool SetupLobby() {
-			logFile.WriteLine("Setting up lobby.");
+			Logger.Log("Setting up lobby.");
 			Steamworks.SteamAPICall_t apiCall = Steamworks.SteamMatchmaking.CreateLobby(Steamworks.ELobbyType.k_ELobbyTypeFriendsOnly, MAX_PLAYERS);
 			if (apiCall == Steamworks.SteamAPICall_t.Invalid) {
-				logFile.WriteLine("Unable to create lobby.");
+				Logger.Log("Unable to create lobby.");
 				return false;
 			}
-			logFile.WriteLine("Waiting for lobby create reply..");
+			Logger.Log("Waiting for lobby create reply..");
 			lobbyCreatedCallResult.Set(apiCall);
 			return true;
 		}
@@ -323,7 +318,7 @@ namespace MSCMP.Network {
 			currentLobbyId = Steamworks.CSteamID.Nil;
 			mode = Mode.None;
 			state = State.Idle;
-			logFile.WriteLine("Left lobby.");
+			Logger.Log("Left lobby.");
 		}
 
 		/// <summary>
@@ -414,7 +409,7 @@ namespace MSCMP.Network {
 			uint size = 0;
 			while (Steamworks.SteamNetworking.IsP2PPacketAvailable(out size)) {
 				if (size == 0) {
-					logFile.WriteLine("Received empty p2p packet");
+					Logger.Log("Received empty p2p packet");
 					continue;
 				}
 
@@ -431,12 +426,12 @@ namespace MSCMP.Network {
 				// TODO: Joining of the messages if are split?
 
 				if (msgSize != size || msgSize == 0) {
-					logFile.WriteLine("Invalid packet size");
+					Logger.Log("Invalid packet size");
 					continue;
 				}
 
 				if (players[1] != null && players[1].SteamId != senderSteamId) {
-					logFile.WriteLine("Received network message from user that is not in the session. (" + senderSteamId + ")");
+					Logger.Log("Received network message from user that is not in the session. (" + senderSteamId + ")");
 					continue;
 				}
 
@@ -505,7 +500,7 @@ namespace MSCMP.Network {
 		private void HandleHandshake(Steamworks.CSteamID senderSteamId) {
 			if (IsHost) {
 				if (players[1] != null) {
-					logFile.WriteLine("Received handshake from player but player is already here.");
+					Logger.Log("Received handshake from player but player is already here.");
 					LeaveLobby();
 					return;
 				}
@@ -525,12 +520,12 @@ namespace MSCMP.Network {
 			}
 			else {
 				if (players[1] == null) {
-					logFile.WriteLine("Received handshake from host but host is not here.");
+					Logger.Log("Received handshake from host but host is not here.");
 					LeaveLobby();
 					return;
 				}
 
-				logFile.WriteLine("CONNECTION ESTABLISHED!");
+				Logger.Log("CONNECTION ESTABLISHED!");
 
 				MPController.Instance.LoadLevel("GAME");
 

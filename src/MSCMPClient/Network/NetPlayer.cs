@@ -119,7 +119,7 @@ namespace MSCMP.Network {
 				if (fsm != null) {
 					GameObject.Destroy(fsm);
 
-					MPController.logFile.WriteLine("REMOVED " + name + " FSM!");
+					Logger.Log("REMOVED " + name + " FSM!");
 				}
 			};
 

@@ -147,9 +147,9 @@ namespace MSCMP {
 				});
 
 				string SanitizedName = go.name;
-				MPController.logFile.WriteLine(SanitizedName);
+				Logger.Log(SanitizedName);
 				SanitizedName = SanitizedName.Replace(@"\", "_SLASH_");
-				MPController.logFile.WriteLine(SanitizedName);
+				Logger.Log(SanitizedName);
 				string dumpFilePath = Client.GetPath("WorldDump/" + SanitizedName + ".txt");
 
 				try {

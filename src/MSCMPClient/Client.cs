@@ -13,6 +13,7 @@ namespace MSCMP
 		/// Starts the mod. Called from Injector.
 		/// </summary>
 		public static void Start() {
+			Logger.SetAutoFlush(true);
 			GameObject go = new GameObject("Multiplayer Controller");
 			go.AddComponent<MPController>();
 		}
