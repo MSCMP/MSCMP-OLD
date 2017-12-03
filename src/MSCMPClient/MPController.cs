@@ -257,7 +257,7 @@ namespace MSCMP {
 		/// <typeparam name="T">The type of the asset to load.</typeparam>
 		/// <param name="name">The name of the asset to load.</param>
 		/// <returns>Loaded asset.</returns>
-		T LoadAsset<T>(string name) where T : UnityEngine.Object {
+		public T LoadAsset<T>(string name) where T : UnityEngine.Object {
 			return assetBundle.LoadAsset<T>(name);
 		}
 
