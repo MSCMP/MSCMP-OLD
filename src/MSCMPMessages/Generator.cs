@@ -25,6 +25,17 @@ namespace MSCMPMessages {
 			return Convert.ChangeType(Enum.Parse(enumType, valueName), underlyingType).ToString();
 		}
 
+		private string GetTypeName(Type type) {
+			if (type.Namespace == "MSCMPMessages.Messages") {
+				return type.Name;
+			}
+			return type.FullName;
+		}
+
+		private bool IsNetworkMessage(Type type) {
+			return type.Namespace == "MSCMPMessages.Messages" && type.IsClass;
+		}
+
 		public void GenerateEnum(Type enumType) {
 
 			if (!enumType.IsEnum) {
@@ -91,9 +102,11 @@ namespace MSCMPMessages {
 				BeginBlock("public " + messageType.Name + "()");
 				{
 					foreach (FieldInfo field in fields) {
-						Type fieldType = field.FieldType;
-						if (fieldType.Namespace == "MSCMPMessages.Messages" && fieldType.IsClass) {
-							WriteLine(field.Name + " = new " + fieldType.Name + "();");
+						if (field.FieldType.IsArray) {
+							WriteLine(field.Name + " = null;");
+						}
+						else if (IsNetworkMessage(field.FieldType)) {
+							WriteLine(field.Name + " = new " + GetTypeName(field.FieldType) + "();");
 						}
 					}
 				}
@@ -105,13 +118,7 @@ namespace MSCMPMessages {
 				// All fields in network messages are made public.
 
 				foreach (FieldInfo field in fields) {
-					Type fieldType = field.FieldType;
-					string fieldTypeName = fieldType.FullName;
-					if (fieldType.Namespace == "MSCMPMessages.Messages") {
-						fieldTypeName = fieldType.Name;
-					}
-
-					WriteLine("public " + fieldTypeName + "\t" + field.Name + ";");
+					WriteLine("public " + GetTypeName(field.FieldType) + "\t" + field.Name + ";");
 				}
 
 				WriteNewLine();
@@ -123,20 +130,7 @@ namespace MSCMPMessages {
 					BeginBlock("try");
 					{
 						foreach (FieldInfo field in fields) {
-							Type fieldType = field.FieldType;
-							if (fieldType.IsEnum) {
-								WriteLine("writer.Write((" + fieldType.GetEnumUnderlyingType().FullName + ")" + field.Name + ");");
-							}
-							else if (fieldType.Namespace == "MSCMPMessages.Messages") {
-								BeginBlock("if (!" + field.Name + ".Write(writer))");
-								{
-									WriteLine("return false;");
-								}
-								EndBlock();
-							}
-							else {
-								WriteLine("writer.Write((" + fieldType.FullName + ")" + field.Name + ");");
-							}
+							WriteTypeWrite(field.FieldType, field.Name);
 						}
 
 						WriteLine("return true;");
@@ -157,29 +151,7 @@ namespace MSCMPMessages {
 					BeginBlock("try");
 					{
 						foreach (FieldInfo field in fields) {
-							Type fieldType = field.FieldType;
-							if (fieldType.IsEnum) {
-								string valueVarName = "_" + field.Name + "Value";
-								Type enumUnderlayingType = fieldType.GetEnumUnderlyingType();
-								WriteLine(enumUnderlayingType.FullName + " " + valueVarName + " = reader.Read" + enumUnderlayingType.Name + "();");
-								BeginBlock("if (!" + fieldType.Name + "Helpers.IsValueValid(" + valueVarName + "))");
-								{
-									WriteLine("return false;");
-								}
-								EndBlock();
-
-								WriteLine(field.Name + " = (" + fieldType.Name + ")" + valueVarName + ";");
-							}
-							else if (fieldType.Namespace == "MSCMPMessages.Messages") {
-								BeginBlock("if (!" + field.Name + ".Read(reader))");
-								{
-									WriteLine("return false;");
-								}
-								EndBlock();
-							}
-							else {
-								WriteLine(field.Name + " = reader.Read" + fieldType.Name + "();");
-							}
+							WriteTypeRead(field.FieldType, field.Name);
 						}
 
 						WriteLine("return true;");
@@ -196,9 +168,76 @@ namespace MSCMPMessages {
 			EndBlock();
 		}
 
+		private void WriteTypeWrite(Type type, string name) {
+			if (type.IsArray) {
+				WriteLine("writer.Write((System.Int32)" + name + ".Length);");
+
+				Type elementType = type.GetElementType();
+				BeginBlock("foreach (" + GetTypeName(elementType) + " value in " + name + ")");
+				{
+					WriteTypeWrite(elementType, "value");
+				}
+				EndBlock();
+			}
+			else if (type.IsEnum) {
+				WriteLine("writer.Write((" + type.GetEnumUnderlyingType().FullName + ")" + name + ");");
+			}
+			else if (IsNetworkMessage(type)) {
+				BeginBlock("if (!" + name + ".Write(writer))");
+				{
+					WriteLine("return false;");
+				}
+				EndBlock();
+			}
+			else {
+				WriteLine("writer.Write((" + type.FullName + ")" + name + ");");
+			}
+		}
+
+		private void WriteTypeRead(Type type, string name) {
+			if (type.IsArray) {
+				string lenVarName = name + "Length";
+				WriteLine("System.Int32 " + lenVarName +" = reader.ReadInt32();");
+				Type elementType = type.GetElementType();
+				WriteLine(name + " = new " + GetTypeName(elementType) + "[" + lenVarName + "];");
+
+				BeginBlock("for (int i = 0 ; i < " + lenVarName + "; ++i)");
+				{
+					if (elementType.IsClass) {
+						WriteLine(name + "[i] = new " + GetTypeName(elementType) + "();");
+					}
+					WriteTypeRead(elementType, name + "[i]");
+				}
+				EndBlock();
+			}
+			else if (type.IsEnum) {
+				string valueVarName = "_" + name + "Value";
+				Type enumUnderlayingType = type.GetEnumUnderlyingType();
+				WriteLine(enumUnderlayingType.FullName + " " + valueVarName + " = reader.Read" + enumUnderlayingType.Name + "();");
+				BeginBlock("if (!" + name + "Helpers.IsValueValid(" + valueVarName + "))");
+				{
+					WriteLine("return false;");
+				}
+				EndBlock();
+
+				WriteLine(name + " = (" + GetTypeName(type) + ")" + valueVarName + ";");
+			}
+			else if (IsNetworkMessage(type)) {
+				BeginBlock("if (!" + name + ".Read(reader))");
+				{
+					WriteLine("return false;");
+				}
+				EndBlock();
+			}
+			else {
+				WriteLine(name + " = reader.Read" + type.Name + "();");
+			}
+		}
+
 		private void WriteHeader() {
 			WriteLine("// Generated at " + DateTime.Now.ToString());
 			WriteLine("using System.IO;");
+			WriteLine("using System.Collections.Generic;");
 
 			BeginBlock("namespace MSCMP.Network.Messages");
 		}
