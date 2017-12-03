@@ -254,5 +254,18 @@ namespace MSCMP {
 		T LoadAsset<T>(string name) where T : UnityEngine.Object {
 			return assetBundle.LoadAsset<T>(name);
 		}
+
+		/// <summary>
+		/// Wrapper around unitys load level method to call OnLevelSwitch even if level is the same.
+		/// </summary>
+		/// <param name="levelName">The name of the level to load.</param>
+		public void LoadLevel(string levelName) {
+			if (currentLevelName == levelName) {
+				OnLevelSwitch(levelName);
+				return;
+			}
+
+			Application.LoadLevel(levelName);
+		}
 	}
 }

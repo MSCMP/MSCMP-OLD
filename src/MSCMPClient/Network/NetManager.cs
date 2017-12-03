@@ -316,7 +316,7 @@ namespace MSCMP.Network {
 			if (IsPlayer) {
 				LeaveLobby();
 
-				Application.LoadLevel("MainMenu");
+				MPController.Instance.LoadLevel("MainMenu");
 			}
 		}
 
@@ -469,12 +469,7 @@ namespace MSCMP.Network {
 
 				logFile.WriteLine("CONNECTION ESTABLISHED!");
 
-				if (Application.loadedLevelName == "GAME") {
-					OnGameWorldLoad();
-				}
-				else {
-					Application.LoadLevel("GAME");
-				}
+				MPController.Instance.LoadLevel("GAME");
 
 				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
