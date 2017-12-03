@@ -3,7 +3,6 @@
 		static void Main(string[] args) {
 			Generator generator = new Generator(@"..\..\src\MSCMPClient\Network\NetMessages.generated.cs");
 
-
 			generator.GenerateMessage(typeof(Messages.QuaternionMessage));
 			generator.GenerateMessage(typeof(Messages.Vector3Message));
 
@@ -16,6 +15,10 @@
 
 			generator.GenerateMessage(typeof(Messages.AskForWorldStateMessage));
 			generator.GenerateMessage(typeof(Messages.FullWorldSyncMessage));
+
+			generator.GenerateMessage(typeof(Messages.VehicleEnterMessage));
+			generator.GenerateMessage(typeof(Messages.VehicleLeaveMessage));
+			generator.GenerateMessage(typeof(Messages.VehicleSyncMessage));
 
 			generator.EndGeneration();
 		}

@@ -11,8 +11,11 @@ namespace MSCMPMessages.Messages {
 		HeartbeatResponse,
 		Disconnect,
 		PlayerSync,
+		VehicleSync,
 		OpenDoors,
 		FullWorldSync,
-		AskForWorldState
+		AskForWorldState,
+		VehicleEnter,
+		VehicleLeave
 	}
 }
