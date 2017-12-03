@@ -44,7 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Generator.cs" />
+    <Compile Include="Messages\AskForWorldStateMessage.cs" />
     <Compile Include="Messages\DisconnectMessage.cs" />
+    <Compile Include="Messages\FullWorldSyncMessage.cs" />
     <Compile Include="Messages\HandshakeMessage.cs" />
     <Compile Include="Messages\HeartbeatMessage.cs" />
     <Compile Include="Messages\HeartbeatResponseMessage.cs" />

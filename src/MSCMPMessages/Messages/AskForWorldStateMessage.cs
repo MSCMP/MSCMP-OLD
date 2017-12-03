@@ -5,14 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MSCMPMessages.Messages {
-	public enum MessageIds {
-		Handshake,
-		Heartbeat,
-		HeartbeatResponse,
-		Disconnect,
-		PlayerSync,
-		OpenDoors,
-		FullWorldSync,
-		AskForWorldState
+	[NetMessageDesc(MessageIds.AskForWorldState)]
+	class AskForWorldStateMessage {
 	}
 }

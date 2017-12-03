@@ -14,6 +14,9 @@
 			generator.GenerateMessage(typeof(Messages.PlayerSyncMessage));
 			generator.GenerateMessage(typeof(Messages.OpenDoorsMessage));
 
+			generator.GenerateMessage(typeof(Messages.AskForWorldStateMessage));
+			generator.GenerateMessage(typeof(Messages.FullWorldSyncMessage));
+
 			generator.EndGeneration();
 		}
 	}
