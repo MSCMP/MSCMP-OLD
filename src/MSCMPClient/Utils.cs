@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using HutongGames.PlayMaker;
+using System;
+using System.Reflection;
 
 namespace MSCMP {
 	/// <summary>
@@ -8,6 +10,24 @@ namespace MSCMP {
 	class Utils {
 
 		public delegate void PrintInfo(int level, string data);
+
+		private static void PrintPlayMakerActionDetails(int level, FsmStateAction rawAction, PrintInfo print) {
+			/*if (rawAction is SendEventByName) {
+				var action = (SendEventByName)rawAction;
+
+				print(level, "delay = " + action.delay.Value);
+				print(level, "eventTarget = " + ((action.eventTarget != null) ? action.eventTarget.fsmName.Value : "null"));
+				print(level, "everyFrame = " + action.everyFrame);
+				print(level, "sendEvent = " + action.sendEvent.Value);
+			}*/
+
+			Type type = rawAction.GetType();
+
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
+			foreach (var fi in fields) {
+				print(level, fi.Name + " = " + fi.GetValue(rawAction).ToString());
+			}
+		}
 
 		public static void PrintTransformTree(Transform trans, int level, PrintInfo print) {
 			print(level, "> " + trans.name + " (" + trans.GetInstanceID() + ")");
@@ -30,8 +50,6 @@ namespace MSCMP {
 						print(level + 2, "Global transition: " + t.EventName + " > " + t.ToState);
 					}
 
-
-
 					FsmState[] states = pmfsm.FsmStates;
 					foreach (FsmState s in states) {
 						print(level + 2, "State Name: " + s.Name);
@@ -40,8 +58,9 @@ namespace MSCMP {
 						}
 
 						try {
-							foreach (FsmStateAction a in s.ActionData.LoadActions(s)) {
-								print(level + 3, "Action Name: " + a.Name);
+							foreach (FsmStateAction a in s.Actions) {
+								print(level + 3, "Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
+								PrintPlayMakerActionDetails(level + 4, a, print);
 							}
 						}
 						catch {
@@ -137,6 +156,25 @@ namespace MSCMP {
 			vec.y = msg.y;
 			vec.z = msg.z;
 			return vec;
+		}
+
+		public static Network.Messages.QuaternionMessage GameQuatToNet(Quaternion q) {
+			var msg = new Network.Messages.QuaternionMessage();
+			msg.w = q.w;
+			msg.x = q.x;
+			msg.y = q.y;
+			msg.z = q.z;
+			return msg;
+		}
+
+
+		public static Quaternion NetQuatToGame(Network.Messages.QuaternionMessage msg) {
+			var q = new Quaternion();
+			q.w = msg.w;
+			q.x = msg.x;
+			q.y = msg.y;
+			q.z = msg.z;
+			return q;
 		}
 	}
 }
