@@ -13,24 +13,34 @@ namespace MSCMP.Network {
 
 		private StreamWriter logFile = null;
 
-		public enum State {
-			Idle,
+		public enum Mode {
+			None,
 			Host,
 			Player
 		}
 
-		private State state;
+		public enum State {
+			Idle,
+			CreatingLobby,
+			LoadingGameWorld,
+			Playing
+		}
+
+		private State state = State.Idle;
+		private Mode mode = Mode.None;
 
 		public bool IsHost {
-			get { return state == State.Host; }
+			get { return mode == Mode.Host; }
 		}
 		public bool IsPlayer {
-			get { return state == State.Player; }
+			get { return mode == Mode.Player; }
 		}
 		public bool IsOnline {
-			get { return state != State.Idle; }
+			get { return mode != Mode.None; }
 		}
-
+		public bool IsPlaying {
+			get { return state == State.Playing;  }
+		}
 		private Steamworks.CSteamID currentLobbyId = Steamworks.CSteamID.Nil;
 
 		private NetPlayer[] players = new NetPlayer[MAX_PLAYERS];
@@ -88,7 +98,6 @@ namespace MSCMP.Network {
 		public NetManager(StreamWriter logFile) {
 			this.logFile = logFile;
 			this.netManagerCreationTime = DateTime.UtcNow;
-			state = State.Idle;
 
 			// Setup local player.
 			players[0] = new NetLocalPlayer(this, Steamworks.SteamUser.GetSteamID());
@@ -109,7 +118,8 @@ namespace MSCMP.Network {
 
 				logFile.WriteLine("Hey you! I have lobby id for you! " + result.m_ulSteamIDLobby);
 
-				state = State.Host;
+				mode = Mode.Host;
+				state = State.Playing;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
 			});
 
@@ -123,7 +133,8 @@ namespace MSCMP.Network {
 
 				logFile.WriteLine("Oh hello! " + result.m_ulSteamIDLobby);
 
-				state = State.Player;
+				mode = Mode.Player;
+				state = State.LoadingGameWorld;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
 
 				Messages.HandshakeMessage message = new Messages.HandshakeMessage();
@@ -166,8 +177,55 @@ namespace MSCMP.Network {
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
+				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(players[1].currentPos);
+				if (doors == null) {
+					MPController.logFile.WriteLine("Player tried to open doors however he is not close to any: " + players[1].currentPos);
+					return;
+				}
+				doors.Open(msg.open);
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.FullWorldSyncMessage msg) => {
+				if (msg.doorsPosition.Length != msg.doorsOpen.Length) {
+					MPController.logFile.WriteLine("Malformed full world sync - doors arrays mismatch");
+					Disconnect();
+					return;
+				}
+
+				for (int i = 0; i < msg.doorsOpen.Length; ++i) {
+					Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.doorsPosition[i]));
+					if (doors == null) {
+						MPController.logFile.WriteLine("Unable to find doors at: " + players[1].currentPos);
+						return;
+					}
+
+					if (doors.IsOpen != msg.doorsOpen[i]) {
+						doors.Open(msg.doorsOpen[i]);
+					}
+				}
+
+				// World loaded we are playing!
+
+				state = State.Playing;
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.AskForWorldStateMessage msg) => {
 				NetLocalPlayer localPlayer = (NetLocalPlayer)players[0];
-				localPlayer.OpenDoors(msg.doorName, msg.open);
+
+				var worldSyncMsg = new Messages.FullWorldSyncMessage();
+
+				List<Game.Objects.GameDoor> doors = Game.GameDoorsManager.Instance.doors;
+				int doorsCount = doors.Count;
+				worldSyncMsg.doorsOpen = new bool[doorsCount];
+				worldSyncMsg.doorsPosition = new Messages.Vector3Message[doorsCount];
+
+				for (int i = 0; i < doorsCount; ++i) {
+					Game.Objects.GameDoor door = doors[i];
+					worldSyncMsg.doorsPosition[i] = Utils.GameVec3ToNet(door.Position);
+					worldSyncMsg.doorsOpen[i] = door.IsOpen;
+				}
+
+				BroadcastMessage(worldSyncMsg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			});
 		}
 
@@ -263,6 +321,7 @@ namespace MSCMP.Network {
 		private void LeaveLobby() {
 			Steamworks.SteamMatchmaking.LeaveLobby(currentLobbyId);
 			currentLobbyId = Steamworks.CSteamID.Nil;
+			mode = Mode.None;
 			state = State.Idle;
 			logFile.WriteLine("Left lobby.");
 		}
@@ -350,6 +409,8 @@ namespace MSCMP.Network {
 		/// Process incomming network messages.
 		/// </summary>
 		private void ProcessMessages() {
+
+
 			uint size = 0;
 			while (Steamworks.SteamNetworking.IsP2PPacketAvailable(out size)) {
 				if (size == 0) {
@@ -432,6 +493,8 @@ namespace MSCMP.Network {
 			debugPanel.y += 20.0f;
 			GUI.Label(debugPanel, "Remote clock: " + remoteClock);
 			debugPanel.y += 20.0f;
+			GUI.Label(debugPanel, "State: " + state);
+			debugPanel.y += 20.0f;
 		}
 #endif
 
@@ -492,6 +555,11 @@ namespace MSCMP.Network {
 
 			if (players[1] != null) {
 				players[1].Spawn();
+			}
+
+			if (IsPlayer) {
+				Messages.AskForWorldStateMessage msg = new Messages.AskForWorldStateMessage();
+				BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			}
 		}
 	}
