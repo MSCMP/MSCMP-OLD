@@ -69,6 +69,11 @@ namespace MSCMP {
 		/// </summary>
 		Texture2D modLogo = null;
 
+		/// <summary>
+		/// Game world manager object.
+		/// </summary>
+		GameWorld gameWorld = new GameWorld();
+
 		MPController() {
 			Instance = this;
 		}
@@ -105,6 +110,7 @@ namespace MSCMP {
 		void OnLevelSwitch(string newLevelName) {
 			if (newLevelName == "GAME") {
 				gameAnimDatabase.Rebuild();
+				gameWorld.OnLoad();
 
 				netManager.OnGameWorldLoad();
 			}
