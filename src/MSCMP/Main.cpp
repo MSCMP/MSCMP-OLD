@@ -68,7 +68,7 @@ struct SteamWrapper
 	bool Init(void)
 	{
 		if (!SteamAPI_IsSteamRunning()) {
-			MessageBox(NULL, "To run Saints Row The Third Multiplayer your Steam client must be running.", "Fatal error", MB_ICONERROR);
+			MessageBox(NULL, "To run My Summer Car Multiplayer your Steam client must be running.", "Fatal error", MB_ICONERROR);
 			return false;
 		}
 
