@@ -103,7 +103,7 @@ namespace MSCMPMessages {
 				{
 					foreach (FieldInfo field in fields) {
 						if (field.FieldType.IsArray) {
-							WriteLine(field.Name + " = null;");
+							WriteLine(field.Name + " = new " + GetTypeName(field.FieldType.GetElementType()) + "[0];");
 						}
 						else if (IsNetworkMessage(field.FieldType)) {
 							WriteLine(field.Name + " = new " + GetTypeName(field.FieldType) + "();");
