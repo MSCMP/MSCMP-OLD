@@ -75,12 +75,35 @@ namespace MSCMPMessages {
 			EndBlock();
 		}
 
+		private int CountOptionals(Type messageType) {
+			int optionals = 0;
+			foreach (FieldInfo field in fields) {
+
+				if (field.GetCustomAttribute<Optional>() != null) {
+					++optionals;
+				}
+			}
+			return optionals;
+		}
+
+		private bool hasOptionals = false;
+		private int optionalCounter = 0;
+		private FieldInfo[] fields = null;
+
 		public void GenerateMessage(Type messageType) {
 			var descriptor = messageType.GetCustomAttribute<NetMessageDesc>();
 			string interfaceName = "";
 			if (descriptor != null) {
 				interfaceName = ": INetMessage";
 			}
+
+			fields = messageType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+
+			int optionals = CountOptionals(messageType);
+			if (optionals > sizeof(Byte) * 8) {
+				throw new Exception("Too many optionals in single message. Currently we support up to 8 optionals per message.");
+			}
+			hasOptionals = optionals > 0;
 
 			BeginBlock("public class " + messageType.Name + interfaceName);
 			{
@@ -94,8 +117,6 @@ namespace MSCMPMessages {
 					EndBlock();
 					EndBlock();
 				}
-
-				FieldInfo[] fields = messageType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
 				// Write constructor.
 
@@ -114,23 +135,37 @@ namespace MSCMPMessages {
 
 				// Write fields.
 
+				if (hasOptionals) {
+					WriteLine("private byte optionalsMask = 0;");
+				}
 
 				// All fields in network messages are made public.
 
 				foreach (FieldInfo field in fields) {
-					WriteLine("public " + GetTypeName(field.FieldType) + "\t" + field.Name + ";");
+					string accessiblity = "public";
+					// Make optional attributes private.
+					if (field.GetCustomAttribute<Optional>() != null) {
+						accessiblity = "private";
+					}
+					WriteLine(accessiblity + " " + GetTypeName(field.FieldType) + "\t" + field.Name + ";");
 				}
 
 				WriteNewLine();
 
+
 				// Write method.
+				optionalCounter = 0;
 
 				BeginBlock("public bool Write(BinaryWriter writer)");
 				{
 					BeginBlock("try");
 					{
+						if (hasOptionals) {
+							WriteTypeWrite(typeof(Byte), "optionalsMask", false);
+						}
+
 						foreach (FieldInfo field in fields) {
-							WriteTypeWrite(field.FieldType, field.Name);
+							WriteTypeWrite(field.FieldType, field.Name, field.GetCustomAttribute<Optional>() != null);
 						}
 
 						WriteLine("return true;");
@@ -145,13 +180,18 @@ namespace MSCMPMessages {
 				EndBlock();
 
 				// Read method.
+				optionalCounter = 0;
 
 				BeginBlock("public bool Read(BinaryReader reader)");
 				{
 					BeginBlock("try");
 					{
+						if (hasOptionals) {
+							WriteTypeRead(typeof(Byte), "optionalsMask", false);
+						}
+
 						foreach (FieldInfo field in fields) {
-							WriteTypeRead(field.FieldType, field.Name);
+							WriteTypeRead(field.FieldType, field.Name, field.GetCustomAttribute<Optional>() != null);
 						}
 
 						WriteLine("return true;");
@@ -164,18 +204,34 @@ namespace MSCMPMessages {
 					EndBlock();
 				}
 				EndBlock();
+
+				if (hasOptionals) {
+					optionalCounter = 0;
+					WriteAccessors();
+				}
 			}
 			EndBlock();
+
+			// Cleanup the state of generator.
+
+			fields = null;
+			hasOptionals = false;
 		}
 
-		private void WriteTypeWrite(Type type, string name) {
+		private void WriteTypeWrite(Type type, string name, bool isOptional) {
+			if (isOptional) {
+				int mask = 1 << optionalCounter;
+				BeginBlock($"if ((optionalsMask & {mask}) != 0)");
+				++optionalCounter;
+			}
+
 			if (type.IsArray) {
 				WriteLine("writer.Write((System.Int32)" + name + ".Length);");
 
 				Type elementType = type.GetElementType();
 				BeginBlock("foreach (" + GetTypeName(elementType) + " value in " + name + ")");
 				{
-					WriteTypeWrite(elementType, "value");
+					WriteTypeWrite(elementType, "value", false);
 				}
 				EndBlock();
 			}
@@ -192,9 +248,19 @@ namespace MSCMPMessages {
 			else {
 				WriteLine("writer.Write((" + type.FullName + ")" + name + ");");
 			}
+
+			if (isOptional) {
+				EndBlock();
+			}
 		}
 
-		private void WriteTypeRead(Type type, string name) {
+		private void WriteTypeRead(Type type, string name, bool isOptional) {
+			if (isOptional) {
+				int mask = 1 << optionalCounter;
+				BeginBlock($"if ((optionalsMask & {mask}) != 0)");
+				++optionalCounter;
+			}
+
 			if (type.IsArray) {
 				string lenVarName = name + "Length";
 				WriteLine("System.Int32 " + lenVarName +" = reader.ReadInt32();");
@@ -206,7 +272,7 @@ namespace MSCMPMessages {
 					if (elementType.IsClass) {
 						WriteLine(name + "[i] = new " + GetTypeName(elementType) + "();");
 					}
-					WriteTypeRead(elementType, name + "[i]");
+					WriteTypeRead(elementType, name + "[i]", false);
 				}
 				EndBlock();
 			}
@@ -231,6 +297,10 @@ namespace MSCMPMessages {
 			}
 			else {
 				WriteLine(name + " = reader.Read" + type.Name + "();");
+			}
+
+			if (isOptional) {
+				EndBlock();
 			}
 		}
 
@@ -267,6 +337,60 @@ namespace MSCMPMessages {
 		private void EndBlock() {
 			identation = identation.Remove(identation.Length - 1);
 			WriteLine("}");
+		}
+
+		/// <summary>
+		/// Writes optionals accessors.
+		/// </summary>
+		private void WriteAccessors() {
+			foreach (var field in fields) {
+				if (field.GetCustomAttribute<Optional>() == null) {
+					continue;
+				}
+
+				WriteAccessorsForField(field);
+			}
+		}
+
+		/// <summary>
+		/// Write accessors for the following optional field.
+		/// </summary>
+		/// <param name="field">The field to write accessors for.</param>
+		private void WriteAccessorsForField(FieldInfo field) {
+			Type type = field.FieldType;
+			string rawName = field.Name;
+			string capitalizedName = rawName.Substring(0, 1).ToUpper() + rawName.Substring(1);
+
+			int fieldMask = (1 << optionalCounter);
+
+			BeginBlock($"public {GetTypeName(type)} {capitalizedName}");
+			{
+				BeginBlock("get");
+				{
+					WriteLine($"return {rawName};");
+				}
+				EndBlock();
+
+				BeginBlock("set");
+				{
+					WriteLine($"{rawName} = value;");
+					WriteLine($"optionalsMask |= {fieldMask};");
+				}
+				EndBlock();
+			}
+			EndBlock();
+
+			BeginBlock($"public bool Has{capitalizedName}");
+			{
+				BeginBlock("get");
+				{
+					WriteLine($"return (optionalsMask & {fieldMask}) != 0;");
+				}
+				EndBlock();
+			}
+			EndBlock();
+
+			optionalCounter++;
 		}
 	}
 }
