@@ -26,5 +26,28 @@ namespace MSCMP
 		public static string GetPath(string file) {
 			return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\" + file;
 		}
+
+		/// <summary>
+		/// Call this when fatal error occurs. This will print error into the log and close the game.
+		/// </summary>
+		/// <param name="message">The message to print to console.</param>
+		public static void FatalError(string message) {
+			Logger.Log(message);
+			Application.Quit();
+		}
+
+		/// <summary>
+		/// Standard assertion. If given condition is not true then prints message to the log and closes game.
+		/// </summary>
+		/// <param name="condition">Condition to chec.</param>
+		/// <param name="message">The message to print to console.</param>
+		public static void Assert(bool condition, string message) {
+			if (condition) {
+				return;
+			}
+			Logger.Log("[ASSERTION FAILED]");
+			Logger.Log(message);
+			Application.Quit();
+		}
 	}
 }
