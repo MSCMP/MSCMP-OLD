@@ -16,6 +16,7 @@ namespace MSCMP.Math {
 		public void SetTarget(Vector3 vec) {
 			source = current;
 			target = vec;
+			Evaluate(0.0f);
 		}
 
 		public void Teleport(Vector3 vec) {

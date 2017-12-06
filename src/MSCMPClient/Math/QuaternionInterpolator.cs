@@ -16,6 +16,7 @@ namespace MSCMP.Math {
 		public void SetTarget(Quaternion quat) {
 			source = current;
 			target = quat;
+			Evaluate(0.0f);
 		}
 
 		public void Teleport(Quaternion quat) {
