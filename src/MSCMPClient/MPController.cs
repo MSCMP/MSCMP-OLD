@@ -87,13 +87,21 @@ namespace MSCMP {
 		/// </summary>
 		/// <param name="newLevelName"></param>
 		void OnLevelSwitch(string newLevelName) {
+			if (currentLevelName == "GAME") {
+				gameWorld.OnUnload();
+			}
+
 			if (newLevelName == "GAME") {
 				gameAnimDatabase.Rebuild();
 				gameWorld.OnLoad();
 
 				netManager.OnGameWorldLoad();
+				return;
 			}
-			else if (newLevelName == "MainMenu") {
+
+			// When leaving game to main menu disconenct from the session.
+
+			if (currentLevelName == "GAME" && newLevelName == "MainMenu") {
 				if (netManager.IsOnline) {
 					netManager.Disconnect();
 				}
