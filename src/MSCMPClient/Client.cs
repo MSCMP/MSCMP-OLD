@@ -19,7 +19,6 @@ namespace MSCMP
 		/// </summary>
 		public static void Start() {
 			Logger.SetAutoFlush(true);
-			GameObject go = new GameObject("Multiplayer Controller");
 
 			string assetBundlePath = Client.GetPath("../../data/mpdata");
 			if (!File.Exists(assetBundlePath)) {
@@ -28,6 +27,11 @@ namespace MSCMP
 			}
 
 			assetBundle = AssetBundle.CreateFromFile(assetBundlePath);
+
+			var go = new GameObject("Multiplayer GUI Controller");
+			go.AddComponent<UI.MPGUI>();
+
+			go = new GameObject("Multiplayer Controller");
 			go.AddComponent<MPController>();
 		}
 
