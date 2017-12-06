@@ -108,6 +108,10 @@ namespace MSCMP.Network {
 			lobbyCreatedCallResult = new Steamworks.CallResult<Steamworks.LobbyCreated_t>((Steamworks.LobbyCreated_t result, bool ioFailure) => {
 				if (result.m_eResult != Steamworks.EResult.k_EResultOK) {
 					Logger.Log("Oh my fucking god i failed to create a lobby for you. Please forgive me. (result: " + result.m_eResult + ")");
+
+					MPGUI.Instance.ShowMessageBox("Failed to create lobby due to steam error.\n" + result.m_eResult, () => {
+						MPController.Instance.LoadLevel("MainMenu");
+					});
 					return;
 				}
 
@@ -168,7 +172,7 @@ namespace MSCMP.Network {
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.DisconnectMessage msg) => {
-				HandleDisconnect();
+				HandleDisconnect(false);
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
@@ -362,15 +366,22 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// Handle disconnect of the remote player.
 		/// </summary>
-		private void HandleDisconnect() {
+		/// <param name="timeout">Was the disconnect caused by timeout?</param>
+		private void HandleDisconnect(bool timeout) {
 			CleanupPlayer();
 
 			// Go to main menu if we are normal player - the session just closed.
 
 			if (IsPlayer) {
 				LeaveLobby();
-
 				MPController.Instance.LoadLevel("MainMenu");
+
+				if (timeout) {
+					MPGUI.Instance.ShowMessageBox("Session timed out.");
+				}
+				else {
+					MPGUI.Instance.ShowMessageBox("Host closed the session.");
+				}
 			}
 		}
 
