@@ -87,7 +87,7 @@ namespace MSCMP.Game.Objects {
 			}
 
 			public override void OnEnter() {
-				base.OnEnter();
+				Finish();
 
 				// If open was triggered from our custom event we do not send it.
 
@@ -110,7 +110,8 @@ namespace MSCMP.Game.Objects {
 			}
 
 			public override void OnEnter() {
-				base.OnEnter();
+
+				Finish();
 
 				// If close was triggered from our custom event we do not send it.
 
