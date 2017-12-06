@@ -1,13 +1,11 @@
 ﻿using HutongGames.PlayMaker;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MSCMP {
-	class PlayMakerUtils {
-
+	/// <summary>
+	/// Class containing PlayMaker utils.
+	/// </summary>
+	static class PlayMakerUtils {
 
 		/// <summary>
 		/// Add new global transition from the given event to the state name to the given PlayMaker FSM.
