@@ -1,5 +1,4 @@
-﻿using MSCMP.Game;
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace MSCMP.Network {
@@ -61,20 +60,15 @@ namespace MSCMP.Network {
 		/// </summary>
 		private AnimationId currentAnim = AnimationId.Standing;
 
-
 		/// <summary>
 		/// Did this player handshake with us during this session?
 		/// </summary>
 		public bool hasHandshake = false;
 
-
-		public Vector3 currentPos = new Vector3();
-		public Quaternion currentRot = new Quaternion();
-
-		public Vector3 sourcePos = new Vector3();
-		public Quaternion sourceRot = new Quaternion();
-		public Vector3 targetPos = new Vector3();
-		public Quaternion targetRot = new Quaternion();
+		/// <summary>
+		/// Character interpolator.
+		/// </summary>
+		Math.TransformInterpolator interpolator = new Math.TransformInterpolator();
 
 		/// <summary>
 		/// Interpolation time in miliseconds.
@@ -92,6 +86,25 @@ namespace MSCMP.Network {
 		private const string CHARACTER_PREFAB_NAME = "Hullu";
 
 		/// <summary>
+		/// Current player state.
+		/// </summary>
+		protected enum State {
+			OnFoot,
+			DrivingVehicle,
+			Passenger
+		}
+
+		/// <summary>
+		/// State of the player.
+		/// </summary>
+		protected State state = State.OnFoot;
+
+		/// <summary>
+		/// The current vehicle player is inside.
+		/// </summary>
+		protected NetVehicle currentVehicle = null;
+
+		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="netManager">Network manager managing connection to the player.</param>
@@ -107,7 +120,7 @@ namespace MSCMP.Network {
 		public void Spawn() {
 			GameObject prefab = GameObject.Find(CHARACTER_PREFAB_NAME);
 
-			characterGameObject = (GameObject)GameObject.Instantiate((GameObject)prefab, currentPos, currentRot);
+			characterGameObject = (GameObject)GameObject.Instantiate((GameObject)prefab, interpolator.CurrentPosition, interpolator.CurrentRotation);
 
 			// If character will disappear we uncomment this
 			// GameObject.DontDestroyOnLoad(go);
@@ -206,15 +219,15 @@ namespace MSCMP.Network {
 
 				float speed = 0.0f;
 				if (progress <= 2.0f) {
-					Vector3 oldPos = currentPos;
-					currentPos = Vector3.Lerp(sourcePos, targetPos, progress);
-					currentRot = Quaternion.Slerp(sourceRot, targetRot, progress);
+					Vector3 oldPos = interpolator.CurrentPosition;
+					Vector3 currentPos = Vector3.zero;
+					Quaternion currentRot = Quaternion.identity;
+					interpolator.Evaluate(ref currentPos, ref currentRot, progress);
 					Vector3 delta = (currentPos - oldPos);
 					delta.y = 0.0f;
 					speed = delta.magnitude;
 
-					characterGameObject.transform.position = currentPos + CHARACTER_OFFSET;
-					characterGameObject.transform.rotation = currentRot;
+					UpdateCharacterPosition();
 				}
 
 				if (speed > 0.001f) {
@@ -235,13 +248,11 @@ namespace MSCMP.Network {
 		/// Update debug IMGUI of this player.
 		/// </summary>
 		public virtual void DrawDebugGUI() {
-			float progress = (float)(netManager.GetNetworkClock() - syncReceiveTime) / INTERPOLATION_TIME;
-			GUI.Label(new Rect(300, 200, 300, 200), "Remote player\ncurrentPos = " + currentPos.ToString() + "\n" +
-				"sourcePos = " + sourcePos.ToString() + "\n" +
-				"targetPos =  " + targetPos.ToString() + "\n" +
-				"progress =  " + progress + "\n" +
-				"anim = " + currentAnim + "\n" +
-				"animSpeed = " + activeAnimationState.speed + "\n"
+			GUI.Label(new Rect(300, 200, 300, 200), "Remote player\n" +
+				"position = "	+ interpolator.CurrentPosition.ToString() + "\n" +
+				"anim = "		+ currentAnim + "\n" +
+				"animSpeed = "	+ (activeAnimationState == null ? 0 : activeAnimationState.speed) + "\n" +
+				"state = "		+ state + "\n"
 			);
 		}
 #endif
@@ -251,25 +262,121 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="msg">The received synchronization message.</param>
 		public void HandleSynchronize(Messages.PlayerSyncMessage msg) {
-			targetPos.x = msg.position.x;
-			targetPos.y = msg.position.y;
-			targetPos.z = msg.position.z;
+			Client.Assert(state == State.OnFoot, "Received on foot update but player is not on foot.");
 
-			targetRot.w = msg.rotation.w;
-			targetRot.x = msg.rotation.x;
-			targetRot.y = msg.rotation.y;
-			targetRot.z = msg.rotation.z;
-
-			sourcePos = currentPos;
-			sourceRot = currentRot;
-
+			Vector3 targetPos = Utils.NetVec3ToGame(msg.position);
+			Quaternion targetRot = Utils.NetQuatToGame(msg.rotation);
+			interpolator.SetTarget(targetPos, targetRot);
 			syncReceiveTime = netManager.GetNetworkClock();
 
 			if (!characterGameObject) {
-				currentPos = targetPos;
-				currentRot = targetRot;
+				Teleport(targetPos, targetRot);
 				return;
 			}
+		}
+
+		/// <summary>
+		/// Handle received vehicle synchronization message.
+		/// </summary>
+		/// <param name="msg">The received synchronization message.</param>
+		public void HandleVehicleSync(Messages.VehicleSyncMessage msg) {
+			Client.Assert(state == State.DrivingVehicle, "Received driving vehicle update but player is not driving any vehicle.");
+			currentVehicle.HandleSynchronization(msg);
+		}
+
+		/// <summary>
+		/// Enter vehicle.
+		/// </summary>
+		/// <param name="vehicle">The vehicle to enter.</param>
+		/// <param name="passenger">Is player entering vehicle as passenger?</param>
+		public virtual void EnterVehicle(NetVehicle vehicle, bool passenger) {
+			Client.Assert(currentVehicle == null, "Entered vehicle but player is already in vehicle.");
+			Client.Assert(state == State.OnFoot, "Entered vehicle but player is not on foot.");
+
+			// Set vehicle and put player inside it.
+
+			currentVehicle = vehicle;
+			currentVehicle.SetPlayer(this, passenger);
+
+			// Make sure player character is attached as we will not update it's position until he leaves vehicle.
+
+			if (characterGameObject != null) {
+				characterGameObject.transform.SetParent(currentVehicle.GameObject.VehicleTransform, false);
+			}
+
+			// Set state of the player.
+
+			SwitchState(passenger ? State.Passenger : State.DrivingVehicle);
+		}
+
+		/// <summary>
+		/// Leave vehicle player is currently sitting in.
+		/// </summary>
+		public virtual void LeaveVehicle() {
+			Client.Assert(currentVehicle != null && state != State.OnFoot, "Player is leaving vehicle but he is not in vehicle.");
+
+			// Detach character game object from vehicle.
+
+			if (characterGameObject != null) {
+				characterGameObject.transform.SetParent(null);
+
+				// TODO: Teleport interpolator to use current position so ped will not be interpolated from previous on foot location here.
+			}
+
+			// Notify vehicle that the player left.
+
+			currentVehicle.ClearPlayer(state == State.Passenger);
+			currentVehicle = null;
+
+			// Set state of the player.
+
+			SwitchState(State.OnFoot);
+		}
+
+		/// <summary>
+		/// Switches state of this player.
+		/// </summary>
+		/// <param name="newState">The state to switch to.</param>
+		protected virtual void SwitchState(State newState) {
+			state = newState;
+		}
+
+		/// <summary>
+		/// Teleport player to the given location.
+		/// </summary>
+		/// <param name="pos">The position to teleport to.</param>
+		/// <param name="rot">The rotation to teleport to.</param>
+		public void Teleport(Vector3 pos, Quaternion rot) {
+			interpolator.Teleport(pos, rot);
+			UpdateCharacterPosition();
+		}
+
+		/// <summary>
+		/// Update character position from interpolator.
+		/// </summary>
+		private void UpdateCharacterPosition() {
+			if (characterGameObject == null) {
+				return;
+			}
+
+			characterGameObject.transform.position = interpolator.CurrentPosition + CHARACTER_OFFSET;
+			characterGameObject.transform.rotation = interpolator.CurrentRotation;
+		}
+
+		/// <summary>
+		/// Get world position of the character.
+		/// </summary>
+		/// <returns>World position of the player character.</returns>
+		public virtual Vector3 GetPosition() {
+			return interpolator.CurrentPosition;
+		}
+
+		/// <summary>
+		/// Get steam name of the player.
+		/// </summary>
+		/// <returns>Steam name of the player.</returns>
+		public virtual string GetName() {
+			return Steamworks.SteamFriends.GetFriendPersonaName(steamId);
 		}
 	}
 }

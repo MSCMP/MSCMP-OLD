@@ -129,6 +129,8 @@ namespace MSCMP {
 			devTools.OnGUI(localPlayer);
 
 			netManager.DrawDebugGUI();
+
+			gameWorld.UpdateIMGUI();
 #endif
 		}
 
@@ -195,12 +197,22 @@ namespace MSCMP {
 		}
 
 		/// <summary>
+		/// Fixed update multiplayer state.
+		/// </summary>
+		void FixedUpdate() {
+			Utils.CallSafe("FixedUpdate", () => {
+				netManager.FixedUpdate();
+			});
+		}
+
+		/// <summary>
 		/// Update multiplayer state.
 		/// </summary>
 		void Update() {
-			try {
+			Utils.CallSafe("Update", () => {
 				Steamworks.SteamAPI.RunCallbacks();
 
+				gameWorld.Update();
 				netManager.Update();
 
 				// Handle level changes.
@@ -222,10 +234,7 @@ namespace MSCMP {
 					devTools.UpdatePlayer(localPlayer);
 				}
 #endif
-			}
-			catch (Exception e) {
-				Application.Quit();
-			}
+			});
 		}
 
 		/// <summary>

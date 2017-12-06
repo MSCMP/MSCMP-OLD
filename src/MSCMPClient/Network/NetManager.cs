@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using MSCMP.UI;
 
 namespace MSCMP.Network {
 	class NetManager {
@@ -89,10 +90,13 @@ namespace MSCMP.Network {
 		DateTime netManagerCreationTime;
 
 		/// <summary>
-		/// Constructor.
+		/// Network world.
 		/// </summary>
+		NetWorld netWorld = null;
+
 		public NetManager() {
 			this.netManagerCreationTime = DateTime.UtcNow;
+			netWorld = new NetWorld(this);
 
 			// Setup local player.
 			players[0] = new NetLocalPlayer(this, Steamworks.SteamUser.GetSteamID());
@@ -136,14 +140,14 @@ namespace MSCMP.Network {
 				state = State.LoadingGameWorld;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
 
-				Messages.HandshakeMessage message = new Messages.HandshakeMessage();
-				message.clock = GetNetworkClock();
-				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
+				SendHandshake();
 			});
+
+			// TODO: Move message handlers to some class.
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.HandshakeMessage msg) => {
 				remoteClock = msg.clock;
-				HandleHandshake(sender);
+				HandleHandshake(sender, msg);
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
@@ -176,7 +180,7 @@ namespace MSCMP.Network {
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
-				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(players[1].currentPos);
+				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(players[1].GetPosition());
 				if (doors == null) {
 					Logger.Log("Player tried to open doors however he is not close to any: " + players[1].GetPosition());
 					return;
@@ -190,6 +194,13 @@ namespace MSCMP.Network {
 					Disconnect();
 					return;
 				}
+				if (msg.vehicleId.Length != msg.vehiclesPosition.Length || msg.vehicleId.Length != msg.vehiclesRotation.Length) {
+					Logger.Log("Malformed full world sync - vehicle arrays mismatch");
+					Disconnect();
+					return;
+				}
+
+				// Doors.
 
 				for (int i = 0; i < msg.doorsOpen.Length; ++i) {
 					Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.doorsPosition[i]));
@@ -203,33 +214,72 @@ namespace MSCMP.Network {
 					}
 				}
 
+				// Vehicles.
+
+				for (int i = 0; i < msg.vehicleId.Length; ++i) {
+					byte vehicleId = msg.vehicleId[i];
+					Vector3 pos = Utils.NetVec3ToGame(msg.vehiclesPosition[i]);
+					Quaternion rot = Utils.NetQuatToGame(msg.vehiclesRotation[i]);
+
+					NetVehicle vehicle = netWorld.GetVehicle(vehicleId);
+					if (vehicle == null) {
+						Logger.Log("Received info about non existing vehicle " + vehicleId + " in full world sync. (pos: " + pos + ", rot: " + rot + ")");
+						continue;
+					}
+
+					vehicle.Teleport(pos, rot);
+				}
+
 				// World loaded we are playing!
 
 				state = State.Playing;
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.AskForWorldStateMessage msg) => {
-				NetLocalPlayer localPlayer = (NetLocalPlayer)players[0];
+				var msgF = new Messages.FullWorldSyncMessage();
+				netWorld.WriteFullWorldSync(msgF);
+				BroadcastMessage(msgF, Steamworks.EP2PSend.k_EP2PSendReliable);
+			});
 
-				var worldSyncMsg = new Messages.FullWorldSyncMessage();
-
-				List<Game.Objects.GameDoor> doors = Game.GameDoorsManager.Instance.doors;
-				int doorsCount = doors.Count;
-				worldSyncMsg.doorsOpen = new bool[doorsCount];
-				worldSyncMsg.doorsPosition = new Messages.Vector3Message[doorsCount];
-
-				for (int i = 0; i < doorsCount; ++i) {
-					Game.Objects.GameDoor door = doors[i];
-					worldSyncMsg.doorsPosition[i] = Utils.GameVec3ToNet(door.Position);
-					worldSyncMsg.doorsOpen[i] = door.IsOpen;
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleEnterMessage msg) => {
+				NetPlayer player = players[1];
+				if (player == null) {
+					return;
 				}
 
-				BroadcastMessage(worldSyncMsg, Steamworks.EP2PSend.k_EP2PSendReliable);
+				NetVehicle vehicle = netWorld.GetVehicle(msg.vehicleId);
+				if (vehicle == null) {
+					Logger.Log("Player " + player.SteamId + " tried to enter vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					return;
+				}
+
+				player.EnterVehicle(vehicle, msg.passenger);
 			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleLeaveMessage msg) => {
+				NetPlayer player = players[1];
+				if (player == null) {
+					return;
+				}
+				player.LeaveVehicle();
+			});
+
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSyncMessage msg) => {
+				Logger.Log("A");
+				NetPlayer player = players[1];
+				if (player == null) {
+					return;
+				}
+				Logger.Log("B");
+
+				player.HandleVehicleSync(msg);
+			});
+
 		}
 
 		/// <summary>
-		/// Get network clock with the milisecond resolution. (time since network manager was created)
+		/// Get network clock with the milliseconds resolution. (time since network manager was created)
 		/// </summary>
 		/// <returns>Network clock time in miliseconds.</returns>
 		public ulong GetNetworkClock() {
@@ -396,7 +446,7 @@ namespace MSCMP.Network {
 			timeSinceLastHeartbeat += Time.deltaTime;
 
 			if (timeSinceLastHeartbeat >= TIMEOUT_TIME) {
-				HandleDisconnect();
+				HandleDisconnect(true);
 			}
 			else {
 				timeToSendHeartbeat -= Time.deltaTime;
@@ -457,6 +507,13 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
+		/// Fixed update of the network.
+		/// </summary>
+		public void FixedUpdate() {
+			netWorld.FixedUpdate();
+		}
+
+		/// <summary>
 		/// Update network manager state.
 		/// </summary>
 		public void Update() {
@@ -464,6 +521,7 @@ namespace MSCMP.Network {
 				return;
 			}
 
+			netWorld.Update();
 			UpdateHeartbeat();
 			ProcessMessages();
 
@@ -501,6 +559,8 @@ namespace MSCMP.Network {
 			debugPanel.y += 20.0f;
 			GUI.Label(debugPanel, "State: " + state);
 			debugPanel.y += 20.0f;
+
+			netWorld.UpdateIMGUI();
 		}
 #endif
 
@@ -508,7 +568,8 @@ namespace MSCMP.Network {
 		/// Process handshake message received from the given steam id.
 		/// </summary>
 		/// <param name="senderSteamId">The steam id of the sender.</param>
-		private void HandleHandshake(Steamworks.CSteamID senderSteamId) {
+		/// <param name="msg">Hand shake message.</param>
+		private void HandleHandshake(Steamworks.CSteamID senderSteamId, Messages.HandshakeMessage msg) {
 			if (IsHost) {
 				if (players[1] != null) {
 					Logger.Log("Received handshake from player but player is already here.");
@@ -525,9 +586,7 @@ namespace MSCMP.Network {
 
 				players[1].Spawn();
 
-				Messages.HandshakeMessage message = new Messages.HandshakeMessage();
-				message.clock = GetNetworkClock();
-				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
+				SendHandshake();
 			}
 			else {
 				if (players[1] == null) {
@@ -543,13 +602,36 @@ namespace MSCMP.Network {
 				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
 
+			// Set player state.
+
+			players[1].Teleport(Utils.NetVec3ToGame(msg.spawnPosition), Utils.NetQuatToGame(msg.spawnRotation));
+			if (msg.occupiedVehicleId != NetVehicle.INVALID_ID) {
+				var vehicle = netWorld.GetVehicle(msg.occupiedVehicleId);
+				Client.Assert(vehicle != null, $"Player {players[1].GetName()} ({players[1].SteamId}) you tried to join reported that he drives car that does not exists in your game. Vehicle id: {msg.occupiedVehicleId}, passenger: {msg.passenger}");
+				players[1].EnterVehicle(vehicle, msg.passenger);
+			}
+
 			players[1].hasHandshake = true;
+		}
+
+		/// <summary>
+		/// Sends handshake to the connected player.
+		/// </summary>
+		private void SendHandshake() {
+			Messages.HandshakeMessage message = new Messages.HandshakeMessage();
+			message.clock = GetNetworkClock();
+			GetLocalPlayer().WriteHandshake(message);
+			BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
 		/// <summary>
 		/// Callback called when game world gets loaded.
 		/// </summary>
 		public void OnGameWorldLoad() {
+			// Notify network world that game world is loaded.
+
+			netWorld.OnGameWorldLoad();
+
 			// If we are not online setup an lobby for players to connect.
 
 			if (!IsOnline) {
@@ -567,6 +649,14 @@ namespace MSCMP.Network {
 				Messages.AskForWorldStateMessage msg = new Messages.AskForWorldStateMessage();
 				BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			}
+		}
+
+		/// <summary>
+		/// Get local player object.
+		/// </summary>
+		/// <returns>Local player object.</returns>
+		public NetLocalPlayer GetLocalPlayer() {
+			return (NetLocalPlayer)players[0];
 		}
 	}
 }
