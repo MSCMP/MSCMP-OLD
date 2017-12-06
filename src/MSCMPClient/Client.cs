@@ -10,11 +10,24 @@ namespace MSCMP
 	public class Client {
 
 		/// <summary>
+		/// Asset bundle containing multiplayer mod content.
+		/// </summary>
+		static AssetBundle assetBundle = null;
+
+		/// <summary>
 		/// Starts the mod. Called from Injector.
 		/// </summary>
 		public static void Start() {
 			Logger.SetAutoFlush(true);
 			GameObject go = new GameObject("Multiplayer Controller");
+
+			string assetBundlePath = Client.GetPath("../../data/mpdata");
+			if (!File.Exists(assetBundlePath)) {
+				FatalError("Cannot find mpdata asset bundle.");
+				return;
+			}
+
+			assetBundle = AssetBundle.CreateFromFile(assetBundlePath);
 			go.AddComponent<MPController>();
 		}
 
@@ -25,6 +38,16 @@ namespace MSCMP
 		/// <returns>Absolute path for the specified file relative to mod instalation folder.</returns>
 		public static string GetPath(string file) {
 			return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\" + file;
+		}
+
+		/// <summary>
+		/// Loads asset from multiplayer mod asset bundle.
+		/// </summary>
+		/// <typeparam name="T">The type of the asset to load.</typeparam>
+		/// <param name="name">The name of the asset to load.</param>
+		/// <returns>Loaded asset.</returns>
+		public static T LoadAsset<T>(string name) where T : UnityEngine.Object {
+			return assetBundle.LoadAsset<T>(name);
 		}
 
 		/// <summary>

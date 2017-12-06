@@ -55,11 +55,6 @@ namespace MSCMP {
 		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
 
 		/// <summary>
-		/// Asset bundle containing multiplayer mod content.
-		/// </summary>
-		AssetBundle assetBundle = null;
-
-		/// <summary>
 		/// The mod logo texture.
 		/// </summary>
 		Texture2D modLogo = null;
@@ -78,21 +73,13 @@ namespace MSCMP {
 		}
 
 		void Start() {
-			string assetBundlePath = Client.GetPath("../../data/mpdata");
-			if (!File.Exists(assetBundlePath)) {
-				Process.GetCurrentProcess().Kill();
-				return;
-			}
-
-			assetBundle = AssetBundle.CreateFromFile(assetBundlePath);
-
 			Steamworks.SteamAPI.Init();
 
 			DontDestroyOnLoad(this.gameObject);
 
 			netManager = new NetManager();
 
-			modLogo = LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
+			modLogo = Client.LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
 		}
 
 		/// <summary>
@@ -239,16 +226,6 @@ namespace MSCMP {
 			catch (Exception e) {
 				Application.Quit();
 			}
-		}
-
-		/// <summary>
-		/// Loads asset from multiplayer mod asset bundle.
-		/// </summary>
-		/// <typeparam name="T">The type of the asset to load.</typeparam>
-		/// <param name="name">The name of the asset to load.</param>
-		/// <returns>Loaded asset.</returns>
-		public T LoadAsset<T>(string name) where T : UnityEngine.Object {
-			return assetBundle.LoadAsset<T>(name);
 		}
 
 		/// <summary>
