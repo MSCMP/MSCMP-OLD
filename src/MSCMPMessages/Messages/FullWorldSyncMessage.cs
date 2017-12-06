@@ -7,6 +7,7 @@
 		Vector3Message[] doorsPosition;
 
 		// Vehicles state
+		byte[] vehicleId;
 		Vector3Message[] vehiclesPosition;
 		QuaternionMessage[] vehiclesRotation;
 	}
