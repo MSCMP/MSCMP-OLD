@@ -7,6 +7,12 @@ namespace MSCMP.Math {
 		Quaternion source = new Quaternion();
 		Quaternion target = new Quaternion();
 
+		public Quaternion Current {
+			get {
+				return current;
+			}
+		}
+
 		public void SetTarget(Quaternion quat) {
 			source = current;
 			target = quat;
