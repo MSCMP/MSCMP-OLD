@@ -9,18 +9,21 @@ namespace MSCMP {
 	/// </summary>
 	class Utils {
 
+
+		/// <summary>
+		/// Delegate used to print tree of the objects.
+		/// </summary>
+		/// <param name="level">The level - can be used to generate identation.</param>
+		/// <param name="data">The line data.</param>
 		public delegate void PrintInfo(int level, string data);
 
+		/// <summary>
+		/// Print details about play maker action.
+		/// </summary>
+		/// <param name="level">The level of the print.</param>
+		/// <param name="rawAction">The base typed object contaning action.</param>
+		/// <param name="print">The delegate to call to print value.</param>
 		private static void PrintPlayMakerActionDetails(int level, FsmStateAction rawAction, PrintInfo print) {
-			/*if (rawAction is SendEventByName) {
-				var action = (SendEventByName)rawAction;
-
-				print(level, "delay = " + action.delay.Value);
-				print(level, "eventTarget = " + ((action.eventTarget != null) ? action.eventTarget.fsmName.Value : "null"));
-				print(level, "everyFrame = " + action.everyFrame);
-				print(level, "sendEvent = " + action.sendEvent.Value);
-			}*/
-
 			Type type = rawAction.GetType();
 
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
@@ -29,6 +32,12 @@ namespace MSCMP {
 			}
 		}
 
+		/// <summary>
+		/// Prints unity Transform tree starting from trans.
+		/// </summary>
+		/// <param name="trans">The transform object to start print of the tree.</param>
+		/// <param name="level">The level of print. When starting printing it should be 0.</param>
+		/// <param name="print">The delegate to call to print value.</param>
 		public static void PrintTransformTree(Transform trans, int level, PrintInfo print) {
 			print(level, "> " + trans.name + " (" + trans.GetInstanceID() + ")");
 
@@ -64,7 +73,7 @@ namespace MSCMP {
 							}
 						}
 						catch {
-							MPController.logFile.Write("Failed to dump actions for state: " + s.Name);
+							Logger.Log("Failed to dump actions for state: " + s.Name);
 						}
 					}
 
@@ -123,15 +132,14 @@ namespace MSCMP {
 			}
 		}
 
+		/// <summary>
+		/// Get PlayMaker finite-state-matching from the game objects tree starting from game object.
+		/// </summary>
+		/// <param name="go">The game object to start searching at.</param>
+		/// <param name="name">The name of finite-state-machine to find.</param>
+		/// <returns>Finite state machine matching the name or null if no such state machine is found.</returns>
 		public static PlayMakerFSM GetPlaymakerScriptByName(GameObject go, string name) {
-			PlayMakerFSM[] fsms = go.GetComponents<PlayMakerFSM>();
-
-			foreach (PlayMakerFSM fsm in fsms) {
-				if (fsm.FsmName == name) {
-					return fsm;
-				}
-			}
-			fsms = go.GetComponentsInChildren<PlayMakerFSM>();
+			PlayMakerFSM[] fsms = go.GetComponentsInChildren<PlayMakerFSM>();
 			foreach (PlayMakerFSM fsm in fsms) {
 				if (fsm.FsmName == name) {
 					return fsm;
@@ -140,7 +148,11 @@ namespace MSCMP {
 			return null;
 		}
 
-
+		/// <summary>
+		/// Convert game representation of vector into network message.
+		/// </summary>
+		/// <param name="v3">Vector to convert.</param>
+		/// <returns>Vector network message.</returns>
 		public static Network.Messages.Vector3Message GameVec3ToNet(Vector3 v3) {
 			var msg = new Network.Messages.Vector3Message();
 			msg.x = v3.x;
@@ -149,7 +161,11 @@ namespace MSCMP {
 			return msg;
 		}
 
-
+		/// <summary>
+		/// Convert network message containing vector into game representation of vector.
+		/// </summary>
+		/// <param name="msg">The message to convert.</param>
+		/// <returns>Converted vector.</returns>
 		public static Vector3 NetVec3ToGame(Network.Messages.Vector3Message msg) {
 			var vec = new Vector3();
 			vec.x = msg.x;
@@ -158,6 +174,11 @@ namespace MSCMP {
 			return vec;
 		}
 
+		/// <summary>
+		/// Convert game representation of quaternion into network message.
+		/// </summary>
+		/// <param name="q">Quaternion to convert.</param>
+		/// <returns>Quaternion network message.</returns>
 		public static Network.Messages.QuaternionMessage GameQuatToNet(Quaternion q) {
 			var msg = new Network.Messages.QuaternionMessage();
 			msg.w = q.w;
@@ -167,7 +188,11 @@ namespace MSCMP {
 			return msg;
 		}
 
-
+		/// <summary>
+		/// Convert network message containing quaternion into game representation of quaternion.
+		/// </summary>
+		/// <param name="msg">The message to convert.</param>
+		/// <returns>Converted quaternion.</returns>
 		public static Quaternion NetQuatToGame(Network.Messages.QuaternionMessage msg) {
 			var q = new Quaternion();
 			q.w = msg.w;
