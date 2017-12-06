@@ -176,5 +176,24 @@ namespace MSCMP {
 			q.z = msg.z;
 			return q;
 		}
+
+		/// <summary>
+		/// Delegate contaning safe call code.
+		/// </summary>
+		public delegate void SafeCall();
+
+		/// <summary>
+		/// Perform safe call catching all exceptions that could happen within it's scope.
+		/// </summary>
+		/// <param name="name">The name of the safe call scope.</param>
+		/// <param name="call">The code to execute.</param>
+		public static void CallSafe(string name, SafeCall call) {
+			try {
+				call();
+			}
+			catch (Exception e) {
+				Client.FatalError("Safe call " + name + " failed.\n" + e.Message + "\n" + e.StackTrace);
+			}
+		}
 	}
 }
