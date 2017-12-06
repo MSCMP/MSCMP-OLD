@@ -35,26 +35,10 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "..\..\bin\Release\MSCMP.exe"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\Assembly-CSharp.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\Assembly-CSharp-firstpass.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\Assembly-UnityScript.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\Assembly-UnityScript-firstpass.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\Boo.Lang.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\cInput.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\ES2.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\HOTween.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\Mono.Security.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\MoodkieSecurity.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\MSCMPClient.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\MSCMPInjector.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\PlayMaker.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\System.Windows.Forms.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\UnityEngine.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\UnityEngine.UI.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\UnityScript.Lang.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\steam_api.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\steam_appid.txt"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-
 Source: "..\..\data\mpdata"; DestDir: "{app}\data"; Flags: ignoreversion
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
