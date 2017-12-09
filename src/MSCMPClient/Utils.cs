@@ -9,6 +9,11 @@ namespace MSCMP {
 	/// </summary>
 	class Utils {
 
+		public const int LAYER_DEFAULT = 1 << 0;
+		public const int LAYER_TRANSPARENT_FX = 1 << 1;
+		public const int LAYER_IGNORE_RAYCAST = 1 << 2;
+		public const int LAYER_WATER = 1 << 4;
+		public const int LAYER_UI = 1 << 5;
 
 		/// <summary>
 		/// Delegate used to print tree of the objects.
