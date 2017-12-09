@@ -31,8 +31,6 @@ namespace MSCMP.Game.Objects {
 			}
 		}
 
-		bool hasDriver = false;
-
 
 		/// <summary>
 		/// PlayMaker state action executed when local player enters vehicle.
@@ -47,7 +45,6 @@ namespace MSCMP.Game.Objects {
 			public override void OnEnter() {
 				Utils.CallSafe("OnLeaveHandler", () => {
 					if (Fsm.PreviousActiveState.Name == "Death") {
-						vehicle.hasDriver = true;
 						if (vehicle.onEnter != null) {
 							vehicle.onEnter();
 						}
@@ -70,7 +67,6 @@ namespace MSCMP.Game.Objects {
 			public override void OnEnter() {
 				Utils.CallSafe("OnLeaveHandler", () => {
 					if (Fsm.PreviousActiveState.Name == "Create player") {
-						vehicle.hasDriver = false;
 						if (vehicle.onLeave != null) {
 							vehicle.onLeave();
 						}
