@@ -23,17 +23,31 @@ namespace MSCMP {
 		public delegate void PrintInfo(int level, string data);
 
 		/// <summary>
-		/// Print details about play maker action.
+		/// Print details about the given object.
 		/// </summary>
 		/// <param name="level">The level of the print.</param>
-		/// <param name="rawAction">The base typed object contaning action.</param>
+		/// <param name="obj">The base typed object contaning action.</param>
 		/// <param name="print">The delegate to call to print value.</param>
-		private static void PrintPlayMakerActionDetails(int level, FsmStateAction rawAction, PrintInfo print) {
-			Type type = rawAction.GetType();
+		private static void PrintObjectFields(int level, object obj, PrintInfo print) {
+			if (level > 10) {
+				print(level + 1, "Out of depth limit.");
+				return;
+			}
 
-			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
+			Type type = obj.GetType();
+
+			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);
 			foreach (var fi in fields) {
-				print(level, fi.Name + " = " + fi.GetValue(rawAction).ToString());
+				var val = fi.GetValue(obj);
+				var valType = val.GetType();
+				string additionalString = "";
+				if (val is NamedVariable) {
+					additionalString += $" [Named variable: {((NamedVariable)val).Name}]";
+				}
+				print(level, valType.FullName + " " + fi.Name + " = " + val.ToString() + additionalString);
+				if (valType.IsClass) {
+					PrintObjectFields(level + 1, val, print);
+				}
 			}
 		}
 
@@ -44,11 +58,12 @@ namespace MSCMP {
 		/// <param name="level">The level of print. When starting printing it should be 0.</param>
 		/// <param name="print">The delegate to call to print value.</param>
 		public static void PrintTransformTree(Transform trans, int level, PrintInfo print) {
-			print(level, "> " + trans.name + " (" + trans.GetInstanceID() + ")");
+			print(level, "> " + trans.name + " (" + trans.GetInstanceID() + ") [" + trans.tag  + "]");
 
 			Component[] components = trans.GetComponents<Component>();
 			foreach (Component component in components) {
-				print(level, " C " + component.GetType().FullName);
+
+				print(level, " C " + component.GetType().FullName + " [" + component.tag + "]");
 
 				if (component is PlayMakerFSM) {
 					PlayMakerFSM pmfsm = (PlayMakerFSM)component;
@@ -57,24 +72,24 @@ namespace MSCMP {
 
 					FsmEvent[] events = pmfsm.FsmEvents;
 					foreach (FsmEvent e in events) {
-						print(level + 2, "Event Name: " + e.Name + " (" + e.Path + ")");
+						print(level + 1, "Event Name: " + e.Name + " (" + e.Path + ")");
 					}
 
 					foreach (FsmTransition t in pmfsm.FsmGlobalTransitions) {
-						print(level + 2, "Global transition: " + t.EventName + " > " + t.ToState);
+						print(level + 1, "Global transition: " + t.EventName + " > " + t.ToState);
 					}
 
 					FsmState[] states = pmfsm.FsmStates;
 					foreach (FsmState s in states) {
-						print(level + 2, "State Name: " + s.Name);
+						print(level + 1, "State Name: " + s.Name);
 						foreach (FsmTransition t in s.Transitions) {
-							print(level + 3, "Transition: " + t.EventName + " > " + t.ToState);
+							print(level + 2, "Transition: " + t.EventName + " > " + t.ToState);
 						}
 
 						try {
 							foreach (FsmStateAction a in s.Actions) {
-								print(level + 3, "Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
-								PrintPlayMakerActionDetails(level + 4, a, print);
+								print(level + 2, "Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
+								PrintObjectFields(level + 3, a, print);
 							}
 						}
 						catch {
@@ -82,45 +97,46 @@ namespace MSCMP {
 						}
 					}
 
+					print(level + 1, "Variables:");
 					FsmVariables variables = pmfsm.FsmVariables;
 					foreach (var v in variables.BoolVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.ColorVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.FloatVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.GameObjectVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.IntVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.MaterialVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.ObjectVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.QuaternionVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.RectVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.StringVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.TextureVariables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.Vector2Variables) {
-						print(level + 2, "  Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.Vector3Variables) {
-						print(level + 2, "Variable Name: " + v.Name);
+						print(level + 2, v.Name + " = " + v.Value);
 					}
 				}
 				else if (component is Animation) {
