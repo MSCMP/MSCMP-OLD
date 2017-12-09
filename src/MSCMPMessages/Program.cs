@@ -5,7 +5,7 @@
 
 			generator.GenerateMessage(typeof(Messages.QuaternionMessage));
 			generator.GenerateMessage(typeof(Messages.Vector3Message));
-
+			generator.GenerateMessage(typeof(Messages.TransformMessage));
 			generator.GenerateMessage(typeof(Messages.HandshakeMessage));
 			generator.GenerateMessage(typeof(Messages.HeartbeatMessage));
 			generator.GenerateMessage(typeof(Messages.HeartbeatResponseMessage));
