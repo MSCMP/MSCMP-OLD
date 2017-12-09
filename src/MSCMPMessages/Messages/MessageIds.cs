@@ -16,6 +16,8 @@ namespace MSCMPMessages.Messages {
 		FullWorldSync,
 		AskForWorldState,
 		VehicleEnter,
-		VehicleLeave
+		VehicleLeave,
+		PickupObject,
+		ReleaseObject
 	}
 }

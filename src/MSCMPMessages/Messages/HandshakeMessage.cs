@@ -13,5 +13,6 @@ namespace MSCMPMessages.Messages {
 		QuaternionMessage	spawnRotation;
 		byte				occupiedVehicleId;
 		bool				passenger;
+		ushort				pickedUpObject;
 	}
 }
