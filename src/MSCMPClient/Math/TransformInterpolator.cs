@@ -31,5 +31,10 @@ namespace MSCMP.Math {
 			pos = position.Evaluate(alpha);
 			rot = rotation.Evaluate(alpha);
 		}
+
+		public void Evaluate(float alpha) {
+			position.Evaluate(alpha);
+			rotation.Evaluate(alpha);
+		}
 	}
 }
