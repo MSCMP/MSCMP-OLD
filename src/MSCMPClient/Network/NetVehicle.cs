@@ -212,6 +212,7 @@ namespace MSCMP.Network {
 			return GameObject.VehicleTransform.rotation;
 		}
 
+#if !PUBLIC_RELEASE
 		/// <summary>
 		/// Draw debug ui about this vehicle.
 		/// </summary>
@@ -230,5 +231,6 @@ namespace MSCMP.Network {
 				"Sync receive time: " + syncReceiveTime + "\n"
 			);*/
 		}
+#endif
 	}
 }
