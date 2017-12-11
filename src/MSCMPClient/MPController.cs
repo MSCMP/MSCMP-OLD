@@ -34,10 +34,12 @@ namespace MSCMP {
 		/// </summary>
 		string currentLevelName = "";
 
+#if !PUBLIC_RELEASE
 		/// <summary>
 		/// Game object representing local player.
 		/// </summary>
 		GameObject localPlayer = null;
+#endif
 
 		/// <summary>
 		/// Current scroll value of the invite panel.
