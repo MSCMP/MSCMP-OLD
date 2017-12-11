@@ -79,6 +79,7 @@
     <Compile Include="Game\GameDoorsManager.cs" />
     <Compile Include="Game\GameWorld.cs" />
     <Compile Include="Game\Objects\GameDoor.cs" />
+    <Compile Include="Game\Objects\GamePlayer.cs" />
     <Compile Include="Game\Objects\GameVehicle.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="UI\Handlers\MessageBoxHandler.cs" />
