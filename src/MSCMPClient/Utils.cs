@@ -39,13 +39,21 @@ namespace MSCMP {
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);
 			foreach (var fi in fields) {
 				var val = fi.GetValue(obj);
-				var valType = val.GetType();
+				var fieldType = fi.FieldType;
+
+				if (val == null) {
+					print(level, fieldType.FullName + " " + fi.Name + " = null");
+					continue;
+				}
+
 				string additionalString = "";
+
 				if (val is NamedVariable) {
 					additionalString += $" [Named variable: {((NamedVariable)val).Name}]";
 				}
-				print(level, valType.FullName + " " + fi.Name + " = " + val.ToString() + additionalString);
-				if (valType.IsClass) {
+				print(level, fieldType.FullName + " " + fi.Name + " = " + val.ToString() + additionalString);
+
+				if (fieldType.IsClass && !fieldType.Namespace.StartsWith("System")) {
 					PrintObjectFields(level + 1, val, print);
 				}
 			}
