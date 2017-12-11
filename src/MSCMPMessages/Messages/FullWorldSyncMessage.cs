@@ -1,14 +1,24 @@
 ﻿namespace MSCMPMessages.Messages {
+
+	class DoorsInitMessage {
+		bool open;
+		Vector3Message position;
+	}
+
+	class VehicleInitMessage {
+		byte id;
+		TransformMessage transform;
+	}
+
+	class PickupableInitMessage {
+		ushort id;
+		TransformMessage transform;
+	}
+
 	[NetMessageDesc(MessageIds.FullWorldSync)]
 	class FullWorldSyncMessage {
-		// Doors state
-
-		bool[] doorsOpen;
-		Vector3Message[] doorsPosition;
-
-		// Vehicles state
-		byte[] vehicleId;
-		Vector3Message[] vehiclesPosition;
-		QuaternionMessage[] vehiclesRotation;
+		DoorsInitMessage[]			doors;
+		VehicleInitMessage[]		vehicles;
+		PickupableInitMessage[]		pickupables;
 	}
 }

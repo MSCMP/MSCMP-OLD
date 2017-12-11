@@ -13,17 +13,16 @@
 			generator.GenerateMessage(typeof(Messages.PickedUpSync));
 			generator.GenerateMessage(typeof(Messages.PlayerSyncMessage));
 			generator.GenerateMessage(typeof(Messages.OpenDoorsMessage));
-
 			generator.GenerateMessage(typeof(Messages.AskForWorldStateMessage));
+			generator.GenerateMessage(typeof(Messages.DoorsInitMessage));
+			generator.GenerateMessage(typeof(Messages.VehicleInitMessage));
+			generator.GenerateMessage(typeof(Messages.PickupableInitMessage));
 			generator.GenerateMessage(typeof(Messages.FullWorldSyncMessage));
-
 			generator.GenerateMessage(typeof(Messages.VehicleEnterMessage));
 			generator.GenerateMessage(typeof(Messages.VehicleLeaveMessage));
 			generator.GenerateMessage(typeof(Messages.VehicleSyncMessage));
-
 			generator.GenerateMessage(typeof(Messages.PickupObjectMessage));
 			generator.GenerateMessage(typeof(Messages.ReleaseObjectMessage));
-
 			generator.EndGeneration();
 		}
 	}
