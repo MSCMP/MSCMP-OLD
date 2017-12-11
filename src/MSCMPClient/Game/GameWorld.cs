@@ -21,14 +21,14 @@ namespace MSCMP.Game {
 		/// </summary>
 		private List<GameVehicle> vehicles = new List<GameVehicle>();
 
-		private GameObject playerGameObject = null;
+		private GamePlayer player = null;
 
 		/// <summary>
 		/// Get player game object.
 		/// </summary>
-		public GameObject PlayerGameObject {
+		public GamePlayer Player {
 			get {
-				return playerGameObject;
+				return player;
 			}
 		}
 
@@ -54,15 +54,23 @@ namespace MSCMP.Game {
 		/// </summary>
 		public void OnUnload() {
 			vehicles.Clear();
-			playerGameObject = null;
+			player = null;
 		}
 
 		/// <summary>
 		/// Update game world state.
 		/// </summary>
 		public void Update() {
-			if (playerGameObject == null) {
-				playerGameObject = GameObject.Find("PLAYER");
+			if (player == null) {
+				var playerGo = GameObject.Find("PLAYER");
+
+				if (playerGo != null) {
+					player = new GamePlayer(playerGo);
+
+					if (GameCallbacks.onLocalPlayerCreated != null) {
+						GameCallbacks.onLocalPlayerCreated();
+					}
+				}
 			}
 		}
 

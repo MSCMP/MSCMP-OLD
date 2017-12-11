@@ -97,8 +97,12 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <returns>true if sync message was sent false otherwise</returns>
 		private bool SendOnFootSync() {
-			GameObject playerObject = GameWorld.Instance.PlayerGameObject;
-			if (!playerObject) {
+			GamePlayer player = GameWorld.Instance.Player;
+			if (player == null) {
+				return false;
+			}
+			GameObject playerObject = player.Object;
+			if (playerObject == null) {
 				return false;
 			}
 
@@ -179,7 +183,11 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <returns>World position of the player character.</returns>
 		public override Vector3 GetPosition() {
-			var playerObject = GameWorld.Instance.PlayerGameObject;
+			GamePlayer player = GameWorld.Instance.Player;
+			if (player == null) {
+				return Vector3.zero;
+			}
+			var playerObject = player.Object;
 			if (playerObject == null) {
 				return Vector3.zero;
 			}
