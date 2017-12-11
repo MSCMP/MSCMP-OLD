@@ -19,6 +19,11 @@ copy 3rdparty\steamapi\steam_api.dll bin\Release
 copy data\steam_appid.txt bin\Release
 echo Release prepared.
 
+if not exist "bin\Public Release" mkdir "bin\Public Release"
+copy 3rdparty\steamapi\steam_api.dll "bin\Public Release"
+copy data\steam_appid.txt "bin\Public Release"
+echo Public release prepared.
+
 if not exist bin\Debug mkdir bin\Debug
 copy 3rdparty\steamapi\steam_api.dll bin\Debug
 copy data\steam_appid.txt bin\Debug
