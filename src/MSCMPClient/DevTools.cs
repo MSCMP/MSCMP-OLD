@@ -127,7 +127,7 @@ namespace MSCMP {
 			}
 		}
 
-		public void DumpWorld() {
+		public static void DumpWorld() {
 			GameObject []gos = gos = GameObject.FindObjectsOfType<GameObject>();
 
 			Directory.CreateDirectory(Client.GetPath("WorldDump"));
