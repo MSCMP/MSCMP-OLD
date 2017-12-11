@@ -82,6 +82,7 @@
     <Compile Include="Game\Objects\GamePlayer.cs" />
     <Compile Include="Game\Objects\GameVehicle.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Network\NetPickupable.cs" />
     <Compile Include="UI\Handlers\MessageBoxHandler.cs" />
     <Compile Include="UI\MPGUI.cs" />
     <Compile Include="Math\QuaternionInterpolator.cs" />

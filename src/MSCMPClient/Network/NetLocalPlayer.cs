@@ -1,4 +1,5 @@
 ﻿using MSCMP.Game;
+using MSCMP.Game.Objects;
 using UnityEngine;
 
 namespace MSCMP.Network {
@@ -22,8 +23,9 @@ namespace MSCMP.Network {
 		/// Constructor.
 		/// </summary>
 		/// <param name="netManager">The network manager owning this player.</param>
+		/// <param name="netWorld">Network world owning this player.</param>
 		/// <param name="steamId">The steam id of the player.</param>
-		public NetLocalPlayer(NetManager netManager, Steamworks.CSteamID steamId) : base(netManager, steamId) {
+		public NetLocalPlayer(NetManager netManager, NetWorld netWorld, Steamworks.CSteamID steamId) : base(netManager, netWorld, steamId) {
 
 			GameDoorsManager.Instance.onDoorsOpen = () => {
 				Messages.OpenDoorsMessage msg = new Messages.OpenDoorsMessage();
@@ -36,6 +38,18 @@ namespace MSCMP.Network {
 				msg.open = false;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
+
+			GameCallbacks.onObjectPickup = (GameObject gameObj) => {
+				Messages.PickupObjectMessage msg = new Messages.PickupObjectMessage();
+				msg.netId = netWorld.GetPickupableNetId(gameObj);
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			};
+
+			GameCallbacks.onObjectRelease = (bool drop) => {
+				Messages.ReleaseObjectMessage msg = new Messages.ReleaseObjectMessage();
+				msg.drop = drop;
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			};
 		}
 
 #if !PUBLIC_RELEASE
@@ -43,7 +57,7 @@ namespace MSCMP.Network {
 		/// Update debug IMGUI for the player.
 		/// </summary>
 		public override void DrawDebugGUI() {
-			GUI.Label(new Rect(300, 10, 300, 200), "Local player\ntime to update: " + timeToUpdate + "\nstate: " + state + "\nobject: " + GameWorld.Instance.PlayerGameObject);
+			GUI.Label(new Rect(300, 10, 300, 200), "Local player\ntime to update: " + timeToUpdate + "\nstate: " + state + "\nobject: " + GameWorld.Instance.Player);
 		}
 #endif
 
@@ -106,18 +120,19 @@ namespace MSCMP.Network {
 				return false;
 			}
 
-			Vector3 position = playerObject.transform.position;
-			Quaternion rotation = playerObject.transform.rotation;
-
 			Messages.PlayerSyncMessage message = new Messages.PlayerSyncMessage();
-			message.position.x = position.x;
-			message.position.y = position.y;
-			message.position.z = position.z;
+			message.position = Utils.GameVec3ToNet(playerObject.transform.position);
+			message.rotation = Utils.GameQuatToNet(playerObject.transform.rotation);
 
-			message.rotation.w = rotation.w;
-			message.rotation.x = rotation.x;
-			message.rotation.y = rotation.y;
-			message.rotation.z = rotation.z;
+			if (player.PickedUpObject) {
+				Transform objectTrans = player.PickedUpObject.transform;
+				var data = new Messages.PickedUpSync();
+				data.position = Utils.GameVec3ToNet(objectTrans.position);
+				data.rotation = Utils.GameQuatToNet(objectTrans.rotation);
+
+				message.PickedUpData = data;
+			}
+
 			if (!netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
 				return false;
 			}
@@ -154,12 +169,26 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="msg">Message to write to.</param>
 		public void WriteHandshake(Messages.HandshakeMessage msg) {
+
 			if (state == State.OnFoot) {
 				msg.occupiedVehicleId = NetVehicle.INVALID_ID;
 			}
 			else {
 				msg.occupiedVehicleId = currentVehicle.NetId;
 				msg.passenger = state == State.Passenger;
+			}
+
+			msg.pickedUpObject = NetPickupable.INVALID_ID;
+
+			GamePlayer player = GameWorld.Instance.Player;
+			if (player != null) {
+				// It is possible the local player is not spawned yet. If so we do not
+				// care about those values as those can be only set when player is actually spawned.
+
+				var pickedUpObject = player.PickedUpObject;
+				if (pickedUpObject == null) {
+					msg.pickedUpObject = netWorld.GetPickupableNetId(pickedUpObject);
+				}
 			}
 		}
 

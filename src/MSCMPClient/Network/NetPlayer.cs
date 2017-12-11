@@ -71,6 +71,11 @@ namespace MSCMP.Network {
 		Math.TransformInterpolator interpolator = new Math.TransformInterpolator();
 
 		/// <summary>
+		/// Picked up object interpolator.
+		/// </summary>
+		Math.TransformInterpolator pickedUpObjectInterpolator = new Math.TransformInterpolator();
+
+		/// <summary>
 		/// Interpolation time in miliseconds.
 		/// </summary>
 		public const ulong INTERPOLATION_TIME = NetLocalPlayer.SYNC_INTERVAL;
@@ -105,12 +110,34 @@ namespace MSCMP.Network {
 		protected NetVehicle currentVehicle = null;
 
 		/// <summary>
+		/// Network world this player is spawned in.
+		/// </summary>
+		protected NetWorld netWorld = null;
+
+		/// <summary>
+		/// The object the player has picked up.
+		/// </summary>
+		private GameObject pickedUpObject = null;
+
+		/// <summary>
+		/// The network id of object the player has picked up.
+		/// </summary>
+		private ushort pickedUpObjectNetId = NetPickupable.INVALID_ID;
+
+		/// <summary>
+		/// The old layer of the pickupable. Used to restore layer after releasing object.
+		/// </summary>
+		private int oldPickupableLayer = 0;
+
+		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="netManager">Network manager managing connection to the player.</param>
+		/// <param name="netWorld">Network world owning this player.</param>
 		/// <param name="steamId">Player's steam id.</param>
-		public NetPlayer(NetManager netManager, Steamworks.CSteamID steamId) {
+		public NetPlayer(NetManager netManager, NetWorld netWorld, Steamworks.CSteamID steamId) {
 			this.netManager = netManager;
+			this.netWorld = netWorld;
 			this.steamId = steamId;
 		}
 
@@ -146,6 +173,10 @@ namespace MSCMP.Network {
 				// Force character to stand.
 
 				PlayAnimation(AnimationId.Standing, true);
+			}
+
+			if (pickedUpObjectNetId != NetPickupable.INVALID_ID) {
+				UpdatePickedUpObject(true, false);
 			}
 		}
 
@@ -228,6 +259,9 @@ namespace MSCMP.Network {
 					speed = delta.magnitude;
 
 					UpdateCharacterPosition();
+
+					pickedUpObjectInterpolator.Evaluate(progress);
+					UpdatePickedupPosition();
 				}
 
 				if (speed > 0.001f) {
@@ -241,6 +275,7 @@ namespace MSCMP.Network {
 					PlayAnimation(AnimationId.Standing);
 				}
 			}
+
 		}
 
 #if !PUBLIC_RELEASE
@@ -268,6 +303,11 @@ namespace MSCMP.Network {
 			Quaternion targetRot = Utils.NetQuatToGame(msg.rotation);
 			interpolator.SetTarget(targetPos, targetRot);
 			syncReceiveTime = netManager.GetNetworkClock();
+
+			if (msg.HasPickedUpData) {
+				var pickedUpData = msg.PickedUpData;
+				pickedUpObjectInterpolator.SetTarget(Utils.NetVec3ToGame(pickedUpData.position), Utils.NetQuatToGame(pickedUpData.rotation));
+			}
 
 			if (!characterGameObject) {
 				Teleport(targetPos, targetRot);
@@ -361,6 +401,19 @@ namespace MSCMP.Network {
 
 			characterGameObject.transform.position = interpolator.CurrentPosition + CHARACTER_OFFSET;
 			characterGameObject.transform.rotation = interpolator.CurrentRotation;
+
+		}
+
+		/// <summary>
+		/// Update position of the picked up object.
+		/// </summary>
+		private void UpdatePickedupPosition() {
+			if (pickedUpObject == null) {
+				return;
+			}
+
+			pickedUpObject.transform.position = pickedUpObjectInterpolator.CurrentPosition;
+			pickedUpObject.transform.rotation = pickedUpObjectInterpolator.CurrentRotation;
 		}
 
 		/// <summary>
@@ -377,6 +430,56 @@ namespace MSCMP.Network {
 		/// <returns>Steam name of the player.</returns>
 		public virtual string GetName() {
 			return Steamworks.SteamFriends.GetFriendPersonaName(steamId);
+		}
+
+		/// <summary>
+		/// Pickup the object.
+		/// </summary>
+		/// <param name="netId">netId of the object to pickup</param>
+		public void PickupObject(ushort netId) {
+			pickedUpObjectNetId = netId;
+			UpdatePickedUpObject(true, false);
+		}
+
+		/// <summary>
+		/// Release the object.
+		/// </summary>
+		/// <param name="drop">Is it drop or throw?</param>
+		public void ReleaseObject(bool drop) {
+			UpdatePickedUpObject(false, drop);
+			pickedUpObjectNetId = NetPickupable.INVALID_ID;
+		}
+
+		/// <summary>
+		/// Update picked up object.
+		/// </summary>
+		/// <param name="pickup">Is this pickup action?</param>
+		/// <param name="drop">If not pickup is it drop or throw?</param>
+		private void UpdatePickedUpObject(bool pickup, bool drop) {
+			if (characterGameObject == null) {
+				if (!pickup) {
+					pickedUpObject = null;
+				}
+				return;
+			}
+
+			Rigidbody rigidBody = null;
+			if (pickup) {
+				pickedUpObject = netWorld.GetPickupableGameObject(pickedUpObjectNetId);
+				Client.Assert(pickedUpObject != null, "Player tried to pickup object that does not exists in world. Net id: " + pickedUpObjectNetId);
+				oldPickupableLayer = pickedUpObject.layer;
+				pickedUpObject.layer = Utils.LAYER_IGNORE_RAYCAST;
+			}
+
+			rigidBody = pickedUpObject.GetComponent<Rigidbody>();
+			if (rigidBody != null) {
+				rigidBody.isKinematic = pickup;
+			}
+
+			if (!pickup) {
+				pickedUpObject.layer = oldPickupableLayer;
+				pickedUpObject = null;
+			}
 		}
 	}
 }

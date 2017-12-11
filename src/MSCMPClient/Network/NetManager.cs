@@ -99,7 +99,7 @@ namespace MSCMP.Network {
 			netWorld = new NetWorld(this);
 
 			// Setup local player.
-			players[0] = new NetLocalPlayer(this, Steamworks.SteamUser.GetSteamID());
+			players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
 
 			p2pSessionRequestCallback = Steamworks.Callback<Steamworks.P2PSessionRequest_t>.Create((Steamworks.P2PSessionRequest_t result) => {
 				if (!Steamworks.SteamNetworking.AcceptP2PSessionWithUser(result.m_steamIDRemote)) {
@@ -189,46 +189,8 @@ namespace MSCMP.Network {
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.FullWorldSyncMessage msg) => {
-				if (msg.doorsPosition.Length != msg.doorsOpen.Length) {
-					Logger.Log("Malformed full world sync - doors arrays mismatch");
-					Disconnect();
-					return;
-				}
-				if (msg.vehicleId.Length != msg.vehiclesPosition.Length || msg.vehicleId.Length != msg.vehiclesRotation.Length) {
-					Logger.Log("Malformed full world sync - vehicle arrays mismatch");
-					Disconnect();
-					return;
-				}
 
-				// Doors.
-
-				for (int i = 0; i < msg.doorsOpen.Length; ++i) {
-					Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.doorsPosition[i]));
-					if (doors == null) {
-						Logger.Log("Unable to find doors at: " + doors.Position);
-						return;
-					}
-
-					if (doors.IsOpen != msg.doorsOpen[i]) {
-						doors.Open(msg.doorsOpen[i]);
-					}
-				}
-
-				// Vehicles.
-
-				for (int i = 0; i < msg.vehicleId.Length; ++i) {
-					byte vehicleId = msg.vehicleId[i];
-					Vector3 pos = Utils.NetVec3ToGame(msg.vehiclesPosition[i]);
-					Quaternion rot = Utils.NetQuatToGame(msg.vehiclesRotation[i]);
-
-					NetVehicle vehicle = netWorld.GetVehicle(vehicleId);
-					if (vehicle == null) {
-						Logger.Log("Received info about non existing vehicle " + vehicleId + " in full world sync. (pos: " + pos + ", rot: " + rot + ")");
-						continue;
-					}
-
-					vehicle.Teleport(pos, rot);
-				}
+				netWorld.HandleFullWorldSync(msg);
 
 				// World loaded we are playing!
 
@@ -266,16 +228,30 @@ namespace MSCMP.Network {
 
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSyncMessage msg) => {
-				Logger.Log("A");
 				NetPlayer player = players[1];
 				if (player == null) {
 					return;
 				}
-				Logger.Log("B");
 
 				player.HandleVehicleSync(msg);
 			});
 
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupObjectMessage msg) => {
+				NetPlayer player = players[1];
+				if (player == null) {
+					return;
+				}
+				player.PickupObject(msg.netId);
+			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.ReleaseObjectMessage msg) => {
+				NetPlayer player = players[1];
+				if (player == null) {
+					return;
+				}
+				player.ReleaseObject(msg.drop);
+			});
 		}
 
 		/// <summary>
@@ -343,7 +319,7 @@ namespace MSCMP.Network {
 
 			// Setup remote player. The HOST.
 			timeSinceLastHeartbeat = 0.0f;
-			players[1] = new NetPlayer(this, request.m_steamIDFriend);
+			players[1] = new NetPlayer(this, netWorld, request.m_steamIDFriend);
 
 			lobbyEnterCallResult.Set(apiCall);
 		}
@@ -580,7 +556,7 @@ namespace MSCMP.Network {
 				// Setup THE PLAYER
 
 				timeSinceLastHeartbeat = 0.0f;
-				players[1] = new NetPlayer(this, senderSteamId);
+				players[1] = new NetPlayer(this, netWorld, senderSteamId);
 
 				// Player can be spawned here safely. Host is already in game and all game objects are here.
 
@@ -611,6 +587,10 @@ namespace MSCMP.Network {
 				players[1].EnterVehicle(vehicle, msg.passenger);
 			}
 
+			if (msg.pickedUpObject != NetPickupable.INVALID_ID) {
+				players[1].PickupObject(msg.pickedUpObject);
+			}
+
 			players[1].hasHandshake = true;
 		}
 
@@ -628,10 +608,6 @@ namespace MSCMP.Network {
 		/// Callback called when game world gets loaded.
 		/// </summary>
 		public void OnGameWorldLoad() {
-			// Notify network world that game world is loaded.
-
-			netWorld.OnGameWorldLoad();
-
 			// If we are not online setup an lobby for players to connect.
 
 			if (!IsOnline) {

@@ -9,6 +9,7 @@ namespace MSCMP.Game {
 	/// </summary>
 	class GameWorld {
 
+
 		public static GameWorld Instance = null;
 
 		/// <summary>
@@ -47,12 +48,20 @@ namespace MSCMP.Game {
 		public void OnLoad() {
 			doorsManager.OnWorldLoad();
 			LoadVehicles();
+
+			if (GameCallbacks.onWorldLoad != null) {
+				GameCallbacks.onWorldLoad();
+			}
 		}
 
 		/// <summary>
 		/// Callback called when world gets unloaded.
 		/// </summary>
 		public void OnUnload() {
+			if (GameCallbacks.onWorldUnload != null) {
+				GameCallbacks.onWorldUnload();
+			}
+
 			vehicles.Clear();
 			player = null;
 		}
@@ -104,6 +113,20 @@ namespace MSCMP.Game {
 			foreach (var v in vehicles) {
 				v.UpdateIMGUI();
 			}
+		}
+
+		public List<GameObject> CollectAllPickupables() {
+			List<GameObject> pickupables = new List<GameObject>();
+			GameObject[] gos = GameObject.FindGameObjectsWithTag("PART");
+			foreach (var go in gos) {
+				pickupables.Add(go);
+			}
+			gos = GameObject.FindGameObjectsWithTag("ITEM");
+			foreach (var go in gos) {
+				pickupables.Add(go);
+			}
+
+			return pickupables;
 		}
 	}
 }
