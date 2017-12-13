@@ -78,6 +78,7 @@
     <Compile Include="Game\GameCallbacks.cs" />
     <Compile Include="Game\GameDoorsManager.cs" />
     <Compile Include="Game\GameWorld.cs" />
+    <Compile Include="Game\Hooks\PlayMakerActionHooks.cs" />
     <Compile Include="Game\Objects\GameDoor.cs" />
     <Compile Include="Game\Objects\GamePlayer.cs" />
     <Compile Include="Game\Objects\GameVehicle.cs" />

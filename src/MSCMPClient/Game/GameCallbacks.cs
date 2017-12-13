@@ -47,5 +47,28 @@ namespace MSCMP.Game {
 		/// Callback called when game world gets unloaded.
 		/// </summary>
 		static public OnWorldUnload onWorldUnload;
+
+		/// <summary>
+		/// Delegate of the callback called when PlayMaker creates new object.
+		/// </summary>
+		/// <param name="instance">The instance of the new object.</param>
+		/// <param name="prefab">The prefab used to instantiate this object.</param>
+		public delegate void OnPlayMakerObjectCreate(GameObject instance, GameObject prefab);
+
+		/// <summary>
+		/// Callback called when PlayMaker creates new object.
+		/// </summary>
+		static public OnPlayMakerObjectCreate onPlayMakerObjectCreate = null;
+
+		/// <summary>
+		/// Delegate of the callback called when PlayMaker destroys object.
+		/// </summary>
+		/// <param name="instance">The instance of the object that will be destroyed.</param>
+		public delegate void OnPlayMakerObjectDestroy(GameObject instance);
+
+		/// <summary>
+		/// Callback called when PlayMaker destroys object.
+		/// </summary>
+		static public OnPlayMakerObjectDestroy onPlayMakerObjectDestroy = null;
 	}
 }

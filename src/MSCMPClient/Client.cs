@@ -19,6 +19,7 @@ namespace MSCMP
 		/// </summary>
 		public static void Start() {
 			Logger.SetAutoFlush(true);
+			Game.Hooks.PlayMakerActionHooks.Install();
 
 			string assetBundlePath = Client.GetPath("../../data/mpdata");
 			if (!File.Exists(assetBundlePath)) {
