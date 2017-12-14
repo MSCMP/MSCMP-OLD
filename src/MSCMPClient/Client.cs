@@ -61,7 +61,7 @@ namespace MSCMP
 		/// <param name="message">The message to print to console.</param>
 		public static void FatalError(string message) {
 			Logger.Log(message);
-			Application.Quit();
+			Process.GetCurrentProcess().Kill();
 		}
 
 		/// <summary>
@@ -75,7 +75,7 @@ namespace MSCMP
 			}
 			Logger.Log("[ASSERTION FAILED]");
 			Logger.Log(message);
-			Application.Quit();
+			Process.GetCurrentProcess().Kill();
 		}
 	}
 }
