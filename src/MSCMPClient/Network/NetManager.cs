@@ -512,10 +512,15 @@ namespace MSCMP.Network {
 			UpdateHeartbeat();
 			ProcessMessages();
 
+#if !PUBLIC_RELEASE
+			if (Input.GetKeyDown(KeyCode.F8) && players[1] != null) {
+				var localPlayer = GetLocalPlayer();
+				localPlayer.Teleport(players[1].GetPosition(), players[1].GetRotation());
+			}
+#endif
+
 			foreach (NetPlayer player in players) {
-				if (player != null) {
-					player.Update();
-				}
+				player?.Update();
 			}
 		}
 
