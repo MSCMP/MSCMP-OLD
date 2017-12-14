@@ -180,9 +180,12 @@ namespace MSCMP.Network {
 			});
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
-				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(players[1].GetPosition());
+				NetPlayer player = players[1];
+				// 1.5 is a length of the ray used to check interaction with doors in game scripts.
+				Vector3 interactionPosition = player.GetPosition() + player.GetRotation() * Vector3.forward * 1.5f;
+				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(interactionPosition);
 				if (doors == null) {
-					Logger.Log("Player tried to open doors however he is not close to any: " + players[1].GetPosition());
+					Logger.Log($"Player tried to open doors however he is not close to any: {interactionPosition}.");
 					return;
 				}
 				doors.Open(msg.open);
