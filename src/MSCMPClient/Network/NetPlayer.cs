@@ -459,6 +459,12 @@ namespace MSCMP.Network {
 		/// <param name="netId">netId of the object to pickup</param>
 		public void PickupObject(ushort netId) {
 			pickedUpObjectNetId = netId;
+
+			// Teleport picked up object position to perform much nicer transition
+			// of object interpolation. Previously the object was interpolated from last frame.
+
+			pickedUpObjectInterpolator.Teleport(interpolator.CurrentPosition, interpolator.CurrentRotation);
+
 			UpdatePickedUpObject(true, false);
 		}
 
