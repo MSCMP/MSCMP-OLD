@@ -55,22 +55,22 @@ namespace MSCMP {
 			}
 
 			// Pseudo AirBrk
-			if (Input.GetKeyDown(KeyCode.KeypadPlus) && localPlayer) {
+			if (Input.GetKey(KeyCode.KeypadPlus) && localPlayer) {
 				localPlayer.transform.position = localPlayer.transform.position + Vector3.up * 5.0f;
 			}
-			if (Input.GetKeyDown(KeyCode.KeypadMinus) && localPlayer) {
+			if (Input.GetKey(KeyCode.KeypadMinus) && localPlayer) {
 				localPlayer.transform.position = localPlayer.transform.position - Vector3.up * 5.0f;
 			}
-			if (Input.GetKeyDown(KeyCode.Keypad8) && localPlayer) {
+			if (Input.GetKey(KeyCode.Keypad8) && localPlayer) {
 				localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
 			}
-			if (Input.GetKeyDown(KeyCode.Keypad2) && localPlayer) {
+			if (Input.GetKey(KeyCode.Keypad2) && localPlayer) {
 				localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.forward * 5.0f;
 			}
-			if (Input.GetKeyDown(KeyCode.Keypad4) && localPlayer) {
+			if (Input.GetKey(KeyCode.Keypad4) && localPlayer) {
 				localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.right * 5.0f;
 			}
-			if (Input.GetKeyDown(KeyCode.Keypad6) && localPlayer) {
+			if (Input.GetKey(KeyCode.Keypad6) && localPlayer) {
 				localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.right * 5.0f;
 			}
 
