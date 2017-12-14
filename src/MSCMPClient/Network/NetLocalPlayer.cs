@@ -230,5 +230,25 @@ namespace MSCMP.Network {
 		public override string GetName() {
 			return Steamworks.SteamFriends.GetPersonaName();
 		}
+
+
+		/// <summary>
+		/// Teleport player to the given location.
+		/// </summary>
+		/// <param name="pos">The position to teleport to.</param>
+		/// <param name="rot">The rotation to teleport to.</param>
+		public override void Teleport(Vector3 pos, Quaternion rot) {
+			GamePlayer player = GameWorld.Instance.Player;
+			if (player == null) {
+				return;
+			}
+			var playerObject = player.Object;
+			if (playerObject == null) {
+				return;
+			}
+			playerObject.transform.position = pos;
+			playerObject.transform.rotation = rot;
+		}
+
 	}
 }

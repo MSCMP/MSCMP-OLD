@@ -399,7 +399,7 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="pos">The position to teleport to.</param>
 		/// <param name="rot">The rotation to teleport to.</param>
-		public void Teleport(Vector3 pos, Quaternion rot) {
+		public virtual void Teleport(Vector3 pos, Quaternion rot) {
 			interpolator.Teleport(pos, rot);
 			UpdateCharacterPosition();
 		}
