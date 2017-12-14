@@ -16,7 +16,8 @@
 			generator.GenerateMessage(typeof(Messages.AskForWorldStateMessage));
 			generator.GenerateMessage(typeof(Messages.DoorsInitMessage));
 			generator.GenerateMessage(typeof(Messages.VehicleInitMessage));
-			generator.GenerateMessage(typeof(Messages.PickupableInitMessage));
+			generator.GenerateMessage(typeof(Messages.PickupableSpawnMessage));
+			generator.GenerateMessage(typeof(Messages.PickupableDestroyMessage));
 			generator.GenerateMessage(typeof(Messages.FullWorldSyncMessage));
 			generator.GenerateMessage(typeof(Messages.VehicleEnterMessage));
 			generator.GenerateMessage(typeof(Messages.VehicleLeaveMessage));

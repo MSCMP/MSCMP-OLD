@@ -10,15 +10,10 @@
 		TransformMessage transform;
 	}
 
-	class PickupableInitMessage {
-		ushort id;
-		TransformMessage transform;
-	}
-
 	[NetMessageDesc(MessageIds.FullWorldSync)]
 	class FullWorldSyncMessage {
 		DoorsInitMessage[]			doors;
 		VehicleInitMessage[]		vehicles;
-		PickupableInitMessage[]		pickupables;
+		PickupableSpawnMessage[]	pickupables;
 	}
 }

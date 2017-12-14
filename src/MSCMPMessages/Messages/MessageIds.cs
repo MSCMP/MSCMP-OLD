@@ -18,6 +18,8 @@ namespace MSCMPMessages.Messages {
 		VehicleEnter,
 		VehicleLeave,
 		PickupObject,
-		ReleaseObject
+		ReleaseObject,
+		PickupableSpawn,
+		PickupableDestroy
 	}
 }
