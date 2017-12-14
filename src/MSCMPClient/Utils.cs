@@ -66,38 +66,38 @@ namespace MSCMP {
 		/// <param name="level">The level of print. When starting printing it should be 0.</param>
 		/// <param name="print">The delegate to call to print value.</param>
 		public static void PrintTransformTree(Transform trans, int level, PrintInfo print) {
-			print(level, "> " + trans.name + " (" + trans.GetInstanceID() + ") [" + trans.tag  + "]");
+			print(level, $"> {trans.name} [{trans.tag}, {(trans.gameObject.activeSelf ? "active" : "inactive")}, {trans.gameObject.GetInstanceID()}]");
 
 			Component[] components = trans.GetComponents<Component>();
 			foreach (Component component in components) {
 
-				print(level, " C " + component.GetType().FullName + " [" + component.tag + "]");
+				print(level + 1, "C " + component.GetType().FullName + " [" + component.tag + "]");
 
 				if (component is PlayMakerFSM) {
 					PlayMakerFSM pmfsm = (PlayMakerFSM)component;
-					print(level + 1, "PMFSM Name: " + pmfsm.FsmName);
-					print(level + 1, "Active state: " + pmfsm.ActiveStateName);
+					print(level + 2, "PMFSM Name: " + pmfsm.FsmName);
+					print(level + 2, "Active state: " + pmfsm.ActiveStateName);
 
 					FsmEvent[] events = pmfsm.FsmEvents;
 					foreach (FsmEvent e in events) {
-						print(level + 1, "Event Name: " + e.Name + " (" + e.Path + ")");
+						print(level + 2, "Event Name: " + e.Name + " (" + e.Path + ")");
 					}
 
 					foreach (FsmTransition t in pmfsm.FsmGlobalTransitions) {
-						print(level + 1, "Global transition: " + t.EventName + " > " + t.ToState);
+						print(level + 2, "Global transition: " + t.EventName + " > " + t.ToState);
 					}
 
 					FsmState[] states = pmfsm.FsmStates;
 					foreach (FsmState s in states) {
-						print(level + 1, "State Name: " + s.Name);
+						print(level + 2, "State Name: " + s.Name);
 						foreach (FsmTransition t in s.Transitions) {
-							print(level + 2, "Transition: " + t.EventName + " > " + t.ToState);
+							print(level + 3, "Transition: " + t.EventName + " > " + t.ToState);
 						}
 
 						try {
 							foreach (FsmStateAction a in s.Actions) {
-								print(level + 2, "Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
-								PrintObjectFields(level + 3, a, print);
+								print(level + 3, "Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
+								PrintObjectFields(level + 4, a, print);
 							}
 						}
 						catch {
@@ -105,52 +105,52 @@ namespace MSCMP {
 						}
 					}
 
-					print(level + 1, "Variables:");
+					print(level + 2, "Variables:");
 					FsmVariables variables = pmfsm.FsmVariables;
 					foreach (var v in variables.BoolVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.ColorVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.FloatVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.GameObjectVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.IntVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.MaterialVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.ObjectVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.QuaternionVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.RectVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.StringVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.TextureVariables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.Vector2Variables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 					foreach (var v in variables.Vector3Variables) {
-						print(level + 2, v.Name + " = " + v.Value);
+						print(level + 3, v.Name + " = " + v.Value);
 					}
 				}
 				else if (component is Animation) {
 					var anim = (Animation)component;
 					foreach (AnimationState state in anim) {
-						print(level + 1, "Animation state: " + state.name);
+						print(level + 2, "Animation state: " + state.name);
 					}
 				}
 			}
