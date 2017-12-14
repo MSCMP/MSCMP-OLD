@@ -438,6 +438,14 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
+		/// Get world rotation of the character.
+		/// </summary>
+		/// <returns>World rotation of the player character.</returns>
+		public virtual Quaternion GetRotation() {
+			return interpolator.CurrentRotation;
+		}
+
+		/// <summary>
 		/// Get steam name of the player.
 		/// </summary>
 		/// <returns>Steam name of the player.</returns>
