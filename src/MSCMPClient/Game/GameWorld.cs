@@ -22,6 +22,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		private List<GameVehicle> vehicles = new List<GameVehicle>();
 
+		/// <summary>
+		/// Game animations database.
+		/// </summary>
+		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
+
 		private GamePlayer player = null;
 
 		/// <summary>
@@ -46,6 +51,7 @@ namespace MSCMP.Game {
 		/// Callback called when world is loaded.
 		/// </summary>
 		public void OnLoad() {
+			gameAnimDatabase.Rebuild();
 			doorsManager.OnWorldLoad();
 			LoadVehicles();
 

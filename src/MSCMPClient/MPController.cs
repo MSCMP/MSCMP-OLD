@@ -52,11 +52,6 @@ namespace MSCMP {
 		Dictionary<Steamworks.CSteamID, string> friendStateOverride = new Dictionary<Steamworks.CSteamID, string>();
 
 		/// <summary>
-		/// Game animations database.
-		/// </summary>
-		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
-
-		/// <summary>
 		/// The mod logo texture.
 		/// </summary>
 		Texture2D modLogo = null;
@@ -94,9 +89,7 @@ namespace MSCMP {
 			}
 
 			if (newLevelName == "GAME") {
-				gameAnimDatabase.Rebuild();
 				gameWorld.OnLoad();
-
 				netManager.OnGameWorldLoad();
 				return;
 			}
