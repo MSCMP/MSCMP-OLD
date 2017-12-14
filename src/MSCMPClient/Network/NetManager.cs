@@ -197,6 +197,12 @@ namespace MSCMP.Network {
 
 				netWorld.HandleFullWorldSync(msg);
 
+				// Now spawn player.
+
+				if (players[1] != null) {
+					players[1].Spawn();
+				}
+
 				// World loaded we are playing!
 
 				state = State.Playing;
@@ -618,12 +624,6 @@ namespace MSCMP.Network {
 			if (!IsOnline) {
 				SetupLobby();
 				return;
-			}
-
-			// Otherwise spawn players that have to be spawned.
-
-			if (players[1] != null) {
-				players[1].Spawn();
 			}
 
 			if (IsPlayer) {
