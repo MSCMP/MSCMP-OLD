@@ -82,7 +82,7 @@ namespace MSCMP.Network {
 		/// <typeparam name="T">The type of the network message.</typeparam>
 		/// <param name="sender">Steam id that sent us the message.</param>
 		/// <param name="message">The deserialized image.</param>
-		delegate void MessageHandler<T>(Steamworks.CSteamID sender, T message);
+		public delegate void MessageHandler<T>(Steamworks.CSteamID sender, T message);
 
 		/// <summary>
 		/// The time when network manager was created in UTC.
@@ -270,7 +270,7 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <typeparam name="T">The type of message to register handler for.</typeparam>
 		/// <param name="Handler">The handler lambda.</param>
-		private void BindMessageHandler<T>(MessageHandler<T> Handler) where T: INetMessage, new() {
+		public void BindMessageHandler<T>(MessageHandler<T> Handler) where T: INetMessage, new() {
 			T message = new T();
 
 			messageHandlers.Add(message.MessageId, (Steamworks.CSteamID sender, BinaryReader reader) => {
