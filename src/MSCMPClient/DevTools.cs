@@ -138,24 +138,14 @@ namespace MSCMP {
 				Transform trans = go.GetComponent<Transform>();
 				if (trans == null || trans.parent != null) continue;
 
-
-				StringBuilder bldr = new StringBuilder();
-				Utils.PrintTransformTree(trans, 0, (int level, string text) => {
-
-					for (int i = 0; i < level; ++i) bldr.Append("    ");
-					bldr.Append(text + "\n");
-				});
-
 				string SanitizedName = go.name;
 				Logger.Log(SanitizedName);
 				SanitizedName = SanitizedName.Replace(@"\", "_SLASH_");
 				Logger.Log(SanitizedName);
 				string dumpFilePath = Client.GetPath("WorldDump/" + SanitizedName + ".txt");
-
 				try {
-					System.IO.File.WriteAllText(dumpFilePath, bldr.ToString());
-				}
-				catch (Exception e) {
+					DumpObject(trans, dumpFilePath);
+				} catch (Exception e) {
 					builder.Append("Unable to dump objects: " + SanitizedName + "\n");
 					builder.Append(e.Message + "\n");
 				}
@@ -165,6 +155,16 @@ namespace MSCMP {
 			}
 
 			System.IO.File.WriteAllText(Client.GetPath("WorldDump/dumpLog.txt"), builder.ToString());
+		}
+
+		public static void DumpObject(Transform obj, string file) {
+			StringBuilder bldr = new StringBuilder();
+			Utils.PrintTransformTree(obj, 0, (int level, string text) => {
+				for (int i = 0; i < level; ++i) bldr.Append("    ");
+				bldr.Append(text + "\n");
+			});
+
+			System.IO.File.WriteAllText(file, bldr.ToString());
 		}
 	}
 #endif
