@@ -56,6 +56,38 @@ namespace MSCMP.Network {
 			Game.GameCallbacks.onWorldLoad += () => {
 				OnGameWorldLoad();
 			};
+
+			Game.GameCallbacks.onPlayMakerObjectCreate += (GameObject instance, GameObject pickupable) => {
+				if (!Game.GamePickupableDatabase.IsPickupable(instance)) {
+					return;
+				}
+
+				var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
+				Client.Assert(metaData != null, "Tried to spawn pickupable that has no meta data assigned.");
+
+				ushort freeId = FindFreePickpableId();
+				Client.Assert(freeId != NetPickupable.INVALID_ID, "Out of pickupables pool");
+				RegisterPickupable(freeId, instance);
+
+				Messages.PickupableSpawnMessage msg = new Messages.PickupableSpawnMessage();
+				msg.id = freeId;
+				msg.prefabId = metaData.prefabId;
+				msg.transform.position = Utils.GameVec3ToNet(instance.transform.position);
+				msg.transform.rotation = Utils.GameQuatToNet(instance.transform.rotation);
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			};
+
+			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSpawnMessage msg) => {
+				SpawnPickupable(msg);
+			});
+
+			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableDestroyMessage msg) => {
+				Client.Assert(netPickupables.ContainsKey(msg.id), "Invalid pickupable id in destroy message.");
+
+				NetPickupable pickupable = netPickupables[msg.id];
+				GameObject.Destroy(pickupable.gameObject);
+				netPickupables.Remove(msg.id);
+			});
 		}
 
 		/// <summary>
@@ -100,39 +132,43 @@ namespace MSCMP.Network {
 		/// Called when game world gets loaded.
 		/// </summary>
 		public void OnGameWorldLoad() {
-			// Register all pickupables.
-
-			netPickupables.Clear();
-
-			var pickupables = Game.GameWorld.Instance.CollectAllPickupables();
-			foreach (var pickupable in pickupables) {
-				if (netPickupables.Count == MAX_PICKUPABLES) {
-					throw new Exception("Out of pickupables pool!");
-				}
-
-				// HACK: As for now destroy xmas present. Xmas present is only not removed as specific
-				// day - PlayMaker script placed in "Database > Xmas Present " destroys it after loading game
-				// when the date is not correct.
-				//
-				// TODO: Database of pickupables - collect all pickupables that we will sync - copy them and deactivate them.
-				// Then activate only pickupables that host reported should be placed in the world.
-
-				if (pickupable.name.StartsWith("xmas present")) {
-					GameObject.Destroy(pickupable);
-					continue;
-				}
-
-				ushort netId = (ushort) netPickupables.Count;
-				netPickupables.Add(netId, new NetPickupable(netId, pickupable));
-				Logger.Log("Register pickupable " + pickupable.name + " (net id: " + netId + ")");
-			}
-
 			// Update vehicles.
 
 			foreach (var vehicle in vehicles) {
 				vehicle.OnGameWorldLoad();
 			}
 		}
+
+		/// <summary>
+		/// Find free pickupable id.
+		/// </summary>
+		/// <returns>Pickupable id or NetPickupable.INVALID_ID when no free ID was found.</returns>
+		private ushort FindFreePickpableId() {
+			for (ushort i = 0; i < MAX_PICKUPABLES; ++i) {
+				if (netPickupables.ContainsKey(i)) {
+					return i;
+				}
+			}
+			return NetPickupable.INVALID_ID;
+		}
+
+
+		/// <summary>
+		/// Register all pickupables that are in the game world.
+		/// </summary>
+		public void RegisterPickupables() {
+			netPickupables.Clear();
+
+			var pickupables = Game.GamePickupableDatabase.Instance.CollectAllPickupables(true);
+			foreach (var pickupable in pickupables) {
+				if (netPickupables.Count == MAX_PICKUPABLES) {
+					throw new Exception("Out of pickupables pool!");
+				}
+
+				RegisterPickupable((ushort)netPickupables.Count, pickupable);
+			}
+		}
+
 
 		/// <summary>
 		/// Called when game world gets unloaded.
@@ -177,14 +213,15 @@ namespace MSCMP.Network {
 
 			// Write pickupables.
 
-			msg.pickupables = new Messages.PickupableInitMessage[netPickupables.Count];
-
+			msg.pickupables = new Messages.PickupableSpawnMessage[netPickupables.Count];
 			int idx = 0;
 			foreach (var kv in netPickupables) {
 				NetPickupable pickupable = kv.Value;
-
-				var pickupableMsg = new Messages.PickupableInitMessage();
+				var pickupableMsg = new Messages.PickupableSpawnMessage();
 				pickupableMsg.id = pickupable.NetId;
+				// Logger.Log($"Serializing pickupable: {pickupableMsg.id}. {pickupable.gameObject}");
+				var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
+				pickupableMsg.prefabId = metaData.prefabId;
 				Transform transform = pickupable.gameObject.transform;
 				pickupableMsg.transform.position = Utils.GameVec3ToNet(transform.position);
 				pickupableMsg.transform.rotation = Utils.GameQuatToNet(transform.rotation);
@@ -224,21 +261,21 @@ namespace MSCMP.Network {
 
 			// Pickupables
 
-			foreach (Messages.PickupableInitMessage pickupableMsg in msg.pickupables) {
-				Vector3 position = Utils.NetVec3ToGame(pickupableMsg.transform.position);
-				Quaternion rotation = Utils.NetQuatToGame(pickupableMsg.transform.rotation);
-				ushort netId = pickupableMsg.id;
-				Client.Assert(netPickupables.ContainsKey(netId), $"Received init state of the pickupable that does not exists. {netId} [pos: {position}, rot: {rotation}]");
-
-				GameObject pickupableGameObject = netPickupables[pickupableMsg.id].gameObject;
-				if (pickupableGameObject == null) {
-					Logger.Log($"Tried to set position of not spawned pickupable {netId}");
-					continue;
-				}
-				pickupableGameObject.transform.position = position;
-				pickupableGameObject.transform.rotation = rotation;
+			foreach (Messages.PickupableSpawnMessage pickupableMsg in msg.pickupables) {
+				SpawnPickupable(pickupableMsg);
 			}
 
+		}
+
+		/// <summary>
+		/// Ask host for full world sync.
+		/// </summary>
+		public void AskForFullWorldSync() {
+			netPickupables.Clear();
+			Game.GameWorld.Instance.DestroyAllPickupables();
+
+			Messages.AskForWorldStateMessage msg = new Messages.AskForWorldStateMessage();
+			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
 #if !PUBLIC_RELEASE
@@ -269,13 +306,70 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="go">Game object to get pickupable it for.</param>
 		/// <returns>The network id of pickupable or invalid id of the pickupable if not pickupable is found for given game object.</returns>
-		public ushort GetPickupableNetId(GameObject go) {
+		public NetPickupable GetPickupableByGameObject(GameObject go) {
 			foreach (var pickupable in netPickupables) {
 				if (pickupable.Value.gameObject == go) {
-					return pickupable.Key;
+					return pickupable.Value;
 				}
 			}
+			return null;
+		}
+
+		/// <summary>
+		/// Get pickupable network id from game object.
+		/// </summary>
+		/// <param name="go">Game object to get pickupable it for.</param>
+		/// <returns>The network id of pickupable or invalid id of the pickupable if not pickupable is found for given game object.</returns>
+		public ushort GetPickupableNetId(GameObject go) {
+			var pickupable = GetPickupableByGameObject(go);
+			if (pickupable != null) {
+				return pickupable.NetId;
+			}
 			return NetPickupable.INVALID_ID;
+		}
+
+		/// <summary>
+		/// Handle destroy of pickupable game object.
+		/// </summary>
+		/// <param name="pickupable">The destroyed pickupable.</param>
+		public void HandlePickupableDestroy(GameObject pickupable) {
+			var netPickupable = GetPickupableByGameObject(pickupable);
+			if (netPickupable != null) {
+				Logger.Log($"Handle pickupable destroy {pickupable.name}");
+				netPickupables.Remove(netPickupable.NetId);
+				// TODO: Send network message
+			}
+			else {
+				Logger.Log($"Unhandled pickupable has been destroyed {pickupable.name}");
+			}
+		}
+
+		/// <summary>
+		/// Spawn pickupable from network message.
+		/// </summary>
+		/// <param name="msg">The message containing info about pickupable to spawn.</param>
+		public void SpawnPickupable(Messages.PickupableSpawnMessage msg) {
+			Vector3 position = Utils.NetVec3ToGame(msg.transform.position);
+			Quaternion rotation = Utils.NetQuatToGame(msg.transform.rotation);
+			GameObject pickupable = Game.GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation);
+			RegisterPickupable(msg.id, pickupable);
+		}
+
+		/// <summary>
+		/// Register pickupable into the network world.
+		/// </summary>
+		/// <param name="netId">The network id of the pickupable.</param>
+		/// <param name="pickupable">The game object representing pickupable.</param>
+		public void RegisterPickupable(ushort netId, GameObject pickupable) {
+			var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
+			Client.Assert(metaData != null, $"Failed to register pickupable. No meta data found. {pickupable.name} ({pickupable.GetInstanceID()})");
+
+			Logger.Log($"Registering pickupable {pickupable.name} (net id: {netId}, instance id: {pickupable.GetInstanceID()})");
+
+			var lifeTracker = pickupable.AddComponent<Game.Components.PickupableLifeTrackerComponent>();
+			lifeTracker.netWorld = this;
+
+			netPickupables.Add(netId, new NetPickupable(netId, pickupable));
 		}
 	}
 }

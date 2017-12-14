@@ -43,8 +43,8 @@ namespace MSCMP.Game.Objects {
 			}
 
 			public override void OnEnter() {
-				Utils.CallSafe("OnLeaveHandler", () => {
-					if (Fsm.PreviousActiveState.Name == "Death") {
+				Utils.CallSafe("OnEnterHandler", () => {
+					if (Fsm.PreviousActiveState != null && Fsm.PreviousActiveState.Name == "Death") {
 						if (vehicle.onEnter != null) {
 							vehicle.onEnter();
 						}
@@ -66,7 +66,7 @@ namespace MSCMP.Game.Objects {
 
 			public override void OnEnter() {
 				Utils.CallSafe("OnLeaveHandler", () => {
-					if (Fsm.PreviousActiveState.Name == "Create player") {
+					if (Fsm.PreviousActiveState != null && Fsm.PreviousActiveState.Name == "Create player") {
 						if (vehicle.onLeave != null) {
 							vehicle.onLeave();
 						}

@@ -124,6 +124,8 @@ namespace MSCMP.Network {
 				mode = Mode.Host;
 				state = State.Playing;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
+
+				netWorld.RegisterPickupables();
 			});
 
 			lobbyEnterCallResult = new Steamworks.CallResult<Steamworks.LobbyEnter_t>((Steamworks.LobbyEnter_t result, bool ioFailure) => {
@@ -625,8 +627,7 @@ namespace MSCMP.Network {
 			}
 
 			if (IsPlayer) {
-				Messages.AskForWorldStateMessage msg = new Messages.AskForWorldStateMessage();
-				BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+				netWorld.AskForFullWorldSync();
 			}
 		}
 

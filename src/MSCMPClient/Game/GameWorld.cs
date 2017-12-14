@@ -27,6 +27,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
 
+		/// <summary>
+		/// Game pickupables database.
+		/// </summary>
+		GamePickupableDatabase gamePickupableDatabase = new GamePickupableDatabase();
+
 		private GamePlayer player = null;
 
 		/// <summary>
@@ -52,6 +57,8 @@ namespace MSCMP.Game {
 		/// </summary>
 		public void OnLoad() {
 			gameAnimDatabase.Rebuild();
+			gamePickupableDatabase.Rebuild();
+
 			doorsManager.OnWorldLoad();
 			LoadVehicles();
 
@@ -121,18 +128,35 @@ namespace MSCMP.Game {
 			}
 		}
 
-		public List<GameObject> CollectAllPickupables() {
-			List<GameObject> pickupables = new List<GameObject>();
-			GameObject[] gos = GameObject.FindGameObjectsWithTag("PART");
-			foreach (var go in gos) {
-				pickupables.Add(go);
-			}
-			gos = GameObject.FindGameObjectsWithTag("ITEM");
-			foreach (var go in gos) {
-				pickupables.Add(go);
-			}
+		/// <summary>
+		/// Destroy all pickupables in game world.
+		/// </summary>
+		public void DestroyAllPickupables() {
+			var pickupables = gamePickupableDatabase.CollectAllPickupables(false);
 
-			return pickupables;
+			while (pickupables.Count > 0) {
+				var go = pickupables[0];
+				pickupables.RemoveAt(0);
+
+				if (go.name.StartsWith("JONNEZ ES")) {
+					continue;
+				}
+				GameObject.Destroy(go);
+			}
+		}
+
+
+		/// <summary>
+		/// Spawns pickupable.
+		/// </summary>
+		/// <param name="prefabId">Pickupable prefab id.</param>
+		/// <param name="position">The spawn position.</param>
+		/// <param name="rotation">The spawn rotation.</param>
+		/// <returns>Spawned pickupable game object.</returns>
+		public GameObject SpawnPickupable(int prefabId, Vector3 position, Quaternion rotation) {
+			GamePickupableDatabase.PrefabDesc prefabDescriptor = gamePickupableDatabase.GetPickupablePrefab(prefabId);
+			Client.Assert(prefabDescriptor != null, $"Unable to find pickupable prefab {prefabId}");
+			return prefabDescriptor.Spawn(position, rotation);
 		}
 	}
 }
