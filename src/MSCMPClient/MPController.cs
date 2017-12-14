@@ -215,6 +215,12 @@ namespace MSCMP {
 			});
 		}
 
+		void OnLevelWasLoaded(int level) {
+			string loadedLevelName = Application.loadedLevelName;
+			OnLevelSwitch(loadedLevelName);
+			currentLevelName = loadedLevelName;
+		}
+
 		/// <summary>
 		/// Update multiplayer state.
 		/// </summary>
@@ -225,13 +231,6 @@ namespace MSCMP {
 				gameWorld.Update();
 				netManager.Update();
 
-				// Handle level changes.
-
-				string loadedLevelName = Application.loadedLevelName;
-				if (loadedLevelName != currentLevelName) {
-					OnLevelSwitch(loadedLevelName);
-					currentLevelName = loadedLevelName;
-				}
 
 				// Development stuff.
 #if !PUBLIC_RELEASE
@@ -252,11 +251,6 @@ namespace MSCMP {
 		/// </summary>
 		/// <param name="levelName">The name of the level to load.</param>
 		public void LoadLevel(string levelName) {
-			if (currentLevelName == levelName) {
-				OnLevelSwitch(levelName);
-				return;
-			}
-
 			Application.LoadLevel(levelName);
 		}
 	}
