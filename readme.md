@@ -27,14 +27,14 @@ First of all compile and run `MSCMPMessages` app. It will generate network messa
 
 Build `MSCMP`, `MSCMPInjector` and `MSCMPClient` projects.
 
-### 5. Prepare mutliplayer data asset bundle.
+### 6. Prepare mutliplayer data asset bundle.
 
 1. Download Unity 5.0.0f4 that is used by the mod files. You can find binaries [here](https://unity3d.com/get-unity/download/archive).
 2. Open Unity and load the project that can be found in the `unity` folder in the top level folder of the repository.
 3. From the unity menu bar select MSCMP > Build Asset Bundles.
 4. Done!
 
-### 6. Play & develop!
+### 7. Play & develop!
 
 That's all. Now you can go to the `bin\Debug` folder and launch mod via `MSCMP.exe` executable. (Or `bin/Release` depending which configuration you are using)
 
