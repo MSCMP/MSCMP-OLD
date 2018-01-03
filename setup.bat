@@ -1,5 +1,9 @@
 @echo off
 
+REG ADD HKLM /F>nul 2>&1
+
+IF NOT %ERRORLEVEL%==0 goto :no_permissions
+
 :msc_path
 
 set /p GAME_PATH=Paste here path to my summer car without traling slash:
@@ -38,3 +42,6 @@ goto :eof
 
 echo Invalid my summer car path. Unable to find %GAME_PATH%/mysummercar.exe.
 goto msc_path
+
+:no_permissions
+echo Please run setup.bat as administrator.
