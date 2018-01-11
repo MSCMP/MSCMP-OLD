@@ -1,0 +1,13 @@
+# MSCMP editor config file
+#
+# To use it install editorconfig extension to your IDE: http://editorconfig.org/
+
+root = true
+
+[*.cs]
+indent_style = tab
+indent_size = 4
+insert_final_newline = true
+end_of_line = lf
+
+# eof
