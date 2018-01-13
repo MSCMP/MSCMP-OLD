@@ -20,6 +20,7 @@ namespace MSCMPMessages.Messages {
 		PickupObject,
 		ReleaseObject,
 		PickupableSpawn,
-		PickupableDestroy
+		PickupableDestroy,
+		PickupableActivate
 	}
 }

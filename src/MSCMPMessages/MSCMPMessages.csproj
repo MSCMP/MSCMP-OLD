@@ -66,6 +66,7 @@
     <Compile Include="Messages\HeartbeatResponseMessage.cs" />
     <Compile Include="Messages\MessageIds.cs" />
     <Compile Include="Messages\OpenDoorsMessage.cs" />
+    <Compile Include="Messages\PickupableActivateMessage.cs" />
     <Compile Include="Messages\PickupableDestroyMessage.cs" />
     <Compile Include="Messages\PickupableSpawnMessage.cs" />
     <Compile Include="Messages\PickupObjectMessage.cs" />
