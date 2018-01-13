@@ -111,12 +111,10 @@ namespace MSCMP.Game {
 				}
 
 				if (go.transform.root == MPController.Instance.transform) {
-					// Logger.Log($"Skipping {go.name} (id: {go.GetInstanceID()}, hideFlags: {go.hideFlags}, parent: {go.transform.parent})");
 					continue;
 				}
 
 				pickupables.Add(go);
-				// Logger.Log($"Prefab found {go.name} (id: {go.GetInstanceID()}, hideFlags: {go.hideFlags}, parent: {go.transform.parent})");
 			}
 			return pickupables;
 		}
@@ -125,9 +123,6 @@ namespace MSCMP.Game {
 		/// Rebuild pickupables database.
 		/// </summary>
 		public void Rebuild() {
-			if (prefabs.Count > 0) {
-				return;
-			}
 			var pickupables = CollectAllPickupables(false);
 
 			prefabs.Clear();
