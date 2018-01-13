@@ -187,7 +187,7 @@ namespace MSCMP.Network {
 				// care about those values as those can be only set when player is actually spawned.
 
 				var pickedUpObject = player.PickedUpObject;
-				if (pickedUpObject == null) {
+				if (pickedUpObject != null) {
 					msg.pickedUpObject = netWorld.GetPickupableNetId(pickedUpObject);
 				}
 			}
