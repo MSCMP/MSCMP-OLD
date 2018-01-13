@@ -271,8 +271,6 @@ namespace MSCMP.Network {
 		/// </summary>
 		public void AskForFullWorldSync() {
 			netPickupables.Clear();
-			Game.GameWorld.Instance.DestroyAllPickupables();
-
 			Messages.AskForWorldStateMessage msg = new Messages.AskForWorldStateMessage();
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}

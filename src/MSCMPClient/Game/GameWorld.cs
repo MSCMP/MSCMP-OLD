@@ -129,26 +129,6 @@ namespace MSCMP.Game {
 		}
 
 		/// <summary>
-		/// Destroy all pickupables in game world.
-		/// </summary>
-		public void DestroyAllPickupables() {
-			var pickupables = gamePickupableDatabase.CollectAllPickupables(false);
-
-			while (pickupables.Count > 0) {
-				var go = pickupables[0];
-				pickupables.RemoveAt(0);
-
-				if (go.name.StartsWith("JONNEZ ES") || !go.transform.parent || !go.name.EndsWith("(Clone)")) {
-					continue;
-				}
-
-				Logger.Log($"Destroying {go.name} {go.activeSelf} {go.transform.parent}");
-				GameObject.Destroy(go);
-			}
-		}
-
-
-		/// <summary>
 		/// Spawns pickupable.
 		/// </summary>
 		/// <param name="prefabId">Pickupable prefab id.</param>
