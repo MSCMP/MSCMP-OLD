@@ -305,7 +305,7 @@ namespace MSCMP.Network {
 
 			writer.Write((byte)message.MessageId);
 			if (! message.Write(writer)) {
-				Logger.Log("Failed to write network message " + message.MessageId);
+				Client.FatalError("Failed to write network message " + message.MessageId);
 				return false;
 			}
 
