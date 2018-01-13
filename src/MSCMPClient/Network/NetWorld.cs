@@ -79,6 +79,10 @@ namespace MSCMP.Network {
 
 
 			Game.GameCallbacks.onPlayMakerObjectActivate += (GameObject instance, bool activate) => {
+				if (activate == instance.activeSelf) {
+					return;
+				}
+
 				if (!Game.GamePickupableDatabase.IsPickupable(instance)) {
 					return;
 				}
