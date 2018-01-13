@@ -132,7 +132,9 @@ namespace MSCMP.Network {
 			});
 
 			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableDestroyMessage msg) => {
-				Client.Assert(netPickupables.ContainsKey(msg.id), "Invalid pickupable id in destroy message.");
+				if (!netPickupables.ContainsKey(msg.id)) {
+					return;
+				}
 
 				NetPickupable pickupable = netPickupables[msg.id];
 				GameObject.Destroy(pickupable.gameObject);
@@ -229,7 +231,6 @@ namespace MSCMP.Network {
 			netPickupables.Clear();
 		}
 
-
 		/// <summary>
 		/// Write full world synchronization message.
 		/// </summary>
@@ -265,10 +266,13 @@ namespace MSCMP.Network {
 
 			// Write pickupables.
 
-			msg.pickupables = new Messages.PickupableSpawnMessage[netPickupables.Count];
-			int idx = 0;
+			var pickupableMessages = new List<Messages.PickupableSpawnMessage>();
 			foreach (var kv in netPickupables) {
 				NetPickupable pickupable = kv.Value;
+				if (pickupable.gameObject == null) {
+					Logger.Log($"Null ptr of the pickupable game object {pickupable.NetId}");
+					continue;
+				}
 				var pickupableMsg = new Messages.PickupableSpawnMessage();
 				pickupableMsg.id = pickupable.NetId;
 				var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
@@ -276,8 +280,10 @@ namespace MSCMP.Network {
 				Transform transform = pickupable.gameObject.transform;
 				pickupableMsg.transform.position = Utils.GameVec3ToNet(transform.position);
 				pickupableMsg.transform.rotation = Utils.GameQuatToNet(transform.rotation);
-				msg.pickupables[idx++] = pickupableMsg;
+				pickupableMessages.Add(pickupableMsg);
 			}
+
+			msg.pickupables = pickupableMessages.ToArray();
 		}
 
 
@@ -326,9 +332,10 @@ namespace MSCMP.Network {
 
 			foreach (ushort id in pickupablesIds) {
 				GameObject gameObject = netPickupables[id].gameObject;
-				if (!gameObject.activeSelf) {
+				if (gameObject && !gameObject.activeSelf) {
 					continue;
 				}
+
 				DestroyPickupableLocal(id);
 			}
 		}
@@ -447,9 +454,11 @@ namespace MSCMP.Network {
 				return;
 			}
 			var gameObject = netPickupables[id].gameObject;
-			var lifeTracker = gameObject.AddComponent<Game.Components.PickupableLifeTrackerComponent>();
-			lifeTracker.netWorld = null;
-			GameObject.Destroy(gameObject);
+			if (gameObject != null) {
+				var lifeTracker = gameObject.AddComponent<Game.Components.PickupableLifeTrackerComponent>();
+				lifeTracker.netWorld = null;
+				GameObject.Destroy(gameObject);
+			}
 			netPickupables.Remove(id);
 		}
 
