@@ -61,29 +61,6 @@ char ClientDllPath[MAX_PATH] = { 0 };
 
 void SetupMSCMP()
 {
-	if (!mono.Setup(monoDllPath))
-	{
-		MessageBox(NULL, "Unable to setup mono loader!", "MSCMP", MB_ICONERROR);
-		ExitProcess(0);
-		return;
-	}
-
-
-	// First of all attach logger so we will know what happens when mono does not like what we send to it.
-
-	mono.mono_unity_set_vprintf_func([](const char *message, va_list args) -> int
-	{
-		char full_message[2048] = { 0 };
-		vsprintf(full_message, message, args);
-		va_end(args);
-		MessageBox(NULL, full_message, "MSCMP", NULL);
-
-		return 1;
-	});
-
-	//MonoDomain *rootDomain = mono.mono_get_root_domain();
-	//mono.mono_thread_attach(rootDomain);
-
 	if (!RunMP(ClientDllPath))
 	{
 		MessageBox(NULL, "Failed to run multiplayer mod!", "MSCMP", MB_ICONERROR);
@@ -101,6 +78,56 @@ int _stdcall InitHook()
 	return result;
 }
 
+typedef void (*GiveChanceToAttachDebugger_t)();
+GiveChanceToAttachDebugger_t GiveChanceToAttachDebugger = nullptr;
+
+void _cdecl GiveChanceToAttachDebuggerHook()
+{
+	if (!getenv("UNITY_GIVE_CHANCE_TO_ATTACH_DEBUGGER"))
+	{
+		return;
+	}
+
+	// First of all attach logger so we will know what happens when mono does not like what we send to it.
+
+	mono.mono_unity_set_vprintf_func([](const char *message, va_list args) -> int
+	{
+		char full_message[2048] = { 0 };
+		vsprintf(full_message, message, args);
+		va_end(args);
+		MessageBox(NULL, full_message, "MSCMP", NULL);
+
+		return 1;
+	});
+
+	const char *argv[] = {
+		"--debugger-agent=transport=dt_socket,embedding=1,server=y,address=127.0.0.1:56000,defer=y"
+	};
+	mono.mono_jit_parse_options(1, const_cast<char **>(argv));
+	mono.mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+}
+
+void Unprotect(ptrdiff_t where, size_t count)
+{
+	DWORD oldProtection = NULL;
+	VirtualProtect(reinterpret_cast<void *>(where), count, PAGE_EXECUTE_READWRITE, &oldProtection);
+}
+
+template <typename TYPE>
+void WriteValue(ptrdiff_t where, TYPE value)
+{
+	Unprotect(where, sizeof(value));
+	*reinterpret_cast<TYPE  *>(where) = value;
+}
+
+
+void InstallCallHook(ptrdiff_t where, ptrdiff_t func)
+{
+	WriteValue<unsigned char>(where, 0xE8);
+	WriteValue<ptrdiff_t>(where + 1, func - (where + 5));
+}
+
+
 BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 {
 	switch (Reason) {
@@ -108,7 +135,6 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 		DisableThreadLibraryCalls(hModule);
 
 		// Make sure we have mono dll to work with.
-
 
 		GetModulePath(GetModuleHandle(0), monoDllPath);
 		strcat(monoDllPath, "\\mysummercar_Data\\Mono\\mono.dll");
@@ -132,21 +158,25 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 			return FALSE;
 		}
 
+		if (!mono.Setup(monoDllPath))
+		{
+			MessageBox(NULL, "Unable to setup mono loader!", "MSCMP", MB_ICONERROR);
+			ExitProcess(0);
+			return FALSE;
+		}
+
 		unsigned baseAddress = (unsigned)(GetModuleHandle(NULL)) - 0x400000;
 		sub_6596C0 = (sub_6596C0_t)(baseAddress + 0x006596C0);
 
 		// Install initialization hook.
 
-		unsigned hookAddress = baseAddress + 0x0065C2AE;
+		InstallCallHook(baseAddress + 0x0065C2AE, (ptrdiff_t)InitHook);
 
-		unsigned hookSize = 5;
-		DWORD oldProtection = NULL;
-		VirtualProtect((void *)hookAddress, hookSize, PAGE_EXECUTE_READWRITE, &oldProtection);
+		// Install command line init hook used to install debugger.
 
-		unsigned char *hookPlace = (unsigned char *)(hookAddress);
-		*hookPlace = 0xE8;
-		unsigned *address = (unsigned *)(hookPlace + 1);
-		*address = ((unsigned)InitHook - (hookAddress + hookSize));
+		GiveChanceToAttachDebugger = (GiveChanceToAttachDebugger_t) (baseAddress + 0x005BEB20);
+		InstallCallHook(baseAddress + 0x005493D3, (ptrdiff_t)GiveChanceToAttachDebuggerHook);
+
 		break;
 	}
 	return TRUE;

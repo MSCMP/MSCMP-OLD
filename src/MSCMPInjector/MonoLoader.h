@@ -5,6 +5,7 @@
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
+#include <mono/metadata/mono-debug.h>
 
 typedef MonoDomain* (__cdecl* mono_get_root_domain_t)();
 typedef MonoThread* (__cdecl* mono_thread_attach_t)(MonoDomain* mDomain);
@@ -17,6 +18,9 @@ typedef MonoAssembly* (__cdecl* mono_domain_assembly_open_t)(MonoDomain* mDomain
 typedef MonoImage* (__cdecl* mono_assembly_get_image_t)(MonoAssembly *assembly);
 typedef MonoDomain* (__cdecl* mono_domain_get_t)();
 typedef MonoThread* (_cdecl* mono_thread_get_main_t)();
+typedef void (_cdecl *mono_jit_parse_options_t)(int argc, char * argv[]);
+typedef void (_cdecl *mono_debug_init_t)(MonoDebugFormat format);
+typedef void (_cdecl *mono_set_commandline_arguments_t)(int a1, char **a2, char *a3);
 
 class Mono
 {
@@ -47,4 +51,7 @@ public:
 	mono_assembly_get_image_t	mono_assembly_get_image = nullptr;
 	mono_domain_get_t			mono_domain_get			= nullptr;
 	mono_thread_get_main_t		mono_thread_get_main	= nullptr;
+	mono_jit_parse_options_t	mono_jit_parse_options	= nullptr;
+	mono_debug_init_t			mono_debug_init			= nullptr;
+	mono_set_commandline_arguments_t mono_set_commandline_arguments = nullptr;
 };

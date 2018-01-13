@@ -21,6 +21,7 @@ bool Mono::Setup(const char *MonoDllPath)
 	name = GetFunctionAddress<name##_t>(#name);\
 	if (!name)\
 	{\
+		MessageBox(NULL, #name, "Failed to get function address.", NULL); \
 		return false;\
 	}
 
@@ -34,6 +35,9 @@ bool Mono::Setup(const char *MonoDllPath)
 	SETUP_FUNCTION(mono_assembly_get_image);
 	SETUP_FUNCTION(mono_domain_get);
 	SETUP_FUNCTION(mono_thread_get_main);
+	SETUP_FUNCTION(mono_jit_parse_options);
+	SETUP_FUNCTION(mono_debug_init);
+	SETUP_FUNCTION(mono_set_commandline_arguments);
 
 #undef SETUP_FUNCTION
 
