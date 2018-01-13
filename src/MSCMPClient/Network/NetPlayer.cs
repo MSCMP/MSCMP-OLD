@@ -464,8 +464,9 @@ namespace MSCMP.Network {
 			// of object interpolation. Previously the object was interpolated from last frame.
 
 			pickedUpObjectInterpolator.Teleport(interpolator.CurrentPosition, interpolator.CurrentRotation);
-
-			UpdatePickedUpObject(true, false);
+			if (characterGameObject != null) {
+				UpdatePickedUpObject(true, false);
+			}
 		}
 
 		/// <summary>
@@ -473,7 +474,9 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="drop">Is it drop or throw?</param>
 		public void ReleaseObject(bool drop) {
-			UpdatePickedUpObject(false, drop);
+			if (characterGameObject != null) {
+				UpdatePickedUpObject(false, drop);
+			}
 			pickedUpObjectNetId = NetPickupable.INVALID_ID;
 		}
 
@@ -483,28 +486,17 @@ namespace MSCMP.Network {
 		/// <param name="pickup">Is this pickup action?</param>
 		/// <param name="drop">If not pickup is it drop or throw?</param>
 		private void UpdatePickedUpObject(bool pickup, bool drop) {
-			if (characterGameObject == null) {
-				if (!pickup) {
-					pickedUpObject = null;
-				}
-				return;
-			}
-
-			Rigidbody rigidBody = null;
 			if (pickup) {
 				pickedUpObject = netWorld.GetPickupableGameObject(pickedUpObjectNetId);
 				Client.Assert(pickedUpObject != null, "Player tried to pickup object that does not exists in world. Net id: " + pickedUpObjectNetId);
 				oldPickupableLayer = pickedUpObject.layer;
 				pickedUpObject.layer = Utils.LAYER_IGNORE_RAYCAST;
+				pickedUpObject.GetComponent<Rigidbody>().isKinematic = true;
 			}
-
-			rigidBody = pickedUpObject.GetComponent<Rigidbody>();
-			if (rigidBody != null) {
-				rigidBody.isKinematic = pickup;
-			}
-
-			if (!pickup) {
+			else {
+				Client.Assert(pickedUpObject != null, "Tried to drop item however player has no item in hands.");
 				pickedUpObject.layer = oldPickupableLayer;
+				pickedUpObject.GetComponent<Rigidbody>().isKinematic = false;
 				pickedUpObject = null;
 			}
 		}

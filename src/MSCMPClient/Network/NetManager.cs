@@ -124,8 +124,6 @@ namespace MSCMP.Network {
 				mode = Mode.Host;
 				state = State.Playing;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
-
-				netWorld.RegisterPickupables();
 			});
 
 			lobbyEnterCallResult = new Steamworks.CallResult<Steamworks.LobbyEnter_t>((Steamworks.LobbyEnter_t result, bool ioFailure) => {
