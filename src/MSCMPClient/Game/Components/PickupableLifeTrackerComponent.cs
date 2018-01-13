@@ -13,7 +13,9 @@ namespace MSCMP.Game.Components {
 		public NetWorld netWorld;
 
 		void OnDestroy() {
-			netWorld.HandlePickupableDestroy(gameObject);
+			if (netWorld != null) {
+				netWorld.HandlePickupableDestroy(gameObject);
+			}
 		}
 	}
 }
