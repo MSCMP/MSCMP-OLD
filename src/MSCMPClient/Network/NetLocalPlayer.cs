@@ -42,6 +42,7 @@ namespace MSCMP.Network {
 			GameCallbacks.onObjectPickup = (GameObject gameObj) => {
 				Messages.PickupObjectMessage msg = new Messages.PickupObjectMessage();
 				msg.netId = netWorld.GetPickupableNetId(gameObj);
+				Client.Assert(msg.netId != NetPickupable.INVALID_ID, "Tried to pickup not network pickupable.");
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
