@@ -145,7 +145,7 @@ namespace MSCMP.Network {
 		/// <returns>Pickupable id or NetPickupable.INVALID_ID when no free ID was found.</returns>
 		private ushort FindFreePickpableId() {
 			for (ushort i = 0; i < MAX_PICKUPABLES; ++i) {
-				if (netPickupables.ContainsKey(i)) {
+				if (!netPickupables.ContainsKey(i)) {
 					return i;
 				}
 			}
@@ -219,7 +219,6 @@ namespace MSCMP.Network {
 				NetPickupable pickupable = kv.Value;
 				var pickupableMsg = new Messages.PickupableSpawnMessage();
 				pickupableMsg.id = pickupable.NetId;
-				// Logger.Log($"Serializing pickupable: {pickupableMsg.id}. {pickupable.gameObject}");
 				var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
 				pickupableMsg.prefabId = metaData.prefabId;
 				Transform transform = pickupable.gameObject.transform;
@@ -335,9 +334,12 @@ namespace MSCMP.Network {
 		public void HandlePickupableDestroy(GameObject pickupable) {
 			var netPickupable = GetPickupableByGameObject(pickupable);
 			if (netPickupable != null) {
+				Messages.PickupableDestroyMessage msg = new Messages.PickupableDestroyMessage();
+				msg.id = netPickupable.NetId;
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+
 				Logger.Log($"Handle pickupable destroy {pickupable.name}");
 				netPickupables.Remove(netPickupable.NetId);
-				// TODO: Send network message
 			}
 			else {
 				Logger.Log($"Unhandled pickupable has been destroyed {pickupable.name}");
@@ -361,6 +363,7 @@ namespace MSCMP.Network {
 		/// <param name="netId">The network id of the pickupable.</param>
 		/// <param name="pickupable">The game object representing pickupable.</param>
 		public void RegisterPickupable(ushort netId, GameObject pickupable) {
+			Client.Assert(!netPickupables.ContainsKey(netId), $"Duplicate net id {netId}");
 			var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
 			Client.Assert(metaData != null, $"Failed to register pickupable. No meta data found. {pickupable.name} ({pickupable.GetInstanceID()})");
 
