@@ -31,6 +31,18 @@ namespace MSCMP.Game.Hooks {
 		}
 
 		/// <summary>
+		/// Activate game object PlayMaker action hook.
+		/// </summary>
+		class MyActivateGameObject : ActivateGameObject {
+			public override void OnEnter() {
+				if (gameObject.OwnerOption == OwnerDefaultOption.SpecifyGameObject) {
+					GameCallbacks.onPlayMakerObjectActivate?.Invoke(gameObject.GameObject.Value, activate.Value);
+				}
+				base.OnEnter();
+			}
+		}
+
+		/// <summary>
 		/// Install PlayMaker actions hooks.
 		/// </summary>
 		public static void Install() {
@@ -41,6 +53,7 @@ namespace MSCMP.Game.Hooks {
 				Dictionary<string, System.Type> value = (Dictionary<string, System.Type>)actionTypeLookup.GetValue(null);
 				value.Add("HutongGames.PlayMaker.Actions.CreateObject", typeof(MyCreateObject));
 				value.Add("HutongGames.PlayMaker.Actions.DestroyObject", typeof(MyDestroyObject));
+				value.Add("HutongGames.PlayMaker.Actions.ActivateGameObject", typeof(MyActivateGameObject));
 			});
 		}
 	}

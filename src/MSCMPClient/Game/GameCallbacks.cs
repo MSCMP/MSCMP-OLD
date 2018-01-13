@@ -70,5 +70,17 @@ namespace MSCMP.Game {
 		/// Callback called when PlayMaker destroys object.
 		/// </summary>
 		static public OnPlayMakerObjectDestroy onPlayMakerObjectDestroy = null;
+
+		/// <summary>
+		/// Delegate of the callback called when PlayMaker activates game object.
+		/// </summary>
+		/// <param name="instance">The instance of the object that will be activated/deactivated.</param>
+		/// <param name="activate">Is the object activating?</param>
+		public delegate void OnPlayMakerObjectActivate(GameObject instance, bool activate);
+
+		/// <summary>
+		/// Callback called when PlayMaker activates object.
+		/// </summary>
+		static public OnPlayMakerObjectActivate onPlayMakerObjectActivate = null;
 	}
 }
