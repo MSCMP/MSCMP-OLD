@@ -138,9 +138,11 @@ namespace MSCMP.Game {
 				var go = pickupables[0];
 				pickupables.RemoveAt(0);
 
-				if (go.name.StartsWith("JONNEZ ES")) {
+				if (go.name.StartsWith("JONNEZ ES") || !go.transform.parent || !go.name.EndsWith("(Clone)")) {
 					continue;
 				}
+
+				Logger.Log($"Destroying {go.name} {go.activeSelf} {go.transform.parent}");
 				GameObject.Destroy(go);
 			}
 		}
