@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Diagnostics;
 using UnityEngine;
+using System;
 
 namespace MSCMP
 {
@@ -62,7 +63,17 @@ namespace MSCMP
 		/// <param name="message">The message to print to console.</param>
 		public static void FatalError(string message) {
 			Logger.Log(message);
-			Process.GetCurrentProcess().Kill();
+			Logger.Log(Environment.StackTrace);
+#if DEBUG
+			if (Debugger.IsAttached) {
+				throw new System.Exception(message);
+			}
+			else {
+#endif
+				Process.GetCurrentProcess().Kill();
+#if DEBUG
+			}
+#endif
 		}
 
 		/// <summary>
@@ -75,8 +86,7 @@ namespace MSCMP
 				return;
 			}
 			Logger.Log("[ASSERTION FAILED]");
-			Logger.Log(message);
-			Process.GetCurrentProcess().Kill();
+			FatalError(message);
 		}
 	}
 }
