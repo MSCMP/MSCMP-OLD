@@ -307,6 +307,13 @@ namespace MSCMP {
 		/// <param name="name">The name of the safe call scope.</param>
 		/// <param name="call">The code to execute.</param>
 		public static void CallSafe(string name, SafeCall call) {
+#if DEBUG
+			if (System.Diagnostics.Debugger.IsAttached) {
+				call();
+				return;
+			}
+#endif
+
 			try {
 				call();
 			}
