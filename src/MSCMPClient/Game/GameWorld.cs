@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using MSCMP.Game.Objects;
+using HutongGames.PlayMaker;
 
 namespace MSCMP.Game {
 
@@ -48,6 +49,8 @@ namespace MSCMP.Game {
 			}
 		}
 
+		private const string REFRESH_WORLD_TIME_EVENT = "MP_REFRESH_WORLD_TIME";
+
 		float worldTimeCached = 0;
 
 		/// <summary>
@@ -60,6 +63,7 @@ namespace MSCMP.Game {
 					int hours = (int)value;
 					worldTimeFsm.Fsm.GetFsmInt("Time").Value = hours;
 					worldTimeFsm.Fsm.GetFsmFloat("Minutes").Value = value - hours;
+					worldTimeFsm.SendEvent(REFRESH_WORLD_TIME_EVENT);
 				}
 			}
 
@@ -107,6 +111,10 @@ namespace MSCMP.Game {
 			// Yep it's called "Color" :>
 			worldTimeFsm = Utils.GetPlaymakerScriptByName(sunGameObject, "Color");
 			Client.Assert(worldTimeFsm != null, "Now world time FSM found :(");
+
+			// Register refresh world time event.
+			FsmEvent mpRefreshWorldTimeEvent = worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
+			PlayMakerUtils.AddNewGlobalTransition(worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
 
 			// Make sure world time is up-to-date with cache.
 			WorldTime = worldTimeCached;
