@@ -137,7 +137,7 @@ namespace MSCMP {
 			int index = 0;
 			foreach (GameObject go in gos) {
 				Transform trans = go.GetComponent<Transform>();
-				if (trans == null /*|| trans.parent != null*/) continue;
+				if (trans == null || trans.parent != null) continue;
 
 				string SanitizedName = go.name;
 				SanitizedName = SanitizedName.Replace("/", "");
