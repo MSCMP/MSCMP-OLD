@@ -424,16 +424,16 @@ namespace MSCMP.Network {
 		/// Update connection state.
 		/// </summary>
 		private void UpdateHeartbeat() {
-			if (!IsNetworkPlayerConnected()) {
-				return;
-			}
-
 			timeSinceLastHeartbeat += Time.deltaTime;
 
 			if (timeSinceLastHeartbeat >= TIMEOUT_TIME) {
 				HandleDisconnect(true);
 			}
 			else {
+				if (!IsNetworkPlayerConnected()) {
+					return;
+				}
+
 				timeToSendHeartbeat -= Time.deltaTime;
 				if (timeToSendHeartbeat <= 0.0f) {
 					Messages.HeartbeatMessage message = new Messages.HeartbeatMessage();
