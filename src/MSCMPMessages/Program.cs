@@ -25,6 +25,7 @@
 			generator.GenerateMessage(typeof(Messages.PickupObjectMessage));
 			generator.GenerateMessage(typeof(Messages.ReleaseObjectMessage));
 			generator.GenerateMessage(typeof(Messages.PickupableActivateMessage));
+			generator.GenerateMessage(typeof(Messages.PickupableSetPositionMessage));
 			generator.EndGeneration();
 		}
 	}

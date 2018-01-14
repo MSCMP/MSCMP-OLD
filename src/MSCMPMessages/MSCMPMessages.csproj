@@ -68,6 +68,7 @@
     <Compile Include="Messages\OpenDoorsMessage.cs" />
     <Compile Include="Messages\PickupableActivateMessage.cs" />
     <Compile Include="Messages\PickupableDestroyMessage.cs" />
+    <Compile Include="Messages\PickupableSetPositionMessage.cs" />
     <Compile Include="Messages\PickupableSpawnMessage.cs" />
     <Compile Include="Messages\PickupObjectMessage.cs" />
     <Compile Include="Messages\PlayerSyncMessage.cs" />

@@ -21,6 +21,7 @@ namespace MSCMPMessages.Messages {
 		ReleaseObject,
 		PickupableSpawn,
 		PickupableDestroy,
-		PickupableActivate
+		PickupableActivate,
+		PickupableSetPosition
 	}
 }
