@@ -12,6 +12,8 @@
 
 	[NetMessageDesc(MessageIds.FullWorldSync)]
 	class FullWorldSyncMessage {
+		int							day;
+		float						dayTime;
 		DoorsInitMessage[]			doors;
 		VehicleInitMessage[]		vehicles;
 		PickupableSpawnMessage[]	pickupables;

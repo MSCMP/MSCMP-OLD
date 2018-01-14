@@ -236,6 +236,13 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="msg">The message to write to.</param>
 		public void WriteFullWorldSync(Messages.FullWorldSyncMessage msg) {
+
+			// Write time
+
+			Game.GameWorld gameWorld = Game.GameWorld.Instance;
+			msg.dayTime = gameWorld.WorldTime;
+			msg.day = gameWorld.WorldDay;
+
 			// Write doors
 
 			List<Game.Objects.GameDoor> doors = Game.GameDoorsManager.Instance.doors;
@@ -293,6 +300,12 @@ namespace MSCMP.Network {
 		/// <param name="msg">The message to handle.</param>
 
 		public void HandleFullWorldSync(Messages.FullWorldSyncMessage msg) {
+			// Read time
+
+			Game.GameWorld gameWorld = Game.GameWorld.Instance;
+			gameWorld.WorldTime = msg.dayTime;
+			gameWorld.WorldDay = msg.day;
+
 			// Doors.
 
 			foreach (Messages.DoorsInitMessage door in msg.doors) {
