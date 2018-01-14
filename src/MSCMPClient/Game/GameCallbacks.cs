@@ -82,5 +82,19 @@ namespace MSCMP.Game {
 		/// Callback called when PlayMaker activates object.
 		/// </summary>
 		static public OnPlayMakerObjectActivate onPlayMakerObjectActivate = null;
+
+
+		/// <summary>
+		/// Delegate of the callback called when PlayMaker sets position of the game object.
+		/// </summary>
+		/// <param name="instance">The instance of the object this event is about.</param>
+		/// <param name="position">The position to set.</param>
+		/// <param name="space">The position space.</param>
+		public delegate void OnPlayMakerSetPosition(GameObject instance, Vector3 newPosition, Space space);
+
+		/// <summary>
+		/// Callback called when PlayMaker sets position of an object.
+		/// </summary>
+		static public OnPlayMakerSetPosition onPlayMakerSetPosition = null;
 	}
 }

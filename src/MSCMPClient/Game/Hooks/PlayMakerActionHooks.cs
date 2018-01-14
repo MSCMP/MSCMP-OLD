@@ -35,9 +35,29 @@ namespace MSCMP.Game.Hooks {
 		/// </summary>
 		class MyActivateGameObject : ActivateGameObject {
 			public override void OnEnter() {
-				if (gameObject.OwnerOption == OwnerDefaultOption.SpecifyGameObject) {
-					GameCallbacks.onPlayMakerObjectActivate?.Invoke(gameObject.GameObject.Value, activate.Value);
-				}
+				UnityEngine.GameObject go = Fsm.GetOwnerDefaultTarget(gameObject);
+				GameCallbacks.onPlayMakerObjectActivate?.Invoke(go, activate.Value);
+
+				base.OnEnter();
+			}
+		}
+
+		/// <summary>
+		/// Set game object position PlayMaker action hook.
+		/// </summary>
+		class MySetPosition : SetPosition {
+			public override void OnEnter() {
+				UnityEngine.Vector3 newPosition = this.vector.Value;
+				if (!this.x.IsNone)
+					newPosition.x = this.x.Value;
+				if (!this.y.IsNone)
+					newPosition.y = this.y.Value;
+				if (!this.z.IsNone)
+					newPosition.z = this.z.Value;
+
+				UnityEngine.GameObject go = Fsm.GetOwnerDefaultTarget(gameObject);
+				GameCallbacks.onPlayMakerSetPosition?.Invoke(go, newPosition, space);
+
 				base.OnEnter();
 			}
 		}
@@ -54,6 +74,7 @@ namespace MSCMP.Game.Hooks {
 				value.Add("HutongGames.PlayMaker.Actions.CreateObject", typeof(MyCreateObject));
 				value.Add("HutongGames.PlayMaker.Actions.DestroyObject", typeof(MyDestroyObject));
 				value.Add("HutongGames.PlayMaker.Actions.ActivateGameObject", typeof(MyActivateGameObject));
+				value.Add("HutongGames.PlayMaker.Actions.SetPosition", typeof(MySetPosition));
 			});
 		}
 	}
