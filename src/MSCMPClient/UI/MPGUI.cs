@@ -63,7 +63,7 @@ namespace MSCMP.UI {
 				Client.Assert(cursorCounter > 0, "Tried to hide cursor too many times.");
 				if (--cursorCounter == 0) {
 					if (Application.loadedLevelName == "GAME") {
-						// Only hide cursor if we aren't in game.
+						// Only hide cursor if we are in game.
 						Cursor.visible = false;
 					}
 				}
