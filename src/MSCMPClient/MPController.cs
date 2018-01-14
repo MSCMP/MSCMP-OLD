@@ -246,5 +246,12 @@ namespace MSCMP {
 		public void LoadLevel(string levelName) {
 			Application.LoadLevel(levelName);
 		}
+
+		/// <summary>
+		/// Can this client instance use save?
+		/// </summary>
+		public bool CanUseSave {
+			get { return !netManager.IsOnline || netManager.IsHost; }
+		}
 	}
 }
