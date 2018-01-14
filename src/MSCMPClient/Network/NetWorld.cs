@@ -110,6 +110,33 @@ namespace MSCMP.Network {
 				}
 			};
 
+			Game.GameCallbacks.onPlayMakerSetPosition += (GameObject gameObject, Vector3 position, Space space) => {
+				if (!Game.GamePickupableDatabase.IsPickupable(gameObject)) {
+					return;
+				}
+
+				NetPickupable pickupable = GetPickupableByGameObject(gameObject);
+				if (pickupable == null) {
+					return;
+				}
+
+
+				if (space == Space.Self) {
+					position += gameObject.transform.position;
+				}
+
+				Messages.PickupableSetPositionMessage msg = new Messages.PickupableSetPositionMessage();
+				msg.id = pickupable.NetId;
+				msg.position = Utils.GameVec3ToNet(position);
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			};
+
+			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSetPositionMessage msg) => {
+				Client.Assert(netPickupables.ContainsKey(msg.id), $"Tried to move pickupable that is not spawned {msg.id}.");
+				GameObject gameObject = netPickupables[msg.id].gameObject;
+				gameObject.transform.position = Utils.NetVec3ToGame(msg.position);
+			});
+
 			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableActivateMessage msg) => {
 				GameObject gameObject = null;
 				if (netPickupables.ContainsKey(msg.id)) {
