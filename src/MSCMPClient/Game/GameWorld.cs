@@ -176,6 +176,7 @@ namespace MSCMP.Game {
 			vehicles.Add(new GameVehicle(GameObject.Find("KEKMET(350-400psi)")));
 			vehicles.Add(new GameVehicle(GameObject.Find("FLATBED")));
 			vehicles.Add(new GameVehicle(GameObject.Find("FERNDALE(1630kg)")));
+			vehicles.Add(new GameVehicle(GameObject.Find("GIFU(750/450psi)")));
 		}
 
 		public GameVehicle FindVehicleByName(string name) {

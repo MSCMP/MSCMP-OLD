@@ -48,6 +48,7 @@ namespace MSCMP.Network {
 			RegisterVehicle("KEKMET(350-400psi)");
 			RegisterVehicle("FLATBED");
 			RegisterVehicle("FERNDALE(1630kg)");
+			RegisterVehicle("GIFU(750/450psi)");
 
 			Game.GameCallbacks.onWorldUnload += () => {
 				OnGameWorldUnload();
