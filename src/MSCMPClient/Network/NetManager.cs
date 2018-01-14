@@ -140,6 +140,7 @@ namespace MSCMP.Network {
 				state = State.LoadingGameWorld;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
 
+				ShowLoadingScreen(true);
 				SendHandshake();
 			});
 
@@ -261,6 +262,26 @@ namespace MSCMP.Network {
 				}
 				player.ReleaseObject(msg.drop);
 			});
+		}
+
+		/// <summary>
+		/// Show loading screen.
+		/// </summary>
+		/// <param name="show">Show or hide loading screen.</param>
+		private void ShowLoadingScreen(bool show) {
+			if (Application.loadedLevelName == "MainMenu") {
+				// This is not that slow as you may think - seriously!
+
+				GameObject []gos = Resources.FindObjectsOfTypeAll<GameObject>();
+				GameObject loadingScreen = null;
+				foreach (GameObject go in gos) {
+					if (go.transform.parent == null && go.name == "Loading") {
+						loadingScreen = go;
+						break;
+					}
+				}
+				loadingScreen.SetActive(show);
+			}
 		}
 
 		/// <summary>
@@ -403,6 +424,7 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="timeout">Was the disconnect caused by timeout?</param>
 		private void HandleDisconnect(bool timeout) {
+			ShowLoadingScreen(false);
 			CleanupPlayer();
 
 			// Go to main menu if we are normal player - the session just closed.
