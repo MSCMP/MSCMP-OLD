@@ -32,6 +32,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		GamePickupableDatabase gamePickupableDatabase = new GamePickupableDatabase();
 
+		/// <summary>
+		/// World time managing fsm.
+		/// </summary>
+		PlayMakerFSM worldTimeFsm = null;
+
 		private GamePlayer player = null;
 
 		/// <summary>
@@ -42,6 +47,44 @@ namespace MSCMP.Game {
 				return player;
 			}
 		}
+
+		float worldTimeCached = 0;
+
+		/// <summary>
+		/// Current world time. (hh.mm)
+		/// </summary>
+		public float WorldTime {
+			set {
+				worldTimeCached = value;
+				if (worldTimeFsm != null) {
+					int hours = (int)value;
+					worldTimeFsm.Fsm.GetFsmInt("Time").Value = hours;
+					worldTimeFsm.Fsm.GetFsmFloat("Minutes").Value = value - hours;
+				}
+			}
+
+			get {
+				if (worldTimeFsm != null) {
+					worldTimeCached = worldTimeFsm.Fsm.GetFsmInt("Time").Value;
+					worldTimeCached += worldTimeFsm.Fsm.GetFsmFloat("Minutes").Value;
+				}
+				return worldTimeCached;
+			}
+		}
+
+		/// <summary>
+		/// Current world day.
+		/// </summary>
+		public int WorldDay {
+			get {
+				return PlayMakerGlobals.Instance.Variables.GetFsmInt("GlobalDay").Value;
+			}
+
+			set {
+				PlayMakerGlobals.Instance.Variables.GetFsmInt("GlobalDay").Value = value;
+			}
+		}
+
 
 
 		public GameWorld() {
@@ -56,6 +99,18 @@ namespace MSCMP.Game {
 		/// Callback called when world is loaded.
 		/// </summary>
 		public void OnLoad() {
+			// Cache world time management fsm.
+
+			GameObject sunGameObject = GameObject.Find("SUN");
+			Client.Assert(sunGameObject != null, "SUN game object is missing!");
+
+			// Yep it's called "Color" :>
+			worldTimeFsm = Utils.GetPlaymakerScriptByName(sunGameObject, "Color");
+			Client.Assert(worldTimeFsm != null, "Now world time FSM found :(");
+
+			// Make sure world time is up-to-date with cache.
+			WorldTime = worldTimeCached;
+
 			gameAnimDatabase.Rebuild();
 			gamePickupableDatabase.Rebuild();
 
@@ -71,6 +126,8 @@ namespace MSCMP.Game {
 		/// Callback called when world gets unloaded.
 		/// </summary>
 		public void OnUnload() {
+			worldTimeFsm = null;
+
 			if (GameCallbacks.onWorldUnload != null) {
 				GameCallbacks.onWorldUnload();
 			}
