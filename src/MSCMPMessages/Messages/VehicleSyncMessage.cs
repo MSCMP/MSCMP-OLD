@@ -11,5 +11,7 @@ namespace MSCMPMessages.Messages {
 		Vector3Message position;
 		QuaternionMessage rotation;
 
+		float steering;
+
 	}
 }
