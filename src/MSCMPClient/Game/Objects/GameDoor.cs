@@ -51,8 +51,11 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		public OnClose onClose;
 
-		private const string OPEN_EVENT_NAME = "MPOPEN";
-		private const string CLOSE_EVENT_NAME = "MPCLOSE";
+		private const string OPEN_EVENT_NAME = "OPEN";
+		private const string CLOSE_EVENT_NAME = "CLOSE";
+
+		private const string MP_OPEN_EVENT_NAME = "MPOPEN";
+		private const string MP_CLOSE_EVENT_NAME = "MPCLOSE";
 
 		/// <summary>
 		/// Constructor.
@@ -61,13 +64,13 @@ namespace MSCMP.Game.Objects {
 		public GameDoor(GameObject gameObject) {
 			go = gameObject;
 			fsm = Utils.GetPlaymakerScriptByName(go, "Use");
-			if (fsm.Fsm.HasEvent(OPEN_EVENT_NAME)) {
+			if (fsm.Fsm.HasEvent(MP_OPEN_EVENT_NAME)) {
 				Logger.Log("Failed to hook game door " + go.name + ". It is already hooked.");
 				return;
 			}
 
-			FsmEvent mpOpenEvent = fsm.Fsm.GetEvent(OPEN_EVENT_NAME);
-			FsmEvent mpCloseEvent = fsm.Fsm.GetEvent(CLOSE_EVENT_NAME);
+			FsmEvent mpOpenEvent = fsm.Fsm.GetEvent(MP_OPEN_EVENT_NAME);
+			FsmEvent mpCloseEvent = fsm.Fsm.GetEvent(MP_CLOSE_EVENT_NAME);
 
 			PlayMakerUtils.AddNewGlobalTransition(fsm, mpOpenEvent, "Open door");
 			PlayMakerUtils.AddNewGlobalTransition(fsm, mpCloseEvent, "Close door");
@@ -89,9 +92,9 @@ namespace MSCMP.Game.Objects {
 			public override void OnEnter() {
 				Finish();
 
-				// If open was triggered from our custom event we do not send it.
+				// If open was not triggered by local player do not send call the callback.
 
-				if (State.Fsm.LastTransition.EventName == OPEN_EVENT_NAME) {
+				if (State.Fsm.LastTransition.EventName != OPEN_EVENT_NAME) {
 					return;
 				}
 
@@ -113,9 +116,9 @@ namespace MSCMP.Game.Objects {
 
 				Finish();
 
-				// If close was triggered from our custom event we do not send it.
+				// If close was not triggered by local player do not send call the callback.
 
-				if (State.Fsm.LastTransition.EventName == CLOSE_EVENT_NAME) {
+				if (State.Fsm.LastTransition.EventName != CLOSE_EVENT_NAME) {
 					return;
 				}
 
@@ -130,10 +133,10 @@ namespace MSCMP.Game.Objects {
 		/// <param name="open">Open or close?</param>
 		public void Open(bool open) {
 			if (open) {
-				fsm.SendEvent(OPEN_EVENT_NAME);
+				fsm.SendEvent(MP_OPEN_EVENT_NAME);
 			}
 			else {
-				fsm.SendEvent(CLOSE_EVENT_NAME);
+				fsm.SendEvent(MP_CLOSE_EVENT_NAME);
 			}
 		}
 
