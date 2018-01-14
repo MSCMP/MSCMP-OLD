@@ -170,6 +170,8 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="msg">Message to write to.</param>
 		public void WriteHandshake(Messages.HandshakeMessage msg) {
+			msg.spawnPosition = Utils.GameVec3ToNet(GetPosition());
+			msg.spawnRotation = Utils.GameQuatToNet(GetRotation());
 
 			if (state == State.OnFoot) {
 				msg.occupiedVehicleId = NetVehicle.INVALID_ID;
@@ -222,6 +224,22 @@ namespace MSCMP.Network {
 				return Vector3.zero;
 			}
 			return playerObject.transform.position;
+		}
+
+		/// <summary>
+		/// Get world rotation of the character.
+		/// </summary>
+		/// <returns>World rotation of the player character.</returns>
+		public override Quaternion GetRotation() {
+			GamePlayer player = GameWorld.Instance.Player;
+			if (player == null) {
+				return Quaternion.identity;
+			}
+			var playerObject = player.Object;
+			if (playerObject == null) {
+				return Quaternion.identity;
+			}
+			return playerObject.transform.rotation;
 		}
 
 		/// <summary>
