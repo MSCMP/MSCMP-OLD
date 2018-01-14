@@ -140,7 +140,7 @@ namespace MSCMP {
 				if (trans == null /*|| trans.parent != null*/) continue;
 
 				string SanitizedName = go.name;
-				SanitizedName = SanitizedName.Replace(@"\", "_SLASH_");
+				SanitizedName = SanitizedName.Replace("/", "");
 				string dumpFilePath = path + "\\" + SanitizedName + ".txt";
 				try {
 					DumpObject(trans, dumpFilePath);
