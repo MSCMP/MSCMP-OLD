@@ -110,6 +110,19 @@ namespace MSCMP.Network {
 				}
 			};
 
+			Game.GameCallbacks.onPlayMakerObjectDestroy += (GameObject instance) => {
+				if (!Game.GamePickupableDatabase.IsPickupable(instance)) {
+					return;
+				}
+
+				NetPickupable pickupable = GetPickupableByGameObject(instance);
+				if (pickupable == null) {
+					return;
+				}
+
+				HandlePickupableDestroy(instance);
+			};
+
 			Game.GameCallbacks.onPlayMakerSetPosition += (GameObject gameObject, Vector3 position, Space space) => {
 				if (!Game.GamePickupableDatabase.IsPickupable(gameObject)) {
 					return;
@@ -495,8 +508,6 @@ namespace MSCMP.Network {
 			}
 			var gameObject = netPickupables[id].gameObject;
 			if (gameObject != null) {
-				var lifeTracker = gameObject.AddComponent<Game.Components.PickupableLifeTrackerComponent>();
-				lifeTracker.netWorld = null;
 				GameObject.Destroy(gameObject);
 			}
 			netPickupables.Remove(id);
@@ -513,9 +524,6 @@ namespace MSCMP.Network {
 			Client.Assert(metaData != null, $"Failed to register pickupable. No meta data found. {pickupable.name} ({pickupable.GetInstanceID()})");
 
 			Logger.Log($"Registering pickupable {pickupable.name} (net id: {netId}, instance id: {pickupable.GetInstanceID()})");
-
-			var lifeTracker = pickupable.AddComponent<Game.Components.PickupableLifeTrackerComponent>();
-			lifeTracker.netWorld = this;
 
 			netPickupables.Add(netId, new NetPickupable(netId, pickupable));
 		}

@@ -77,7 +77,6 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="DevTools.cs" />
-    <Compile Include="Game\Components\PickupableLifeTrackerComponent.cs" />
     <Compile Include="Game\Components\PickupableMetaDataComponent.cs" />
     <Compile Include="Game\GameAnimDatabase.cs" />
     <Compile Include="Game\GameCallbacks.cs" />
