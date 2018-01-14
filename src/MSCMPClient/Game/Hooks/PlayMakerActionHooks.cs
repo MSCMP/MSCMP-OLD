@@ -31,6 +31,16 @@ namespace MSCMP.Game.Hooks {
 		}
 
 		/// <summary>
+		/// Destroy self PlayMaker action hook.
+		/// </summary>
+		class MyDestroySelf : DestroySelf {
+			public override void OnEnter() {
+				GameCallbacks.onPlayMakerObjectDestroy?.Invoke(Owner);
+				base.OnEnter();
+			}
+		}
+
+		/// <summary>
 		/// Activate game object PlayMaker action hook.
 		/// </summary>
 		class MyActivateGameObject : ActivateGameObject {
@@ -72,6 +82,7 @@ namespace MSCMP.Game.Hooks {
 
 				Dictionary<string, System.Type> value = (Dictionary<string, System.Type>)actionTypeLookup.GetValue(null);
 				value.Add("HutongGames.PlayMaker.Actions.CreateObject", typeof(MyCreateObject));
+				value.Add("HutongGames.PlayMaker.Actions.DestroySelf", typeof(MyDestroySelf));
 				value.Add("HutongGames.PlayMaker.Actions.DestroyObject", typeof(MyDestroyObject));
 				value.Add("HutongGames.PlayMaker.Actions.ActivateGameObject", typeof(MyActivateGameObject));
 				value.Add("HutongGames.PlayMaker.Actions.SetPosition", typeof(MySetPosition));
