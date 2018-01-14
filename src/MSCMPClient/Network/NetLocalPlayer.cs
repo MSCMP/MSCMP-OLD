@@ -59,6 +59,10 @@ namespace MSCMP.Network {
 		/// </summary>
 		public override void DrawDebugGUI() {
 			GUI.Label(new Rect(300, 10, 300, 200), "Local player\ntime to update: " + timeToUpdate + "\nstate: " + state + "\nobject: " + GameWorld.Instance.Player + "\n World time: " + GameWorld.Instance.WorldTime + "\nWorld day: " + GameWorld.Instance.WorldDay);
+
+			if (currentVehicle != null) {
+				currentVehicle.UpdateIMGUI();
+			}
 		}
 #endif
 

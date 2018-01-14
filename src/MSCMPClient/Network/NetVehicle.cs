@@ -217,19 +217,9 @@ namespace MSCMP.Network {
 		/// Draw debug ui about this vehicle.
 		/// </summary>
 		public void UpdateIMGUI() {
-			/*Vector3 pos = GetPosition() + Vector3.up * 3.0f;
-
-			Vector3 spos = Camera.main.WorldToScreenPoint(pos);
-			if (spos.z < 0.0f) {
-				return;
+			if (GameObject != null) {
+				GameObject.UpdateIMGUI();
 			}
-			spos.y = Screen.height - spos.y;
-
-			GUI.Label(new Rect(spos.x, spos.y, 300.0f, 300.0f),
-				"Has driver: " + (driverPlayer != null ? "yes" : "no") + "\n" +
-				"Has passenger: " + (passengerPlayer != null ? "yes" : "no") + "\n" +
-				"Sync receive time: " + syncReceiveTime + "\n"
-			);*/
 		}
 #endif
 	}

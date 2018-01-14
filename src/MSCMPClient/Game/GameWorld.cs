@@ -189,9 +189,7 @@ namespace MSCMP.Game {
 		}
 
 		public void UpdateIMGUI() {
-			foreach (var v in vehicles) {
-				v.UpdateIMGUI();
-			}
+			// noop
 		}
 
 		/// <summary>

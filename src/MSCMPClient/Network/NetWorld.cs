@@ -407,9 +407,7 @@ namespace MSCMP.Network {
 		/// Update debug imgui.
 		/// </summary>
 		public void UpdateIMGUI() {
-			foreach (var v in vehicles) {
-				v.UpdateIMGUI();
-			}
+			// noop
 		}
 #endif
 
