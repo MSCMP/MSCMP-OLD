@@ -482,16 +482,17 @@ namespace MSCMP.Network {
 			if (netPickupables.ContainsKey(msg.id)) {
 				NetPickupable netPickupable = netPickupables[msg.id];
 				GameObject gameObject = netPickupable.gameObject;
-				var metaData = gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
-				if (msg.prefabId == metaData.prefabId) {
-					gameObject.SetActive(true);
-					gameObject.transform.position = position;
-					gameObject.transform.rotation = rotation;
-					return;
+				if (gameObject != null) {
+					var metaData = gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
+					if (msg.prefabId == metaData.prefabId) {
+						gameObject.SetActive(true);
+						gameObject.transform.position = position;
+						gameObject.transform.rotation = rotation;
+						return;
+					}
 				}
-				else {
-					DestroyPickupableLocal(msg.id);
-				}
+
+				DestroyPickupableLocal(msg.id);
 			}
 
 			GameObject pickupable = Game.GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation);
