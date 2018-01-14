@@ -31,6 +31,14 @@ namespace MSCMP {
 		}
 
 		/// <summary>
+		/// Write log message.
+		/// </summary>
+		/// <param name="message">Message to write.</param>
+		public static void Warning(string message) {
+			logFile.WriteLine("[WARN] " + message);
+		}
+
+		/// <summary>
 		/// Write debug message.
 		/// </summary>
 		/// <param name="message">Message to write.</param>
