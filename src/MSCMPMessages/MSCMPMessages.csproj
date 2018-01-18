@@ -78,6 +78,7 @@
     <Compile Include="Messages\VehicleEnterMessage.cs" />
     <Compile Include="Messages\VehicleLeaveMessage.cs" />
     <Compile Include="Messages\VehicleSyncMessage.cs" />
+    <Compile Include="Messages\WorldPeriodicalUpdateMessage.cs" />
     <Compile Include="NetMessageDesc.cs" />
     <Compile Include="Optional.cs" />
     <Compile Include="Program.cs" />

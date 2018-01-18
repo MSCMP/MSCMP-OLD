@@ -58,11 +58,21 @@ namespace MSCMP.Game {
 		/// </summary>
 		public float WorldTime {
 			set {
-				worldTimeCached = value;
+				// Make sure value is reasonable. (0 - 24 range)
+
+				while (value > 24.0f) {
+					value -= 24.0f;
+				}
+
+				// Make sure reported time is power of two..
+				worldTimeCached = (float)((int)(value) / 2 * 2);
+
+				if (worldTimeCached <= 2.0f) {
+					worldTimeCached = 2.0f;
+				}
+
 				if (worldTimeFsm != null) {
-					int hours = (int)value;
-					worldTimeFsm.Fsm.GetFsmInt("Time").Value = hours;
-					worldTimeFsm.Fsm.GetFsmFloat("Minutes").Value = value - hours;
+					worldTimeFsm.Fsm.GetFsmInt("Time").Value = (int)worldTimeCached;
 					worldTimeFsm.SendEvent(REFRESH_WORLD_TIME_EVENT);
 				}
 			}
@@ -70,7 +80,6 @@ namespace MSCMP.Game {
 			get {
 				if (worldTimeFsm != null) {
 					worldTimeCached = worldTimeFsm.Fsm.GetFsmInt("Time").Value;
-					worldTimeCached += worldTimeFsm.Fsm.GetFsmFloat("Minutes").Value;
 				}
 				return worldTimeCached;
 			}
@@ -113,8 +122,10 @@ namespace MSCMP.Game {
 			Client.Assert(worldTimeFsm != null, "Now world time FSM found :(");
 
 			// Register refresh world time event.
-			FsmEvent mpRefreshWorldTimeEvent = worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
-			PlayMakerUtils.AddNewGlobalTransition(worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
+			if (!worldTimeFsm.Fsm.HasEvent(REFRESH_WORLD_TIME_EVENT)) {
+				FsmEvent mpRefreshWorldTimeEvent = worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
+				PlayMakerUtils.AddNewGlobalTransition(worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
+			}
 
 			// Make sure world time is up-to-date with cache.
 			WorldTime = worldTimeCached;

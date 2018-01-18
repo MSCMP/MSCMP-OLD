@@ -33,6 +33,16 @@ namespace MSCMP.Network {
 		Dictionary<ushort, NetPickupable> netPickupables = new Dictionary<ushort, NetPickupable>();
 
 		/// <summary>
+		/// Interval between each periodical update in seconds.
+		/// </summary>
+		const float PERIODICAL_UPDATE_INTERVAL = 10.0f;
+
+		/// <summary>
+		/// Time left to send periodical message.
+		/// </summary>
+		float timeToSendPeriodicalUpdate = 0.0f;
+
+		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="netManager">Network manager owning this network world.</param>
@@ -181,6 +191,12 @@ namespace MSCMP.Network {
 				GameObject.Destroy(pickupable.gameObject);
 				netPickupables.Remove(msg.id);
 			});
+
+			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.WorldPeriodicalUpdateMessage msg) => {
+				// Game reports 'next hour' - we want to have transition so correct it.
+				Game.GameWorld.Instance.WorldTime = (float) msg.sunClock - 2.0f;
+				Game.GameWorld.Instance.WorldDay = (int) msg.worldDay;
+			});
 		}
 
 		/// <summary>
@@ -209,6 +225,22 @@ namespace MSCMP.Network {
 		/// Update net world.
 		/// </summary>
 		public void Update() {
+
+			if (netManager.IsPlayer || !netManager.IsNetworkPlayerConnected()) {
+				return;
+			}
+
+			timeToSendPeriodicalUpdate -= Time.deltaTime;
+
+			if (timeToSendPeriodicalUpdate <= 0.0f) {
+				var message = new Messages.WorldPeriodicalUpdateMessage();
+				message.sunClock = (Byte)Game.GameWorld.Instance.WorldTime;
+				message.worldDay = (Byte)Game.GameWorld.Instance.WorldDay;
+				netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
+
+				timeToSendPeriodicalUpdate = PERIODICAL_UPDATE_INTERVAL;
+			}
+
 		}
 
 

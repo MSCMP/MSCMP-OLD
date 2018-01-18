@@ -26,6 +26,7 @@
 			generator.GenerateMessage(typeof(Messages.ReleaseObjectMessage));
 			generator.GenerateMessage(typeof(Messages.PickupableActivateMessage));
 			generator.GenerateMessage(typeof(Messages.PickupableSetPositionMessage));
+			generator.GenerateMessage(typeof(Messages.WorldPeriodicalUpdateMessage));
 			generator.EndGeneration();
 		}
 	}
