@@ -188,6 +188,11 @@ namespace MSCMP.Network {
 		/// Cleanup all objects before destroying the player.
 		/// </summary>
 		public void Dispose() {
+
+			if (currentVehicle != null) {
+				LeaveVehicle();
+			}
+
 			// Destroy player model on disconnect/timeout.
 
 			if (characterGameObject != null) {

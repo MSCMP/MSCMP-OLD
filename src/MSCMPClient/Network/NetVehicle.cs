@@ -117,9 +117,13 @@ namespace MSCMP.Network {
 		/// Handle synchronization packet from the network.
 		/// </summary>
 		/// <param name="msg">The message to handle.</param>
-		public virtual void HandleSynchronization(Messages.VehicleSyncMessage msg) {
-			interpolator.SetTarget(Utils.NetVec3ToGame(msg.position), Utils.NetQuatToGame(msg.rotation));
+		public virtual void HandleSynchronization(Messages.VehicleSyncMessage message) {
+			interpolator.SetTarget(Utils.NetVec3ToGame(message.position), Utils.NetQuatToGame(message.rotation));
 			syncReceiveTime = netManager.GetNetworkClock();
+
+			if (GameObject != null) {
+				GameObject.Steering = message.steering;
+			}
 		}
 
 		/// <summary>
@@ -133,6 +137,9 @@ namespace MSCMP.Network {
 			}
 			else {
 				driverPlayer = player;
+
+				bool remoteSteering = (driverPlayer != null) && !(driverPlayer is NetLocalPlayer);
+				GameObject.SetRemoteSteering(remoteSteering);
 			}
 		}
 
@@ -177,6 +184,7 @@ namespace MSCMP.Network {
 			}
 			message.position = Utils.GameVec3ToNet(transform.position);
 			message.rotation = Utils.GameQuatToNet(transform.rotation);
+			message.steering = GameObject.Steering;
 			return true;
 		}
 
