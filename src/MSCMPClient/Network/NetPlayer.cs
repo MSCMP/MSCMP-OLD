@@ -178,6 +178,10 @@ namespace MSCMP.Network {
 			if (pickedUpObjectNetId != NetPickupable.INVALID_ID) {
 				UpdatePickedUpObject(true, false);
 			}
+
+			if (currentVehicle != null) {
+				SitInCurrentVehicle();
+			}
 		}
 
 		/// <summary>
@@ -338,6 +342,24 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
+		/// Sit in current vehicle.
+		/// </summary>
+		private void SitInCurrentVehicle() {
+			if (currentVehicle != null) {
+
+				// Make sure player character is attached as we will not update it's position until he leaves vehicle.
+
+				if (characterGameObject != null) {
+					Game.Objects.GameVehicle vehicleGameObject = currentVehicle.GameObject;
+					Transform seatTransform = vehicleGameObject.SeatTransform;
+					Teleport(seatTransform.position, seatTransform.rotation);
+
+					characterGameObject.transform.SetParent(vehicleGameObject.VehicleTransform, false);
+				}
+			}
+		}
+
+		/// <summary>
 		/// Enter vehicle.
 		/// </summary>
 		/// <param name="vehicle">The vehicle to enter.</param>
@@ -351,11 +373,7 @@ namespace MSCMP.Network {
 			currentVehicle = vehicle;
 			currentVehicle.SetPlayer(this, passenger);
 
-			// Make sure player character is attached as we will not update it's position until he leaves vehicle.
-
-			if (characterGameObject != null) {
-				characterGameObject.transform.SetParent(currentVehicle.GameObject.VehicleTransform, false);
-			}
+			SitInCurrentVehicle();
 
 			// Set state of the player.
 
@@ -373,7 +391,9 @@ namespace MSCMP.Network {
 			if (characterGameObject != null) {
 				characterGameObject.transform.SetParent(null);
 
-				// TODO: Teleport interpolator to use current position so ped will not be interpolated from previous on foot location here.
+				Game.Objects.GameVehicle vehicleGameObject = currentVehicle.GameObject;
+				Transform seatTransform = vehicleGameObject.SeatTransform;
+				Teleport(seatTransform.position, seatTransform.rotation);
 			}
 
 			// Notify vehicle that the player left.
