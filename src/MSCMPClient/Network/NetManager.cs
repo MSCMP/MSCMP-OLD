@@ -98,9 +98,6 @@ namespace MSCMP.Network {
 			this.netManagerCreationTime = DateTime.UtcNow;
 			netWorld = new NetWorld(this);
 
-			// Setup local player.
-			players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
-
 			p2pSessionRequestCallback = Steamworks.Callback<Steamworks.P2PSessionRequest_t>.Create((Steamworks.P2PSessionRequest_t result) => {
 				if (!Steamworks.SteamNetworking.AcceptP2PSessionWithUser(result.m_steamIDRemote)) {
 					Logger.Log("Accepted p2p session with " + result.m_steamIDRemote.ToString());
@@ -121,6 +118,9 @@ namespace MSCMP.Network {
 
 				Logger.Log("Hey you! I have lobby id for you! " + result.m_ulSteamIDLobby);
 
+				// Setup local player.
+				players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
+
 				mode = Mode.Host;
 				state = State.Playing;
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
@@ -133,6 +133,9 @@ namespace MSCMP.Network {
 					players[1] = null;
 					return;
 				}
+
+				// Setup local player.
+				players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
 
 				Logger.Log("Oh hello! " + result.m_ulSteamIDLobby);
 
@@ -182,6 +185,11 @@ namespace MSCMP.Network {
 
 			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
 				NetPlayer player = players[1];
+				if (player == null) {
+					Logger.Log($"Received OpenDoorsMessage however there is no remote player! (open: {msg.open}");
+					return;
+				}
+
 				// 1.5 is a length of the ray used to check interaction with doors in game scripts.
 				Vector3 interactionPosition = player.GetPosition() + player.GetRotation() * Vector3.forward * 1.5f;
 				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(interactionPosition);
@@ -378,6 +386,8 @@ namespace MSCMP.Network {
 			currentLobbyId = Steamworks.CSteamID.Nil;
 			mode = Mode.None;
 			state = State.Idle;
+			players[0].Dispose();
+			players[0] = null;
 			Logger.Log("Left lobby.");
 		}
 
@@ -405,6 +415,9 @@ namespace MSCMP.Network {
 		/// Cleanup remote player.
 		/// </summary>
 		public void CleanupPlayer() {
+			if (players[1] == null) {
+				return;
+			}
 			Steamworks.SteamNetworking.CloseP2PSessionWithUser(players[1].SteamId);
 			players[1].Dispose();
 			players[1] = null;
