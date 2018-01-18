@@ -15,5 +15,10 @@
 		/// The spawn transformation of the pickupable.
 		/// </summary>
 		TransformMessage	transform;
+
+		/// <summary>
+		/// Should this pickupable be spawned as active?
+		/// </summary>
+		bool active;
 	}
 }

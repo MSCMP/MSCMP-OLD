@@ -85,6 +85,7 @@ namespace MSCMP.Network {
 				msg.prefabId = metaData.prefabId;
 				msg.transform.position = Utils.GameVec3ToNet(instance.transform.position);
 				msg.transform.rotation = Utils.GameQuatToNet(instance.transform.rotation);
+				msg.active = instance.activeSelf;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
@@ -360,6 +361,7 @@ namespace MSCMP.Network {
 				Transform transform = pickupable.gameObject.transform;
 				pickupableMsg.transform.position = Utils.GameVec3ToNet(transform.position);
 				pickupableMsg.transform.rotation = Utils.GameQuatToNet(transform.rotation);
+				pickupableMsg.active = pickupable.gameObject.activeSelf;
 				pickupableMessages.Add(pickupableMsg);
 			}
 
@@ -516,7 +518,7 @@ namespace MSCMP.Network {
 				if (gameObject != null) {
 					var metaData = gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
 					if (msg.prefabId == metaData.prefabId) {
-						gameObject.SetActive(true);
+						gameObject.SetActive(msg.active);
 						gameObject.transform.position = position;
 						gameObject.transform.rotation = rotation;
 						return;
