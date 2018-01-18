@@ -46,8 +46,11 @@ namespace MSCMP.Game.Hooks {
 		class MyActivateGameObject : ActivateGameObject {
 			public override void OnEnter() {
 				UnityEngine.GameObject go = Fsm.GetOwnerDefaultTarget(gameObject);
+				if (go == null) {
+					Finish();
+					return;
+				}
 				GameCallbacks.onPlayMakerObjectActivate?.Invoke(go, activate.Value);
-
 				base.OnEnter();
 			}
 		}
@@ -57,6 +60,12 @@ namespace MSCMP.Game.Hooks {
 		/// </summary>
 		class MySetPosition : SetPosition {
 			public override void OnEnter() {
+				UnityEngine.GameObject go = Fsm.GetOwnerDefaultTarget(gameObject);
+				if (go == null) {
+					Finish();
+					return;
+				}
+
 				UnityEngine.Vector3 newPosition = this.vector.Value;
 				if (!this.x.IsNone)
 					newPosition.x = this.x.Value;
@@ -65,7 +74,6 @@ namespace MSCMP.Game.Hooks {
 				if (!this.z.IsNone)
 					newPosition.z = this.z.Value;
 
-				UnityEngine.GameObject go = Fsm.GetOwnerDefaultTarget(gameObject);
 				GameCallbacks.onPlayMakerSetPosition?.Invoke(go, newPosition, space);
 
 				base.OnEnter();
