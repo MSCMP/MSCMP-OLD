@@ -127,12 +127,39 @@ void InstallCallHook(ptrdiff_t where, ptrdiff_t func)
 	WriteValue<ptrdiff_t>(where + 1, func - (where + 5));
 }
 
+FILE *unityLog = nullptr;
+
+/**
+ * Custom unity log handler.
+ */
+int _cdecl UnityLog(int a1, const char *message, va_list args)
+{
+	fprintf(unityLog, "[%i] ", a1);
+	vfprintf(unityLog, message, args);
+	va_end(args);
+	return 0;
+}
 
 BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 {
 	switch (Reason) {
 	case DLL_PROCESS_ATTACH:
+	{
 		DisableThreadLibraryCalls(hModule);
+
+		// Setup unity log hook.
+
+		char UnityLogPath[MAX_PATH] = { 0 };
+		GetModulePath(GetModuleHandle("MSCMPInjector.dll"), UnityLogPath);
+		strcat(UnityLogPath, "\\unityLog.txt");
+
+		unityLog = fopen(UnityLogPath, "w+");
+		if (!unityLog)
+		{
+			MessageBox(NULL, "Unable to create Unity Log!", "MSCMP", MB_ICONERROR);
+			ExitProcess(0);
+			return FALSE;
+		}
 
 		// Make sure we have mono dll to work with.
 
@@ -177,6 +204,19 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 		GiveChanceToAttachDebugger = (GiveChanceToAttachDebugger_t) (baseAddress + 0x005BEB20);
 		InstallCallHook(baseAddress + 0x005493D3, (ptrdiff_t)GiveChanceToAttachDebuggerHook);
 
+		// Set custom log callback.
+
+		WriteValue<unsigned>(baseAddress + 0x11E79C4, (ptrdiff_t)UnityLog);
+
+	}
+	break;
+
+	case DLL_PROCESS_DETACH:
+		if (unityLog)
+		{
+			fclose(unityLog);
+			unityLog = nullptr;
+		}
 		break;
 	}
 	return TRUE;
