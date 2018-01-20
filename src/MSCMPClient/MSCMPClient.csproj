@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="Client.cs" />
     <Compile Include="DevTools.cs" />
+    <Compile Include="Game\BeerCaseManager.cs" />
     <Compile Include="Game\Components\PickupableMetaDataComponent.cs" />
     <Compile Include="Game\GameAnimDatabase.cs" />
     <Compile Include="Game\GameCallbacks.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Game\GamePickupableDatabase.cs" />
     <Compile Include="Game\GameWorld.cs" />
     <Compile Include="Game\Hooks\PlayMakerActionHooks.cs" />
+    <Compile Include="Game\Objects\BeerCase.cs" />
     <Compile Include="Game\Objects\GameDoor.cs" />
     <Compile Include="Game\Objects\GamePlayer.cs" />
     <Compile Include="Game\Objects\GameVehicle.cs" />
