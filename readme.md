@@ -8,7 +8,7 @@ First of all you have to clone repository.
 
 1. Install GIT client (for example: https://git-scm.com)
 2. Go to the folder where you want to download mod source code, click right mouse button and start Git Bash.
-3. Type `git clone git@github.com:RootKiller/MSCMP.git`
+3. Type `git clone https://github.com/MSCMP/MSCMP.git`
 4. Repository will now be cloned to your disk.
 
 ### 2. Setup workspace.
