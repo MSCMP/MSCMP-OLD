@@ -21,6 +21,10 @@ typedef MonoThread* (_cdecl* mono_thread_get_main_t)();
 typedef void (_cdecl *mono_jit_parse_options_t)(int argc, char * argv[]);
 typedef void (_cdecl *mono_debug_init_t)(MonoDebugFormat format);
 typedef void (_cdecl *mono_set_commandline_arguments_t)(int a1, char **a2, char *a3);
+typedef void (_cdecl *mono_add_internal_call_t)(const char *name, const void* method);
+typedef char* (_cdecl *mono_string_to_utf8_t)(MonoString *string_obj);
+typedef void (_cdecl *g_free_t)(void *data);
+
 
 class Mono
 {
@@ -54,4 +58,7 @@ public:
 	mono_jit_parse_options_t	mono_jit_parse_options	= nullptr;
 	mono_debug_init_t			mono_debug_init			= nullptr;
 	mono_set_commandline_arguments_t mono_set_commandline_arguments = nullptr;
+	mono_add_internal_call_t	mono_add_internal_call = nullptr;
+	mono_string_to_utf8_t		mono_string_to_utf8		= nullptr;
+	g_free_t					g_free				= nullptr; // in unity mono.dll mono_free it's called g_free
 };

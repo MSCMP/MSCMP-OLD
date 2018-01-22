@@ -88,5 +88,13 @@ namespace MSCMP
 			Logger.Log("[ASSERTION FAILED]");
 			FatalError(message);
 		}
+
+		/// <summary>
+		/// Shows system message box to the user. Should be used only during initialization when no ui can be shown in game.
+		/// </summary>
+		/// <param name="message">The message to show.</param>
+		/// <param name="title">The title of the message box.</param>
+		[MethodImplAttribute(MethodImplOptions.InternalCall)]
+		extern static void ShowMessageBox(string message, string title);
 	}
 }

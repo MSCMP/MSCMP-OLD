@@ -17,8 +17,30 @@ void GetModulePath(HMODULE module, char *path)
 	}
 }
 
+
+static void ShowMessageBox(MonoString *message, MonoString *title)
+{
+	if (message && title)
+	{
+		char *messageText = mono.mono_string_to_utf8(message);
+		char *titleText = mono.mono_string_to_utf8(title);
+
+		if (messageText && titleText)
+		{
+			MessageBox(NULL, messageText, titleText, NULL);
+		}
+
+		mono.g_free(messageText);
+		mono.g_free(titleText);
+	}
+}
+
 bool RunMP(const char *clientDllPath)
 {
+	// Register our internal calls.
+
+	mono.mono_add_internal_call ("MSCMP.Client::ShowMessageBox", ShowMessageBox);
+
 	MonoDomain* domain = mono.mono_domain_get();
 	if (! domain)
 	{

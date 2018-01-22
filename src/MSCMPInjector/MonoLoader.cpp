@@ -38,6 +38,9 @@ bool Mono::Setup(const char *MonoDllPath)
 	SETUP_FUNCTION(mono_jit_parse_options);
 	SETUP_FUNCTION(mono_debug_init);
 	SETUP_FUNCTION(mono_set_commandline_arguments);
+	SETUP_FUNCTION(mono_add_internal_call);
+	SETUP_FUNCTION(mono_string_to_utf8);
+	SETUP_FUNCTION(g_free);
 
 #undef SETUP_FUNCTION
 
