@@ -18,6 +18,11 @@ namespace MSCMP
 		static AssetBundle assetBundle = null;
 
 		/// <summary>
+		/// The my summer car game app id.
+		/// </summary>
+		public static readonly Steamworks.AppId_t GAME_APP_ID = new Steamworks.AppId_t(516750);
+
+		/// <summary>
 		/// Starts the mod. Called from Injector.
 		/// </summary>
 		public static void Start() {
