@@ -47,11 +47,6 @@ namespace MSCMP {
 		Vector2 friendsScrollViewPos = new Vector2();
 
 		/// <summary>
-		/// State override of the friend list.
-		/// </summary>
-		Dictionary<Steamworks.CSteamID, string> friendStateOverride = new Dictionary<Steamworks.CSteamID, string>();
-
-		/// <summary>
 		/// The mod logo texture.
 		/// </summary>
 		Texture2D modLogo = null;
@@ -60,6 +55,8 @@ namespace MSCMP {
 		/// Game world manager object.
 		/// </summary>
 		GameWorld gameWorld = new GameWorld();
+
+		Texture2D fillText = new Texture2D(1, 1);
 
 		MPController() {
 			Instance = this;
@@ -77,6 +74,10 @@ namespace MSCMP {
 			netManager = new NetManager();
 
 			modLogo = Client.LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
+
+			fillText.SetPixel(0, 0, Color.white);
+			fillText.wrapMode = TextureWrapMode.Repeat;
+			fillText.Apply();
 		}
 
 		/// <summary>
@@ -126,7 +127,9 @@ namespace MSCMP {
 
 			// Friends widget.
 
-			UpdateInvitePanel();
+			if (ShouldSeeInvitePanel()) {
+				UpdateInvitePanel();
+			}
 
 #if !PUBLIC_RELEASE
 			devTools.OnGUI(localPlayer);
@@ -138,59 +141,183 @@ namespace MSCMP {
 		}
 
 		/// <summary>
-		/// Updates invite panel IMGUI.
+		/// The interval between each friend list updates from steam in seconds.
 		/// </summary>
-		private void UpdateInvitePanel() {
+		const float FRIENDLIST_UPDATE_INTERVAL = 10.0f;
 
-			if (!netManager.IsHost || netManager.IsNetworkPlayerConnected()) {
-				friendStateOverride.Clear();
+		/// <summary>
+		/// Time left to next friend update.
+		/// </summary>
+		float timeToUpdateFriendList = 0.0f;
+
+		struct FriendEntry {
+			public Steamworks.CSteamID steamId;
+			public string name;
+			public bool playingMSC;
+		}
+
+		/// <summary>
+		/// Time in seconds player can have between invite.
+		/// </summary>
+		const float INVITE_COOLDOWN = 10.0f;
+
+		/// <summary>
+		/// Current invite cooldown value.
+		/// </summary>
+		float inviteCooldown = 0.0f;
+
+		List<FriendEntry> onlineFriends = new List<FriendEntry>();
+
+		/// <summary>
+		/// Steam id of the recently invited friend.
+		/// </summary>
+		Steamworks.CSteamID invitedFriendSteamId = new Steamworks.CSteamID();
+
+		/// <summary>
+		/// Check if invite panel is visible.
+		/// </summary>
+		/// <returns>true if invite panel is visible false otherwise</returns>
+		bool IsInvitePanelVisible() {
+			return PlayMakerGlobals.Instance.Variables.FindFsmBool("PlayerInMenu").Value;
+		}
+
+		/// <summary>
+		/// Update friend list.
+		/// </summary>
+		void UpdateFriendList() {
+			if (inviteCooldown > 0.0f) {
+				inviteCooldown -= Time.deltaTime;
+			}
+			else {
+				// Reset invited friend steam id.
+
+				invitedFriendSteamId.Clear();
+			}
+
+			timeToUpdateFriendList -= Time.deltaTime;
+			if (timeToUpdateFriendList > 0.0f) {
 				return;
 			}
 
-			GUI.color = Color.white;
+			onlineFriends.Clear();
 
 			Steamworks.EFriendFlags friendFlags = Steamworks.EFriendFlags.k_EFriendFlagImmediate;
 			int friendsCount = Steamworks.SteamFriends.GetFriendCount(friendFlags);
 
-			List<Steamworks.CSteamID> onlineFriends = new List<Steamworks.CSteamID>();
 			for (int i = 0; i < friendsCount; ++i) {
-
 				Steamworks.CSteamID friendSteamId = Steamworks.SteamFriends.GetFriendByIndex(i, friendFlags);
 
 				if (Steamworks.SteamFriends.GetFriendPersonaState(friendSteamId) == Steamworks.EPersonaState.k_EPersonaStateOffline) {
 					continue;
 				}
 
-				onlineFriends.Add(friendSteamId);
+
+
+				FriendEntry friend = new FriendEntry();
+				friend.steamId = friendSteamId;
+				friend.name = Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId);
+
+				Steamworks.FriendGameInfo_t gameInfo;
+				Steamworks.SteamFriends.GetFriendGamePlayed(friendSteamId, out gameInfo);
+				friend.playingMSC = (gameInfo.m_gameID.AppID() == Client.GAME_APP_ID);
+
+				if (friend.playingMSC) {
+					onlineFriends.Insert(0, friend);
+				}
+				else {
+					onlineFriends.Add(friend);
+				}
 			}
 
+			timeToUpdateFriendList = FRIENDLIST_UPDATE_INTERVAL;
+		}
+
+		/// <summary>
+		/// Should player see invite panel?
+		/// </summary>
+		/// <returns>true if invite panel should be visible, false otherwise</returns>
+		bool ShouldSeeInvitePanel() {
+			return netManager.IsHost && !netManager.IsNetworkPlayerConnected();
+		}
+
+		/// <summary>
+		/// Updates invite panel IMGUI.
+		/// </summary>
+		private void UpdateInvitePanel() {
+			if (!IsInvitePanelVisible()) {
+				GUI.color = Color.white;
+				GUI.Label(new Rect(0, Screen.height - 100, 200.0f, 20.0f), "[ESCAPE] - Invite friend");
+				return;
+			}
+
+			const float invitePanelHeight = 400.0f;
+			const float invitePanelWidth = 300.0f;
+			const float rowHeight = 20.0f;
+			Rect invitePanelRect = new Rect(10, Screen.height / 2 - invitePanelHeight / 2, invitePanelWidth, 20.0f);
+
+			// Draw header
+
+			GUI.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
+			GUI.DrawTexture(invitePanelRect, fillText);
+
+			GUI.color = Color.white;
+			invitePanelRect.x += 2.0f;
+			GUI.Label(invitePanelRect, "Invite friend");
+			invitePanelRect.x -= 2.0f;
+
+			// Draw contents
+
+			invitePanelRect.y += 21.0f;
+			invitePanelRect.height = invitePanelHeight;
+
+			GUI.color = new Color(0.0f, 0.0f, 0.0f, 0.8f);
+			GUI.DrawTexture(invitePanelRect, fillText);
+
+			GUI.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
 			int onlineFriendsCount = onlineFriends.Count;
-			friendsScrollViewPos = GUI.BeginScrollView(new Rect(0, 30.0f, 270.0f, 400.0f), friendsScrollViewPos, new Rect(0, 0, 260.0f, 20.0f * (1 + onlineFriendsCount)));
+			invitePanelRect.height -= 2.0f;
+			friendsScrollViewPos = GUI.BeginScrollView(invitePanelRect, friendsScrollViewPos, new Rect(0, 0, invitePanelWidth - 20.0f, 20.0f * onlineFriendsCount));
 
-			for (int i = 0; i < onlineFriendsCount; ++i) {
-				Steamworks.CSteamID friendSteamId = onlineFriends[i];
-
-				string friendName = Steamworks.SteamFriends.GetFriendPersonaName(friendSteamId);
-
-				Rect friendRect = new Rect(2, 1 + 20 * i, 200.0f, 20);
-
-				// TODO: Draw nice state here - for now let's assume all players are ready to join.
-				string state = "";
-				if (friendStateOverride.ContainsKey(friendSteamId)) {
-					state = " - " + friendStateOverride[friendSteamId];
+			int firstVisibleFriendId = (int)(friendsScrollViewPos.y / rowHeight);
+			int maxVisibleFriends = (int)(invitePanelHeight / rowHeight);
+			int lastIndex = firstVisibleFriendId + maxVisibleFriends + 1;
+			if (lastIndex > onlineFriendsCount) {
+				lastIndex = onlineFriendsCount;
+			}
+			for (int i = firstVisibleFriendId; i < lastIndex; ++i) {
+				FriendEntry friend = onlineFriends[i];
+				if (friend.playingMSC) {
+					GUI.color = Color.green;
+				}
+				else {
+					GUI.color = Color.white;
 				}
 
-				GUI.Label(friendRect, friendName + state);
+				Rect friendRect = new Rect(2, 1 + rowHeight * i, 200.0f, rowHeight);
 
-				friendRect.x += 200.0f;
-				friendRect.width = 50.0f;
+				GUI.Label(friendRect, friend.name);
+
+				friendRect.x += 180.0f;
+				friendRect.width = 100.0f;
+
+				Steamworks.CSteamID friendSteamId = friend.steamId;
+
+				if (invitedFriendSteamId == friendSteamId) {
+					GUI.Label(friendRect, String.Format("INVITED! ({0:F1}s)", inviteCooldown));
+					continue;
+				}
+
+				if (inviteCooldown > 0.0f) {
+					continue;
+				}
 
 				if (GUI.Button(friendRect, "Invite")) {
 					if (netManager.InviteToMyLobby(friendSteamId)) {
-						friendStateOverride.Add(friendSteamId, "INVITED!");
+						invitedFriendSteamId = friendSteamId;
+						inviteCooldown = INVITE_COOLDOWN;
 					}
 					else {
-						friendStateOverride.Add(friendSteamId, "FAILED TO INVITE");
+						UI.MPGUI.Instance.ShowMessageBox("Failed to invite friend due to steam error.");
 					}
 
 				}
@@ -220,6 +347,10 @@ namespace MSCMP {
 		void Update() {
 			Utils.CallSafe("Update", () => {
 				Steamworks.SteamAPI.RunCallbacks();
+
+				if (IsInvitePanelVisible()) {
+					UpdateFriendList();
+				}
 
 				gameWorld.Update();
 				netManager.Update();
