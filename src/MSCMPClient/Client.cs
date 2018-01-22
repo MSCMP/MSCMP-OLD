@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Diagnostics;
 using UnityEngine;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace MSCMP
 {
@@ -20,10 +21,17 @@ namespace MSCMP
 		/// Starts the mod. Called from Injector.
 		/// </summary>
 		public static void Start() {
+			string logPath = GetPath("clientLog.txt");
+			if (!Logger.SetupLogger(logPath)) {
+				FatalError($"Cannot setup logger. Log file path: {logPath}");
+				return;
+			}
+
 			Logger.SetAutoFlush(true);
+
 			Game.Hooks.PlayMakerActionHooks.Install();
 
-			string assetBundlePath = Client.GetPath("../../data/mpdata");
+			string assetBundlePath = GetPath("../../data/mpdata");
 			if (!File.Exists(assetBundlePath)) {
 				FatalError("Cannot find mpdata asset bundle.");
 				return;

@@ -2,24 +2,46 @@
 
 namespace MSCMP {
 	static class Logger {
+
 		/// <summary>
 		/// The file used for logging.
 		/// </summary>
-		static StreamWriter logFile = new StreamWriter(Client.GetPath("clientLog.txt"), false);
+		static StreamWriter logFile = null;
+
+
+		/// <summary>
+		/// Setup logger.
+		/// </summary>
+		/// <param name="logPath">The path where log file should be created</param>
+		/// <returns></returns>
+		public static bool SetupLogger(string logPath) {
+			try {
+				logFile = new StreamWriter(logPath, false);
+			}
+			catch {
+				// Unfortunately there is no place where we could send the failure.
+				return false;
+			}
+			return logFile != null;
+		}
 
 		/// <summary>
 		/// Set auto flush? (Remember! This is not good for FPS as each write to log is automatically flushing the log file!)
 		/// </summary>
 		/// <param name="autoFlush"></param>
 		public static void SetAutoFlush(bool autoFlush) {
-			logFile.AutoFlush = autoFlush;
+			if (logFile != null) {
+				logFile.AutoFlush = autoFlush;
+			}
 		}
 
 		/// <summary>
 		/// Force flush of the log file.
 		/// </summary>
 		public static void ForceFlush() {
-			logFile.Flush();
+			if (logFile != null) {
+				logFile.Flush();
+			}
 		}
 
 		/// <summary>
@@ -27,7 +49,9 @@ namespace MSCMP {
 		/// </summary>
 		/// <param name="message">Message to write.</param>
 		public static void Log(string message) {
-			logFile.WriteLine(message);
+			if (logFile != null) {
+				logFile.WriteLine(message);
+			}
 		}
 
 		/// <summary>
@@ -35,7 +59,7 @@ namespace MSCMP {
 		/// </summary>
 		/// <param name="message">Message to write.</param>
 		public static void Warning(string message) {
-			logFile.WriteLine("[WARN] " + message);
+			Log("[WARN] " + message);
 		}
 
 		/// <summary>
@@ -44,7 +68,7 @@ namespace MSCMP {
 		/// <param name="message">Message to write.</param>
 		public static void Debug(string message) {
 #if !PUBLIC_RELEASE
-			logFile.WriteLine(message);
+			Log("[DEBUG] " + message);
 #endif
 		}
 	}
