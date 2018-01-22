@@ -64,9 +64,11 @@ namespace MSCMP
 		public static void FatalError(string message) {
 			Logger.Log(message);
 			Logger.Log(Environment.StackTrace);
+			ShowMessageBox(message, "MSCMP - Fatal error");
+
 #if DEBUG
 			if (Debugger.IsAttached) {
-				throw new System.Exception(message);
+				throw new Exception(message);
 			}
 			else {
 #endif
