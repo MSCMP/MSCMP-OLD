@@ -33,6 +33,14 @@ namespace MSCMP.Game {
 		}
 
 		/// <summary>
+		/// Prefab type enum used for identification of the prefabs.
+		/// </summary>
+		public enum PrefabType {
+			Generic,
+		}
+
+
+		/// <summary>
 		/// Pickupable prefab descriptor.
 		/// </summary>
 		public class PrefabDesc {
@@ -47,6 +55,11 @@ namespace MSCMP.Game {
 			public GameObject gameObject;
 
 			/// <summary>
+			/// Type of this prefab.
+			/// </summary>
+			public PrefabType type = PrefabType.Generic;
+
+			/// <summary>
 			/// Spawn new instance of the given pickupable at given world position.
 			/// </summary>
 			/// <param name="position">The position where to spawn pickupable at.</param>
@@ -54,6 +67,7 @@ namespace MSCMP.Game {
 			/// <returns>Newly spawned pickupable game object.</returns>
 			public GameObject Spawn(Vector3 position, Quaternion rotation) {
 				// HACK: Jonnez is already spawned and there can be only one of it.
+				// TODO: Get rid of it, it's ugly hack. Perhaps JONNEZ should behave like pickupable.
 				if (gameObject.name.StartsWith("JONNEZ ES")) {
 					return GameObject.Find("JONNEZ ES(Clone)");
 				}
@@ -136,15 +150,24 @@ namespace MSCMP.Game {
 				prefab.SetActive(false);
 				prefab.transform.SetParent(MPController.Instance.transform);
 
-				Logger.Log($"Registering {prefab.name} ({prefab.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId}, Source pickupable id: {pickupable.GetInstanceID()})");
+				Logger.Debug($"Registering {prefab.name} ({prefab.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId}, Source pickupable id: {pickupable.GetInstanceID()})");
 
 				PrefabDesc desc = new PrefabDesc();
 				desc.gameObject = prefab;
 				desc.id = prefabId;
-
+				SetupPrefabDescriptorType(desc);
 
 				prefabs.Add(desc);
 			}
+		}
+
+
+		/// <summary>
+		/// Setup prefab type of the given prefab descriptor.
+		/// </summary>
+		/// <param name="desc">The descriptor to setup type for.</param>
+		private void SetupPrefabDescriptorType(PrefabDesc desc) {
+			// Noop - if you implement some prefab type do it here.
 		}
 
 		/// <summary>
