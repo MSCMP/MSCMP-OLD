@@ -104,7 +104,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	const AppId_t appid = 516750;
 
 	if (!steamApps->BIsAppInstalled(appid)) {
-		MessageBox(NULL, "To run My Summer Car Multiplayer you need to have installed Saints Row The Third game.", "Fatal error", MB_ICONERROR);
+		MessageBox(NULL, "To run My Summer Car Multiplayer you need to have installed My Summer Car game.", "Fatal error", MB_ICONERROR);
 		return 0;
 	}
 
