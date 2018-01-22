@@ -9,15 +9,9 @@ namespace MSCMP {
 	/// Development tools.
 	/// </summary>
 	class DevTools {
-		Texture2D fillText = new Texture2D(1, 1);
 
 		bool devView = false;
 		GameObject spawnedGo = null;
-		public DevTools() {
-			fillText.SetPixel(0, 0, Color.white);
-			fillText.wrapMode = TextureWrapMode.Repeat;
-			fillText.Apply();
-		}
 
 		public void OnGUI(GameObject localPlayer) {
 			if (!devView) {
