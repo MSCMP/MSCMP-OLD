@@ -25,5 +25,6 @@ namespace MSCMPMessages.Messages {
 		PickupableSetPosition,
 		WorldPeriodicalUpdate,
 		RemoveBottle,
+		LightSwitch,
 	}
 }

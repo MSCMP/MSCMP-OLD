@@ -17,5 +17,6 @@
 		DoorsInitMessage[]			doors;
 		VehicleInitMessage[]		vehicles;
 		PickupableSpawnMessage[]	pickupables;
+		LightSwitchMessage[]		lights;
 	}
 }
