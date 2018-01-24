@@ -19,6 +19,12 @@
 		/// <summary>
 		/// Should this pickupable be spawned as active?
 		/// </summary>
-		bool active;
+		bool				active;
+
+		/// <summary>
+		/// Optional data to send with the pickupable.
+		/// </summary>
+		[Optional]
+		float[]				data;
 	}
 }
