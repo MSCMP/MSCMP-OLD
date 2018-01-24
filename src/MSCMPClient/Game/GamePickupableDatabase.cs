@@ -37,6 +37,7 @@ namespace MSCMP.Game {
 		/// </summary>
 		public enum PrefabType {
 			Generic,
+			BeerCase,
 		}
 
 
@@ -167,7 +168,18 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="desc">The descriptor to setup type for.</param>
 		private void SetupPrefabDescriptorType(PrefabDesc desc) {
-			// Noop - if you implement some prefab type do it here.
+			PlayMakerFSM fsm = null;
+			desc.gameObject.SetActive(true);
+
+			fsm = Utils.GetPlaymakerScriptByName(desc.gameObject, "Use");
+			if(fsm != null) {
+				if(fsm.FsmVariables.FindFsmInt("DestroyedBottles") != null && fsm.Fsm.GetState("Remove bottle") != null) {
+					// Found BeerCase
+					desc.type = PrefabType.BeerCase;
+				}
+			}
+
+			desc.gameObject.SetActive(false);
 		}
 
 		/// <summary>

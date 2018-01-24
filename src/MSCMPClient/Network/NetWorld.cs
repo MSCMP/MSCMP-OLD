@@ -362,6 +362,17 @@ namespace MSCMP.Network {
 				pickupableMsg.transform.position = Utils.GameVec3ToNet(transform.position);
 				pickupableMsg.transform.rotation = Utils.GameQuatToNet(transform.rotation);
 				pickupableMsg.active = pickupable.gameObject.activeSelf;
+				List<float> data = new List<float>();
+
+				//Beercases
+				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase && pickupable.gameObject.name != "beer case") {
+					Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(pickupable.gameObject);
+					data.Add(Game.BeerCaseManager.Instance.FullCaseBottles - beer.UsedBottles);
+				}
+
+				if (data.Count != 0) {
+					pickupableMsg.Data = data.ToArray();
+				}
 				pickupableMessages.Add(pickupableMsg);
 			}
 
@@ -515,12 +526,16 @@ namespace MSCMP.Network {
 			if (netPickupables.ContainsKey(msg.id)) {
 				NetPickupable netPickupable = netPickupables[msg.id];
 				GameObject gameObject = netPickupable.gameObject;
+				Game.GamePickupableDatabase.PrefabDesc desc = Game.GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
 				if (gameObject != null) {
 					var metaData = gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
 					if (msg.prefabId == metaData.prefabId) {
 						gameObject.SetActive(msg.active);
 						gameObject.transform.position = position;
 						gameObject.transform.rotation = rotation;
+						if (msg.HasData) {
+							HandlePickupablesSpawnData(gameObject, desc.type, msg.Data);
+						}
 						return;
 					}
 				}
@@ -529,6 +544,10 @@ namespace MSCMP.Network {
 			}
 
 			GameObject pickupable = Game.GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation);
+			if (msg.HasData) {
+				Game.GamePickupableDatabase.PrefabDesc desc = Game.GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
+				HandlePickupablesSpawnData(pickupable, desc.type, msg.Data);
+			}
 			RegisterPickupable(msg.id, pickupable);
 		}
 
@@ -560,6 +579,26 @@ namespace MSCMP.Network {
 			Logger.Log($"Registering pickupable {pickupable.name} (net id: {netId}, instance id: {pickupable.GetInstanceID()})");
 
 			netPickupables.Add(netId, new NetPickupable(netId, pickupable));
+
+			if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
+				// "beer case" will not be added to the BeerCaseManager correctly, unsure of a better solution.
+				if (pickupable.name != "beer case") {
+					Game.BeerCaseManager.Instance.AddBeerCase(pickupable);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Set data of pickupables.
+		/// </summary>
+		/// <param name="pickupable">Pickupable GameObject</param>
+		/// <param name="prefabId">Pickupable PrefabID</param>
+		/// <param name="data">Pickupable Data</param>
+		private void HandlePickupablesSpawnData(GameObject pickupable, Game.GamePickupableDatabase.PrefabType type, float[] data) {
+			//Beercase
+			if (type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
+				Game.BeerCaseManager.Instance.SetBottleCount(pickupable, (int)data[0]);
+			}
 		}
 	}
 }

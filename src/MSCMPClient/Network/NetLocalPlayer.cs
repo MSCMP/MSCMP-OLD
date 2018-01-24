@@ -51,6 +51,13 @@ namespace MSCMP.Network {
 				msg.drop = drop;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
+
+			BeerCaseManager.Instance.onBottleConsumed = (GameObject bcase) => {
+				Messages.RemoveBottleMessage msg = new Messages.RemoveBottleMessage();
+				msg.netId = netWorld.GetPickupableNetId(bcase);
+				Client.Assert(msg.netId != NetPickupable.INVALID_ID, "Tried to drink from not network beercase.");
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			};
 		}
 
 #if !PUBLIC_RELEASE

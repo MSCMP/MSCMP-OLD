@@ -38,6 +38,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		PlayMakerFSM worldTimeFsm = null;
 
+		/// <summary>
+		/// Beer case manager.
+		/// </summary>
+		BeerCaseManager beerCaseManager = new BeerCaseManager();
+
 		private GamePlayer player = null;
 
 		/// <summary>
@@ -134,6 +139,7 @@ namespace MSCMP.Game {
 			gamePickupableDatabase.Rebuild();
 
 			doorsManager.OnWorldLoad();
+			beerCaseManager.OnWorldLoad();
 			LoadVehicles();
 
 			if (GameCallbacks.onWorldLoad != null) {

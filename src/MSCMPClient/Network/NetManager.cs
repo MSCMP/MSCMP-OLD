@@ -270,6 +270,16 @@ namespace MSCMP.Network {
 				}
 				player.ReleaseObject(msg.drop);
 			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.RemoveBottleMessage msg) => {
+				GameObject beerGO = netWorld.GetPickupableGameObject(msg.netId);
+				Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(beerGO);
+				if (beer == null) {
+					Logger.Log($"Player tried to drink beer, however, the beercase cannot be found.");
+					return;
+				}
+				beer.RemoveBottles(1);
+			});
 		}
 
 		/// <summary>
