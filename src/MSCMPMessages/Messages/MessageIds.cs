@@ -23,6 +23,7 @@ namespace MSCMPMessages.Messages {
 		PickupableDestroy,
 		PickupableActivate,
 		PickupableSetPosition,
-		WorldPeriodicalUpdate
+		WorldPeriodicalUpdate,
+		RemoveBottle,
 	}
 }

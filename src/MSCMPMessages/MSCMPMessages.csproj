@@ -73,6 +73,7 @@
     <Compile Include="Messages\PickupObjectMessage.cs" />
     <Compile Include="Messages\PlayerSyncMessage.cs" />
     <Compile Include="Messages\QuaternionMessage.cs" />
+    <Compile Include="Messages\RemoveBottleMessage.cs" />
     <Compile Include="Messages\TransformMessage.cs" />
     <Compile Include="Messages\Vector3Message.cs" />
     <Compile Include="Messages\VehicleEnterMessage.cs" />
