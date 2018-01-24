@@ -1,8 +1,6 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <assert.h>
-
-#define VERSION_SAFE_STEAM_API_INTERFACES
 #include "steam_api.h"
 
 /**
@@ -58,10 +56,7 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
 //! Steam api wrapper.
 struct SteamWrapper
 {
-	CSteamAPIContext *context;
-
 	SteamWrapper(void)
-		: context(nullptr)
 	{
 	}
 
@@ -72,19 +67,16 @@ struct SteamWrapper
 			return false;
 		}
 
-		assert(SteamAPI_InitSafe());
-
-		context = new CSteamAPIContext();
-		context->Init();
+		if (!SteamAPI_Init()) {
+			MessageBox(NULL, "Failed to initialize steam.", "Fatal error", MB_ICONERROR);
+			return false;
+		}
 		return true;
 	}
 
 	~SteamWrapper(void)
 	{
-		if (context) {
-			delete context;
-			context = nullptr;
-		}
+		SteamAPI_Shutdown();
 	}
 };
 
@@ -100,7 +92,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 
-	ISteamApps *const steamApps = steam.context->SteamApps();
+	ISteamApps *const steamApps = SteamApps();
 	const AppId_t appid = 516750;
 
 	if (!steamApps->BIsAppInstalled(appid)) {
