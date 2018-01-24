@@ -190,11 +190,9 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				// 1.5 is a length of the ray used to check interaction with doors in game scripts.
-				Vector3 interactionPosition = player.GetPosition() + player.GetRotation() * Vector3.forward * 1.5f;
-				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(interactionPosition);
+				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.position));
 				if (doors == null) {
-					Logger.Log($"Player tried to open doors however he is not close to any: {interactionPosition}.");
+					Logger.Log($"Player tried to open door, however, the door could not be found!");
 					return;
 				}
 				doors.Open(msg.open);

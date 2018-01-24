@@ -38,8 +38,8 @@ namespace MSCMP.Game.Objects {
 			}
 		}
 
-		public delegate void OnOpen();
-		public delegate void OnClose();
+		public delegate void OnOpen(GameObject door);
+		public delegate void OnClose(GameObject door);
 
 		/// <summary>
 		/// Callback called when doors are opened.
@@ -98,7 +98,7 @@ namespace MSCMP.Game.Objects {
 					return;
 				}
 
-				gameDoor.onOpen();
+				gameDoor.onOpen(gameDoor.go);
 			}
 		}
 
@@ -122,7 +122,7 @@ namespace MSCMP.Game.Objects {
 					return;
 				}
 
-				gameDoor.onClose();
+				gameDoor.onClose(gameDoor.go);
 
 			}
 		}
@@ -141,12 +141,13 @@ namespace MSCMP.Game.Objects {
 		}
 
 		/// <summary>
-		/// Calculate distance between doors and the given point.
+		/// Returns GameObject of the door.
 		/// </summary>
-		/// <param name="point">The point to calculate distance to.</param>
-		/// <returns>Distance between points and the doors.</returns>
-		public float DistanceToPoint(Vector3 point) {
-			return (go.transform.position - point).magnitude;
+		/// <returns>GameObject</returns>
+		public GameObject getGameObject {
+			get {
+				return go;
+			}
 		}
 	}
 }

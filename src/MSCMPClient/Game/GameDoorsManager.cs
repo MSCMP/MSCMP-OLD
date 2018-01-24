@@ -18,8 +18,8 @@ namespace MSCMP.Game {
 		/// </summary>
 		public List<GameDoor> doors = new List<GameDoor>();
 
-		public delegate void OnDoorsOpen();
-		public delegate void OnDoorsClose();
+		public delegate void OnDoorsOpen(GameObject door);
+		public delegate void OnDoorsClose(GameObject door);
 
 		/// <summary>
 		/// Callback called when local player opens any doors.
@@ -79,11 +79,11 @@ namespace MSCMP.Game {
 
 				if (isValid) {
 					GameDoor door = new GameDoor(go);
-					door.onOpen = () => {
-						onDoorsOpen();
+					door.onOpen = (doorObj) => {
+						onDoorsOpen(door.getGameObject);
 					};
-					door.onClose = () => {
-						onDoorsClose();
+					door.onClose = (doorObj) => {
+						onDoorsClose(door.getGameObject);
 					};
 					doors.Add(door);
 
@@ -98,18 +98,12 @@ namespace MSCMP.Game {
 		/// <param name="position">The location of the doors.</param>
 		/// <returns></returns>
 		public GameDoor FindGameDoors(Vector3 position) {
-			float closestDistance = 5.0f;
-			GameDoor closestDoors = null;
 			foreach (var door in doors) {
-				float distance = door.DistanceToPoint(position);
-				if (distance > closestDistance) {
-					continue;
+				if (door.Position == position) {
+					return door;
 				}
-
-				closestDistance = distance;
-				closestDoors = door;
 			}
-			return closestDoors;
+			return null;
 		}
 	}
 }

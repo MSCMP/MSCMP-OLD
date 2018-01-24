@@ -326,7 +326,7 @@ namespace MSCMP.Network {
 			for (int i = 0; i < doorsCount; ++i) {
 				var doorMsg = new Messages.DoorsInitMessage();
 				Game.Objects.GameDoor door = doors[i];
-				doorMsg.position  = Utils.GameVec3ToNet(door.Position);
+				doorMsg.position = Utils.GameVec3ToNet(door.Position);
 				doorMsg.open = door.IsOpen;
 				msg.doors[i] = doorMsg;
 			}

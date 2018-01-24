@@ -27,14 +27,16 @@ namespace MSCMP.Network {
 		/// <param name="steamId">The steam id of the player.</param>
 		public NetLocalPlayer(NetManager netManager, NetWorld netWorld, Steamworks.CSteamID steamId) : base(netManager, netWorld, steamId) {
 
-			GameDoorsManager.Instance.onDoorsOpen = () => {
+			GameDoorsManager.Instance.onDoorsOpen = (GameObject door) => {
 				Messages.OpenDoorsMessage msg = new Messages.OpenDoorsMessage();
+				msg.position = Utils.GameVec3ToNet(door.transform.position);
 				msg.open = true;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
-			GameDoorsManager.Instance.onDoorsClose = () => {
+			GameDoorsManager.Instance.onDoorsClose = (GameObject door) => {
 				Messages.OpenDoorsMessage msg = new Messages.OpenDoorsMessage();
+				msg.position = Utils.GameVec3ToNet(door.transform.position);
 				msg.open = false;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
