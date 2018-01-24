@@ -43,6 +43,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		BeerCaseManager beerCaseManager = new BeerCaseManager();
 
+		/// <summary>
+		/// Light switch manager.
+		/// </summary>
+		LightSwitchManager lightSwitchManager = new LightSwitchManager();
+
 		private GamePlayer player = null;
 
 		/// <summary>
@@ -140,6 +145,7 @@ namespace MSCMP.Game {
 
 			doorsManager.OnWorldLoad();
 			beerCaseManager.OnWorldLoad();
+			lightSwitchManager.OnWorldLoad();
 			LoadVehicles();
 
 			if (GameCallbacks.onWorldLoad != null) {

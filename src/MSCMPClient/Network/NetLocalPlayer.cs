@@ -58,6 +58,13 @@ namespace MSCMP.Network {
 				Client.Assert(msg.netId != NetPickupable.INVALID_ID, "Tried to drink from not network beercase.");
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
+
+			LightSwitchManager.Instance.onLightSwitchUsed = (GameObject lswitch, bool turnedOn) => {
+				Messages.LightSwitchMessage msg = new Messages.LightSwitchMessage();
+				msg.pos = Utils.GameVec3ToNet(lswitch.transform.position);
+				msg.toggle = turnedOn;
+				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			};
 		}
 
 #if !PUBLIC_RELEASE

@@ -331,6 +331,20 @@ namespace MSCMP.Network {
 				msg.doors[i] = doorMsg;
 			}
 
+			// Write light switches.
+
+			List<Game.Objects.LightSwitch> lights = Game.LightSwitchManager.Instance.lightSwitches;
+			int lightCount = lights.Count;
+			msg.lights = new Messages.LightSwithInitMessage[lightCount];
+
+			for (int i = 0; i < lightCount; i++) {
+				var lightMsg = new Messages.LightSwithInitMessage();
+				Game.Objects.LightSwitch light = lights[i];
+				lightMsg.position = Utils.GameVec3ToNet(light.Position);
+				lightMsg.on = light.SwitchStatus;
+				msg.lights[i] = lightMsg;
+			}
+
 			// Write vehicles.
 
 			int vehiclesCount = vehicles.Count;
@@ -400,6 +414,17 @@ namespace MSCMP.Network {
 				Client.Assert(doors != null, $"Unable to find doors at: {position}.");
 				if (doors.IsOpen != door.open) {
 					doors.Open(door.open);
+				}
+			}
+
+			// Lights.
+
+			foreach (Messages.LightSwithInitMessage light in msg.lights) {
+				Vector3 position = Utils.NetVec3ToGame(light.position);
+				Game.Objects.LightSwitch lights = Game.LightSwitchManager.Instance.FindLightSwitch(position);
+				Client.Assert(lights != null, $"Unable to find light switch at: {position}.");
+				if (lights.SwitchStatus != light.on) {
+					lights.TurnOn(light.on);
 				}
 			}
 

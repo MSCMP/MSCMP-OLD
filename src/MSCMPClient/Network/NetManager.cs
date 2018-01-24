@@ -280,6 +280,11 @@ namespace MSCMP.Network {
 				}
 				beer.RemoveBottles(1);
 			});
+
+			BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
+				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
+				light.TurnOn(msg.toggle);
+			});
 		}
 
 		/// <summary>
