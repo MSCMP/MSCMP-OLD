@@ -280,7 +280,7 @@ namespace MSCMPMessages {
 				string valueVarName = "_" + name + "Value";
 				Type enumUnderlayingType = type.GetEnumUnderlyingType();
 				WriteLine(enumUnderlayingType.FullName + " " + valueVarName + " = reader.Read" + enumUnderlayingType.Name + "();");
-				BeginBlock("if (!" + name + "Helpers.IsValueValid(" + valueVarName + "))");
+				BeginBlock("if (!" + type.Name + "Helpers.IsValueValid(" + valueVarName + "))");
 				{
 					WriteLine("return false;");
 				}
