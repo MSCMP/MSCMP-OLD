@@ -26,5 +26,6 @@ namespace MSCMPMessages.Messages {
 		WorldPeriodicalUpdate,
 		RemoveBottle,
 		LightSwitch,
+		WeatherSync,
 	}
 }
