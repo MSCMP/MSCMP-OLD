@@ -48,6 +48,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		LightSwitchManager lightSwitchManager = new LightSwitchManager();
 
+		/// <summary>
+		/// Weather manager.
+		/// </summary>
+		GameWeatherManager gameWeatherManager = new GameWeatherManager();
+
 		private GamePlayer player = null;
 
 		/// <summary>
