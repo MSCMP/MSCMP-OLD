@@ -319,6 +319,10 @@ namespace MSCMP.Network {
 			msg.dayTime = gameWorld.WorldTime;
 			msg.day = gameWorld.WorldDay;
 
+			// Write mailbox name
+
+			msg.mailboxName = gameWorld.PlayerLastName;
+
 			// Write doors
 
 			List<Game.Objects.GameDoor> doors = Game.GameDoorsManager.Instance.doors;
@@ -411,6 +415,10 @@ namespace MSCMP.Network {
 			Game.GameWorld gameWorld = Game.GameWorld.Instance;
 			gameWorld.WorldTime = msg.dayTime;
 			gameWorld.WorldDay = msg.day;
+
+			// Read mailbox name
+
+			gameWorld.PlayerLastName = msg.mailboxName;
 
 			// Doors.
 
