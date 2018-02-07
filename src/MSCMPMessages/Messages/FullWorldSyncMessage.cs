@@ -12,6 +12,7 @@
 
 	[NetMessageDesc(MessageIds.FullWorldSync)]
 	class FullWorldSyncMessage {
+		string						mailboxName;
 		int							day;
 		float						dayTime;
 		DoorsInitMessage[]			doors;
