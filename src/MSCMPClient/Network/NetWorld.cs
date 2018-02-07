@@ -197,6 +197,7 @@ namespace MSCMP.Network {
 				// Game reports 'next hour' - we want to have transition so correct it.
 				Game.GameWorld.Instance.WorldTime = (float) msg.sunClock - 2.0f;
 				Game.GameWorld.Instance.WorldDay = (int) msg.worldDay;
+				Game.GameWeatherManager.Instance.SetWeather(msg.currentWeather);
 			});
 		}
 
@@ -237,6 +238,7 @@ namespace MSCMP.Network {
 				var message = new Messages.WorldPeriodicalUpdateMessage();
 				message.sunClock = (Byte)Game.GameWorld.Instance.WorldTime;
 				message.worldDay = (Byte)Game.GameWorld.Instance.WorldDay;
+				Game.GameWeatherManager.Instance.WriteWeather(message.currentWeather);
 				netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 
 				timeToSendPeriodicalUpdate = PERIODICAL_UPDATE_INTERVAL;
@@ -345,6 +347,10 @@ namespace MSCMP.Network {
 				msg.lights[i] = lightMsg;
 			}
 
+			// Write weather
+
+			Game.GameWeatherManager.Instance.WriteWeather(msg.currentWeather);
+
 			// Write vehicles.
 
 			int vehiclesCount = vehicles.Count;
@@ -427,6 +433,10 @@ namespace MSCMP.Network {
 					lights.TurnOn(light.on);
 				}
 			}
+
+			// Weather.
+
+			Game.GameWeatherManager.Instance.SetWeather(msg.currentWeather);
 
 			// Vehicles.
 
