@@ -18,5 +18,6 @@
 		VehicleInitMessage[]		vehicles;
 		PickupableSpawnMessage[]	pickupables;
 		LightSwitchMessage[]		lights;
+		WeatherUpdateMessage		currentWeather;
 	}
 }
