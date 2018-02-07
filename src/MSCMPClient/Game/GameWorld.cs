@@ -113,7 +113,34 @@ namespace MSCMP.Game {
 			}
 		}
 
+		/// <summary>
+		/// Current Host in game last name.
+		/// </summary>
+		public string PlayerLastName {
+			get {
+				return lastnameTextMesh.text;
+			}
 
+			set {
+				lastnameFSM.enabled = false;
+				lastnameTextMesh.text = value;
+			}
+		}
+
+		private TextMesh lastnameTextMesh = null;
+		private PlayMakerFSM lastnameFSM = null;
+
+		/// <summary>
+		/// Search for the red mailbox next to the player's home.
+		/// </summary>
+		public void LoadMailbox() {
+			GameObject mailboxGameObject = GameObject.Find("YARD/PlayerMailBox/mailbox_bottom_player/Name");
+			lastnameTextMesh = mailboxGameObject.GetComponent<TextMesh>();
+			lastnameFSM = mailboxGameObject.GetComponent<PlayMakerFSM>();
+
+			Client.Assert(lastnameFSM != null, "Mailbox FSM couldn't be found!");
+			Client.Assert(lastnameTextMesh != null, "Mailbox TextMesh couldn't be found!");
+		}
 
 		public GameWorld() {
 			Instance = this;
@@ -128,7 +155,6 @@ namespace MSCMP.Game {
 		/// </summary>
 		public void OnLoad() {
 			// Cache world time management fsm.
-
 			GameObject sunGameObject = GameObject.Find("SUN");
 			Client.Assert(sunGameObject != null, "SUN game object is missing!");
 
@@ -151,6 +177,7 @@ namespace MSCMP.Game {
 			doorsManager.OnWorldLoad();
 			beerCaseManager.OnWorldLoad();
 			lightSwitchManager.OnWorldLoad();
+			LoadMailbox();
 			LoadVehicles();
 
 			if (GameCallbacks.onWorldLoad != null) {
