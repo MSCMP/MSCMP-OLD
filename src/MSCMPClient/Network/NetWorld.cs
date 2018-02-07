@@ -341,13 +341,13 @@ namespace MSCMP.Network {
 
 			List<Game.Objects.LightSwitch> lights = Game.LightSwitchManager.Instance.lightSwitches;
 			int lightCount = lights.Count;
-			msg.lights = new Messages.LightSwithInitMessage[lightCount];
+			msg.lights = new Messages.LightSwitchMessage[lightCount];
 
 			for (int i = 0; i < lightCount; i++) {
-				var lightMsg = new Messages.LightSwithInitMessage();
+				var lightMsg = new Messages.LightSwitchMessage();
 				Game.Objects.LightSwitch light = lights[i];
-				lightMsg.position = Utils.GameVec3ToNet(light.Position);
-				lightMsg.on = light.SwitchStatus;
+				lightMsg.pos = Utils.GameVec3ToNet(light.Position);
+				lightMsg.toggle = light.SwitchStatus;
 				msg.lights[i] = lightMsg;
 			}
 
@@ -433,12 +433,12 @@ namespace MSCMP.Network {
 
 			// Lights.
 
-			foreach (Messages.LightSwithInitMessage light in msg.lights) {
-				Vector3 position = Utils.NetVec3ToGame(light.position);
+			foreach (Messages.LightSwitchMessage light in msg.lights) {
+				Vector3 position = Utils.NetVec3ToGame(light.pos);
 				Game.Objects.LightSwitch lights = Game.LightSwitchManager.Instance.FindLightSwitch(position);
 				Client.Assert(lights != null, $"Unable to find light switch at: {position}.");
-				if (lights.SwitchStatus != light.on) {
-					lights.TurnOn(light.on);
+				if (lights.SwitchStatus != light.toggle) {
+					lights.TurnOn(light.toggle);
 				}
 			}
 
