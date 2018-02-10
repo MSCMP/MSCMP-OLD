@@ -3,6 +3,13 @@
 #include <assert.h>
 #include "steam_api.h"
 
+const AppId_t GAME_APP_ID			= 516750;
+const char *const GAME_APP_ID_STR	= "516750";
+const char *const ExecutableName	= "mysummercar.exe";
+
+#define GAME_FULL_NAME				"My Summer Car"
+#define PROJECT_FULL_NAME			GAME_FULL_NAME " Multiplayer"
+
 /**
  * Inject DLL into process.
  *
@@ -56,14 +63,10 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
 //! Steam api wrapper.
 struct SteamWrapper
 {
-	SteamWrapper(void)
-	{
-	}
-
 	bool Init(void)
 	{
 		if (!SteamAPI_IsSteamRunning()) {
-			MessageBox(NULL, "To run My Summer Car Multiplayer your Steam client must be running.", "Fatal error", MB_ICONERROR);
+			MessageBox(NULL, "To run " PROJECT_FULL_NAME " your Steam client must be running.", "Fatal error", MB_ICONERROR);
 			return false;
 		}
 
@@ -71,6 +74,10 @@ struct SteamWrapper
 			MessageBox(NULL, "Failed to initialize steam.", "Fatal error", MB_ICONERROR);
 			return false;
 		}
+
+		// XXX: We may want to eventually handle steam errors here, some users have reported
+		// that they were unable to play game as steam fails to initialize for them, in most cases
+		// making OS privilages for both steam and game process to be the same level was solving the problem.
 		return true;
 	}
 
@@ -79,9 +86,6 @@ struct SteamWrapper
 		SteamAPI_Shutdown();
 	}
 };
-
-const AppId_t GAME_APP_ID = 516750;
-const char *const GAME_APP_ID_STR = "516750";
 
 
 /**
@@ -115,14 +119,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ISteamApps *const steamApps = SteamApps();
 
 	if (!steamApps->BIsAppInstalled(GAME_APP_ID)) {
-		MessageBox(NULL, "To run My Summer Car Multiplayer you need to have installed My Summer Car game.", "Fatal error", MB_ICONERROR);
+		MessageBox(NULL, "To run " PROJECT_FULL_NAME " you need to have installed " GAME_FULL_NAME " game.", "Fatal error", MB_ICONERROR);
 		return 0;
 	}
 
 	char installFolder[MAX_PATH] = { 0 };
 	steamApps->GetAppInstallDir(GAME_APP_ID, installFolder, MAX_PATH);
-
-	const char ExecutableName[] = "mysummercar.exe";
 
 	char gameExePath[MAX_PATH] = { 0 };
 	sprintf(gameExePath, "%s\\%s", installFolder, ExecutableName);
@@ -142,6 +144,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MessageBox(NULL, "Cannot create game process.", "Fatal error", MB_ICONERROR);
 		return 0;
 	}
+
+	// Helper lambda used to show fatal error message and terminate the process.
+
+	auto ShowFatalError = [&processInformation](const char *const message)
+	{
+		MessageBox(NULL, message, "Fatal error", MB_ICONERROR);
+		TerminateProcess(processInformation.hProcess, 0);
+	};
 
 	BOOL Wow64Process = FALSE;
 	if (!IsWow64Process(processInformation.hProcess, &Wow64Process)) {
@@ -171,14 +181,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	sprintf(injectorDllPath, "%s\\MSCMPInjector.dll", cPath);
 
 	if (GetFileAttributes(injectorDllPath) == INVALID_FILE_ATTRIBUTES) {
-		MessageBox(NULL, "Cannot find MSCMPInjector.dll file.", "Error", MB_ICONERROR);
+		ShowFatalError("Cannot find MSCMPInjector.dll file.");
 		return 0;
 	}
 
 	if (!InjectDll(processInformation.hProcess, injectorDllPath)) {
-		const DWORD InjectionError = GetLastError();
-		MessageBox(NULL, "Could not inject dll into the game process. Please try launching the game again.", "Fatal error", MB_ICONERROR);
-		TerminateProcess(processInformation.hProcess, 0);
+		ShowFatalError("Could not inject dll into the game process. Please try launching the game again.");
 		return 0;
 	}
 
