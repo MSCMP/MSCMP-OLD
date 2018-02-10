@@ -80,7 +80,7 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
-		/// Update state of the network vehicle.
+		/// Update state of the network vehicle. (can be called more than once per frame!)
 		/// </summary>
 		public virtual void FixedUpdate() {
 			// If local player is driving this vehicle do not interpolate it's position.
@@ -98,6 +98,27 @@ namespace MSCMP.Network {
 				}
 
 				UpdateTransform(alpha);
+			}
+		}
+
+		/// <summary>
+		/// Update state of the vehicle each frame.
+		/// </summary>
+		public virtual void Update() {
+			ApplyRemoteSteering();
+		}
+
+		/// <summary>
+		/// Apply vehicles remote steering.
+		/// </summary>
+		private void ApplyRemoteSteering() {
+			if (GameObject == null) {
+				return;
+			}
+
+			bool remoteSteering = (driverPlayer != null) && !(driverPlayer is NetLocalPlayer);
+			if (GameObject.RemoteSteering != remoteSteering) {
+				GameObject.RemoteSteering = remoteSteering;
 			}
 		}
 
@@ -137,9 +158,7 @@ namespace MSCMP.Network {
 			}
 			else {
 				driverPlayer = player;
-
-				bool remoteSteering = (driverPlayer != null) && !(driverPlayer is NetLocalPlayer);
-				GameObject.SetRemoteSteering(remoteSteering);
+				ApplyRemoteSteering();
 			}
 		}
 

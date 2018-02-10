@@ -196,9 +196,17 @@ namespace MSCMP.Game.Objects {
 			}
 		}
 
-		public void SetRemoteSteering(bool enabled) {
-			axisCarController.enabled = !enabled;
-			mpCarController.enabled = enabled;
+		/// <summary>
+		/// Set remote steering state.
+		/// </summary>
+		public bool RemoteSteering {
+			set {
+				axisCarController.enabled = !value;
+				mpCarController.enabled = value;
+			}
+			get {
+				return axisCarController.enabled;
+			}
 		}
 
 		/// <summary>
