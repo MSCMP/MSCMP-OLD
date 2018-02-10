@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
 
 using System.Collections.Generic;
-using System.IO;
 using System;
-using System.Diagnostics;
 using MSCMP.Network;
 using MSCMP.Game;
 
@@ -12,9 +10,6 @@ namespace MSCMP {
 	/// Main multiplayer mode controller component.
 	/// </summary>
 	class MPController : MonoBehaviour {
-
-		public const string MOD_DEVELOPMENT_STAGE = "Pre-Alpha";
-		public const string MOD_VERSION_STRING = "0.1";
 
 		public static MPController Instance = null;
 
@@ -110,7 +105,7 @@ namespace MSCMP {
 		/// </summary>
 		void OnGUI() {
 			GUI.color = Color.white;
-			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP " + MOD_VERSION_STRING + " " + MOD_DEVELOPMENT_STAGE);
+			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP " + Client.GetMODDisplayVersion());
 
 			GUI.color = new Color(1.0f, 1.0f, 1.0f, 0.25f);
 			GUI.DrawTexture(new Rect(2, Screen.height - 80, 76, 66), modLogo);

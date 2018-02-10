@@ -111,5 +111,20 @@ namespace MSCMP
 		/// <param name="title">The title of the message box.</param>
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		extern static void ShowMessageBox(string message, string title);
+
+		/// <summary>
+		/// The current mod development stage.
+		/// </summary>
+		public const string MOD_DEVELOPMENT_STAGE = "Pre-Alpha";
+
+		/// <summary>
+		/// Get display version of the mod.
+		/// </summary>
+		/// <returns></returns>
+		public static string GetMODDisplayVersion() {
+			string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+			version += " " + MOD_DEVELOPMENT_STAGE;
+			return version;
+		}
 	}
 }
