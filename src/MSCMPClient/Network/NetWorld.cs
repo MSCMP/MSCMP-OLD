@@ -156,13 +156,21 @@ namespace MSCMP.Network {
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
-			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSetPositionMessage msg) => {
+			RegisterNetworkMessagesHandlers(netManager.MessageHandler);
+		}
+
+		/// <summary>
+		/// Register world related network message handlers.
+		/// </summary>
+		/// <param name="netMessageHandler">The network message handler to register messages to.</param>
+		void RegisterNetworkMessagesHandlers(NetMessageHandler netMessageHandler) {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSetPositionMessage msg) => {
 				Client.Assert(netPickupables.ContainsKey(msg.id), $"Tried to move pickupable that is not spawned {msg.id}.");
 				GameObject gameObject = netPickupables[msg.id].gameObject;
 				gameObject.transform.position = Utils.NetVec3ToGame(msg.position);
 			});
 
-			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableActivateMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableActivateMessage msg) => {
 				GameObject gameObject = null;
 				if (netPickupables.ContainsKey(msg.id)) {
 					gameObject = netPickupables[msg.id].gameObject;
@@ -179,11 +187,11 @@ namespace MSCMP.Network {
 				}
 			});
 
-			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSpawnMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSpawnMessage msg) => {
 				SpawnPickupable(msg);
 			});
 
-			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableDestroyMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableDestroyMessage msg) => {
 				if (!netPickupables.ContainsKey(msg.id)) {
 					return;
 				}
@@ -193,11 +201,124 @@ namespace MSCMP.Network {
 				netPickupables.Remove(msg.id);
 			});
 
-			netManager.BindMessageHandler((Steamworks.CSteamID sender, Messages.WorldPeriodicalUpdateMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.WorldPeriodicalUpdateMessage msg) => {
 				// Game reports 'next hour' - we want to have transition so correct it.
-				Game.GameWorld.Instance.WorldTime = (float) msg.sunClock - 2.0f;
-				Game.GameWorld.Instance.WorldDay = (int) msg.worldDay;
+				Game.GameWorld.Instance.WorldTime = (float)msg.sunClock - 2.0f;
+				Game.GameWorld.Instance.WorldDay = (int)msg.worldDay;
 				Game.GameWeatherManager.Instance.SetWeather(msg.currentWeather);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.RemoveBottleMessage msg) => {
+				GameObject beerGO = GetPickupableGameObject(msg.netId);
+				Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(beerGO);
+				if (beer == null) {
+					Logger.Log($"Player tried to drink beer, however, the beercase cannot be found.");
+					return;
+				}
+				beer.RemoveBottles(1);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Log($"Received synchronization packet from {sender} but there is not player registered using this id.");
+					return;
+				}
+
+				player.HandleSynchronize(msg);
+			});
+
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Log($"Received OpenDoorsMessage however there is no matching player {sender}! (open: {msg.open}");
+					return;
+				}
+
+				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.position));
+				if (doors == null) {
+					Logger.Log($"Player tried to open door, however, the door could not be found!");
+					return;
+				}
+				doors.Open(msg.open);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.FullWorldSyncMessage msg) => {
+				// Handle full world state synchronization.
+
+				HandleFullWorldSync(msg);
+
+				// World is loaded! Notify network manager about that.
+
+				netManager.OnNetworkWorldLoaded();
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.AskForWorldStateMessage msg) => {
+				var msgF = new Messages.FullWorldSyncMessage();
+				WriteFullWorldSync(msgF);
+				netManager.BroadcastMessage(msgF, Steamworks.EP2PSend.k_EP2PSendReliable);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleEnterMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
+					return;
+				}
+
+				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				if (vehicle == null) {
+					Logger.Error("Player " + player.SteamId + " tried to enter vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					return;
+				}
+
+				player.EnterVehicle(vehicle, msg.passenger);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleLeaveMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
+					return;
+				}
+				player.LeaveVehicle();
+			});
+
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSyncMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
+					return;
+				}
+				player.HandleVehicleSync(msg);
+			});
+
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupObjectMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
+					return;
+				}
+				player.PickupObject(msg.netId);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ReleaseObjectMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+				if (player == null) {
+					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
+					return;
+				}
+				player.ReleaseObject(msg.drop);
+			});
+
+
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
+				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
+				light.TurnOn(msg.toggle);
 			});
 		}
 

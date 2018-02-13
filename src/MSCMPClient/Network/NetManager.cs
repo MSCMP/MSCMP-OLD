@@ -43,9 +43,6 @@ namespace MSCMP.Network {
 
 		private NetPlayer[] players = new NetPlayer[MAX_PLAYERS];
 
-		delegate void HandleMessageLowLevel(Steamworks.CSteamID sender, BinaryReader reader);
-		private Dictionary<byte, HandleMessageLowLevel> messageHandlers = new Dictionary<byte, HandleMessageLowLevel>();
-
 		/// <summary>
 		/// The interval between sending individual heartbeat.
 		/// </summary>
@@ -77,14 +74,6 @@ namespace MSCMP.Network {
 		uint ping = 0;
 
 		/// <summary>
-		/// Delegate type for network messages handler.
-		/// </summary>
-		/// <typeparam name="T">The type of the network message.</typeparam>
-		/// <param name="sender">Steam id that sent us the message.</param>
-		/// <param name="message">The deserialized image.</param>
-		public delegate void MessageHandler<T>(Steamworks.CSteamID sender, T message);
-
-		/// <summary>
 		/// The time when network manager was created in UTC.
 		/// </summary>
 		DateTime netManagerCreationTime;
@@ -94,8 +83,21 @@ namespace MSCMP.Network {
 		/// </summary>
 		NetWorld netWorld = null;
 
+		/// <summary>
+		/// The network message handler.
+		/// </summary>
+		NetMessageHandler netMessageHandler = null;
+
+		/// <summary>
+		/// Get net manager's message handler.
+		/// </summary>
+		public NetMessageHandler MessageHandler {
+			get { return netMessageHandler;  }
+		}
+
 		public NetManager() {
 			this.netManagerCreationTime = DateTime.UtcNow;
+			netMessageHandler = new NetMessageHandler(this);
 			netWorld = new NetWorld(this);
 
 			p2pSessionRequestCallback = Steamworks.Callback<Steamworks.P2PSessionRequest_t>.Create((Steamworks.P2PSessionRequest_t result) => {
@@ -147,30 +149,26 @@ namespace MSCMP.Network {
 				SendHandshake();
 			});
 
-			// TODO: Move message handlers to some class.
+			RegisterProtocolMessagesHandlers();
+		}
 
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.HandshakeMessage msg) => {
+		/// <summary>
+		/// Register protocol related network messages handlers.
+		/// </summary>
+		void RegisterProtocolMessagesHandlers() {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.HandshakeMessage msg) => {
 				remoteClock = msg.clock;
 				HandleHandshake(sender, msg);
 			});
 
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
-				if (players[1] == null) {
-					Logger.Log("Received synchronization packet but no remote player is currently connected.");
-					return;
-				}
-
-				players[1].HandleSynchronize(msg);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.HeartbeatMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.HeartbeatMessage msg) => {
 				var message = new Messages.HeartbeatResponseMessage();
 				message.clientClock = msg.clientClock;
 				message.clock = GetNetworkClock();
 				BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 			});
 
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.HeartbeatResponseMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.HeartbeatResponseMessage msg) => {
 				ping = (uint)(GetNetworkClock() - msg.clientClock);
 
 				// TODO: Some smart lag compensation.
@@ -179,109 +177,8 @@ namespace MSCMP.Network {
 				timeSinceLastHeartbeat = 0.0f;
 			});
 
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.DisconnectMessage msg) => {
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.DisconnectMessage msg) => {
 				HandleDisconnect(false);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.OpenDoorsMessage msg) => {
-				NetPlayer player = players[1];
-				if (player == null) {
-					Logger.Log($"Received OpenDoorsMessage however there is no remote player! (open: {msg.open}");
-					return;
-				}
-
-				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.position));
-				if (doors == null) {
-					Logger.Log($"Player tried to open door, however, the door could not be found!");
-					return;
-				}
-				doors.Open(msg.open);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.FullWorldSyncMessage msg) => {
-
-				netWorld.HandleFullWorldSync(msg);
-
-				// Now spawn player.
-
-				if (players[1] != null) {
-					players[1].Spawn();
-				}
-
-				// World loaded we are playing!
-
-				state = State.Playing;
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.AskForWorldStateMessage msg) => {
-				var msgF = new Messages.FullWorldSyncMessage();
-				netWorld.WriteFullWorldSync(msgF);
-				BroadcastMessage(msgF, Steamworks.EP2PSend.k_EP2PSendReliable);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleEnterMessage msg) => {
-				NetPlayer player = players[1];
-				if (player == null) {
-					return;
-				}
-
-				NetVehicle vehicle = netWorld.GetVehicle(msg.vehicleId);
-				if (vehicle == null) {
-					Logger.Log("Player " + player.SteamId + " tried to enter vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
-					return;
-				}
-
-				player.EnterVehicle(vehicle, msg.passenger);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleLeaveMessage msg) => {
-				NetPlayer player = players[1];
-				if (player == null) {
-					return;
-				}
-				player.LeaveVehicle();
-			});
-
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSyncMessage msg) => {
-				NetPlayer player = players[1];
-				if (player == null) {
-					return;
-				}
-
-				player.HandleVehicleSync(msg);
-			});
-
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupObjectMessage msg) => {
-				NetPlayer player = players[1];
-				if (player == null) {
-					return;
-				}
-				player.PickupObject(msg.netId);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.ReleaseObjectMessage msg) => {
-				NetPlayer player = players[1];
-				if (player == null) {
-					return;
-				}
-				player.ReleaseObject(msg.drop);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.RemoveBottleMessage msg) => {
-				GameObject beerGO = netWorld.GetPickupableGameObject(msg.netId);
-				Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(beerGO);
-				if (beer == null) {
-					Logger.Log($"Player tried to drink beer, however, the beercase cannot be found.");
-					return;
-				}
-				beer.RemoveBottles(1);
-			});
-
-			BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
-				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
-				light.TurnOn(msg.toggle);
 			});
 		}
 
@@ -313,22 +210,6 @@ namespace MSCMP.Network {
 			return (ulong)((DateTime.UtcNow - this.netManagerCreationTime).TotalMilliseconds);
 		}
 
-		/// <summary>
-		/// Binds handler for the given message. (There can be only one handler per message)
-		/// </summary>
-		/// <typeparam name="T">The type of message to register handler for.</typeparam>
-		/// <param name="Handler">The handler lambda.</param>
-		public void BindMessageHandler<T>(MessageHandler<T> Handler) where T: INetMessage, new() {
-			T message = new T();
-
-			messageHandlers.Add(message.MessageId, (Steamworks.CSteamID sender, BinaryReader reader) => {
-				if (! message.Read(reader)) {
-					Logger.Log("Failed to read network message " + message.MessageId + " received from " + sender.ToString());
-					return;
-				}
-				Handler(sender, message);
-			});
-		}
 
 		/// <summary>
 		/// Broadcasts message to connected players.
@@ -351,7 +232,13 @@ namespace MSCMP.Network {
 				return false;
 			}
 
-			players[1].SendPacket(stream.GetBuffer(), sendType, channel);
+			foreach (NetPlayer player in players) {
+				if (player is NetLocalPlayer) {
+					continue;
+				}
+
+				player?.SendPacket(stream.GetBuffer(), sendType, channel);
+			}
 			return true;
 		}
 
@@ -524,18 +411,11 @@ namespace MSCMP.Network {
 					continue;
 				}
 
-				if (players[1] != null && players[1].SteamId != senderSteamId) {
-					Logger.Log("Received network message from user that is not in the session. (" + senderSteamId + ")");
-					continue;
-				}
-
 				MemoryStream stream = new MemoryStream(data);
 				BinaryReader reader = new BinaryReader(stream);
 
 				byte messageId = reader.ReadByte();
-				if (messageHandlers.ContainsKey(messageId)) {
-					messageHandlers[messageId](senderSteamId, reader);
-				}
+				netMessageHandler.ProcessMessage(messageId, senderSteamId, reader);
 			}
 		}
 
@@ -640,19 +520,6 @@ namespace MSCMP.Network {
 				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
 
-			// Set player state.
-
-			players[1].Teleport(Utils.NetVec3ToGame(msg.spawnPosition), Utils.NetQuatToGame(msg.spawnRotation));
-			if (msg.occupiedVehicleId != NetVehicle.INVALID_ID) {
-				var vehicle = netWorld.GetVehicle(msg.occupiedVehicleId);
-				Client.Assert(vehicle != null, $"Player {players[1].GetName()} ({players[1].SteamId}) you tried to join reported that he drives car that does not exists in your game. Vehicle id: {msg.occupiedVehicleId}, passenger: {msg.passenger}");
-				players[1].EnterVehicle(vehicle, msg.passenger);
-			}
-
-			if (msg.pickedUpObject != NetPickupable.INVALID_ID) {
-				players[1].PickupObject(msg.pickedUpObject);
-			}
-
 			players[1].hasHandshake = true;
 		}
 
@@ -662,7 +529,6 @@ namespace MSCMP.Network {
 		private void SendHandshake() {
 			Messages.HandshakeMessage message = new Messages.HandshakeMessage();
 			message.clock = GetNetworkClock();
-			GetLocalPlayer().WriteHandshake(message);
 			BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
@@ -688,6 +554,28 @@ namespace MSCMP.Network {
 		/// <returns>Local player object.</returns>
 		public NetLocalPlayer GetLocalPlayer() {
 			return (NetLocalPlayer)players[0];
+		}
+
+		/// <summary>
+		/// Get network player object by steam id.
+		/// </summary>
+		/// <param name="steamId">The steam id used to find player for.</param>
+		/// <returns>Network player object or null if there is not player matching given steam id.</returns>
+		public NetPlayer GetPlayer(Steamworks.CSteamID steamId) {
+			foreach (NetPlayer player in players) {
+				if (player?.SteamId == steamId) {
+					return player;
+				}
+			}
+			return null;
+		}
+
+
+		/// <summary>
+		/// Called after whole network world is loaded.
+		/// </summary>
+		public void OnNetworkWorldLoaded() {
+			state = State.Playing;
 		}
 	}
 }
