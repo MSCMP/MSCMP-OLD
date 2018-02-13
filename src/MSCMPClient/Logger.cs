@@ -55,11 +55,19 @@ namespace MSCMP {
 		}
 
 		/// <summary>
-		/// Write log message.
+		/// Write warning log message.
 		/// </summary>
 		/// <param name="message">Message to write.</param>
 		public static void Warning(string message) {
 			Log("[WARN] " + message);
+		}
+
+		/// <summary>
+		/// Write error log message.
+		/// </summary>
+		/// <param name="message">Message to write.</param>
+		public static void Error(string message) {
+			Log("[ERROR] " + message);
 		}
 
 		/// <summary>
