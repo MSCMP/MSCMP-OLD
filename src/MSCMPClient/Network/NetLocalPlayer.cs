@@ -189,10 +189,10 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
-		/// Write player state into handshake message.
+		/// Write player state into the network message.
 		/// </summary>
 		/// <param name="msg">Message to write to.</param>
-		public void WriteHandshake(Messages.HandshakeMessage msg) {
+		public void WriteSpawnState(Messages.FullWorldSyncMessage msg) {
 			msg.spawnPosition = Utils.GameVec3ToNet(GetPosition());
 			msg.spawnRotation = Utils.GameQuatToNet(GetRotation());
 

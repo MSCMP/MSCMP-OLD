@@ -245,9 +245,32 @@ namespace MSCMP.Network {
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.FullWorldSyncMessage msg) => {
+				NetPlayer player = netManager.GetPlayer(sender);
+
+				// This one should never happen - if happens there is something done miserably wrong.
+				Client.Assert(player != null, $"There is no player matching given steam id {sender}.");
+
 				// Handle full world state synchronization.
 
 				HandleFullWorldSync(msg);
+
+				// Spawn host character.
+
+				player.Spawn();
+
+				// Set player state.
+
+				player.Teleport(Utils.NetVec3ToGame(msg.spawnPosition), Utils.NetQuatToGame(msg.spawnRotation));
+
+				if (msg.occupiedVehicleId != NetVehicle.INVALID_ID) {
+					var vehicle = GetVehicle(msg.occupiedVehicleId);
+					Client.Assert(vehicle != null, $"Player {player.GetName()} ({player.SteamId}) you tried to join reported that he drives car that does not exists in your game. Vehicle id: {msg.occupiedVehicleId}, passenger: {msg.passenger}");
+					player.EnterVehicle(vehicle, msg.passenger);
+				}
+
+				if (msg.pickedUpObject != NetPickupable.INVALID_ID) {
+					player.PickupObject(msg.pickedUpObject);
+				}
 
 				// World is loaded! Notify network manager about that.
 
@@ -522,6 +545,8 @@ namespace MSCMP.Network {
 			}
 
 			msg.pickupables = pickupableMessages.ToArray();
+
+			netManager.GetLocalPlayer().WriteSpawnState(msg);
 		}
 
 
