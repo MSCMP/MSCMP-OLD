@@ -20,5 +20,13 @@
 		PickupableSpawnMessage[]	pickupables;
 		LightSwitchMessage[]		lights;
 		WeatherUpdateMessage		currentWeather;
+
+		// Informations about player we have connected to.
+
+		Vector3Message spawnPosition;
+		QuaternionMessage spawnRotation;
+		byte occupiedVehicleId;
+		bool passenger;
+		ushort pickedUpObject;
 	}
 }
