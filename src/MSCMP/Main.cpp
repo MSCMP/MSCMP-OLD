@@ -83,6 +83,23 @@ struct SteamWrapper
 const AppId_t GAME_APP_ID = 516750;
 const char *const GAME_APP_ID_STR = "516750";
 
+
+/**
+ * Check if operating system we are running on is 64 bit.
+ *
+ * @return @c true if operating system is 64 bit, @c false otherwise.
+ */
+bool IsOS64Bit(void)
+{
+	// As launcher currently is only compiled as 32bit process this check is sufficient.
+
+	BOOL Wow64Process = FALSE;
+	if (!IsWow64Process(GetCurrentProcess(), &Wow64Process)) {
+		return false;
+	}
+	return Wow64Process != 0;
+}
+
 /**
  * Launcher entry point.
  *
@@ -126,6 +143,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 0;
 	}
 
+	BOOL Wow64Process = FALSE;
+	if (!IsWow64Process(processInformation.hProcess, &Wow64Process)) {
+		MessageBox(NULL, "Failed to determinate game process architecture.", "Fatal error", MB_ICONERROR);
+		TerminateProcess(processInformation.hProcess, 0);
+		return 0;
+	}
+
+	if (!Wow64Process && IsOS64Bit()) {
+		MessageBox(NULL, "Mod does not support 64bit version of the game. To play multiplayer go to steam and opt out of 64bit beta.", "Fatal error", MB_ICONERROR);
+		TerminateProcess(processInformation.hProcess, 0);
+		return 0;
+	}
+
 	char cPath[MAX_PATH] = { 0 };
 	GetModuleFileName(NULL, cPath, MAX_PATH);
 	char injectorDllPath[MAX_PATH] = { 0 };
@@ -146,6 +176,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (!InjectDll(processInformation.hProcess, injectorDllPath)) {
+		const DWORD InjectionError = GetLastError();
 		MessageBox(NULL, "Could not inject dll into the game process. Please try launching the game again.", "Fatal error", MB_ICONERROR);
 		TerminateProcess(processInformation.hProcess, 0);
 		return 0;
