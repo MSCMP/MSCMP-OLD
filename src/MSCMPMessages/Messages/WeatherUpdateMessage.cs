@@ -1,8 +1,6 @@
-﻿namespace MSCMPMessages.Messages
-{
+namespace MSCMPMessages.Messages {
 	[NetMessageDesc(MessageIds.WeatherSync)]
-	class WeatherUpdateMessage
-	{
+	class WeatherUpdateMessage {
 		/// <summary>
 		/// 3 types of weather in My Summer Car.
 		/// </summary>

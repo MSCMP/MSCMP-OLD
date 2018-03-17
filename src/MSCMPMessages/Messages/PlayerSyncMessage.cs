@@ -1,4 +1,3 @@
-﻿
 namespace MSCMPMessages.Messages {
 
 	class PickedUpSync {
