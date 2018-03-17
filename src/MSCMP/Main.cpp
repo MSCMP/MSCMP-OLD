@@ -80,6 +80,9 @@ struct SteamWrapper
 	}
 };
 
+const AppId_t GAME_APP_ID = 516750;
+const char *const GAME_APP_ID_STR = "516750";
+
 /**
  * Launcher entry point.
  *
@@ -93,15 +96,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	ISteamApps *const steamApps = SteamApps();
-	const AppId_t appid = 516750;
 
-	if (!steamApps->BIsAppInstalled(appid)) {
+	if (!steamApps->BIsAppInstalled(GAME_APP_ID)) {
 		MessageBox(NULL, "To run My Summer Car Multiplayer you need to have installed My Summer Car game.", "Fatal error", MB_ICONERROR);
 		return 0;
 	}
 
 	char installFolder[MAX_PATH] = { 0 };
-	steamApps->GetAppInstallDir(appid, installFolder, MAX_PATH);
+	steamApps->GetAppInstallDir(GAME_APP_ID, installFolder, MAX_PATH);
 
 	const char ExecutableName[] = "mysummercar.exe";
 
@@ -112,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	PROCESS_INFORMATION processInformation = { 0 };
 	startupInfo.cb = sizeof(startupInfo);
 
-	SetEnvironmentVariable("SteamAppID", "516750");
+	SetEnvironmentVariable("SteamAppID", GAME_APP_ID_STR);
 
 	if (GetFileAttributes(gameExePath) == INVALID_FILE_ATTRIBUTES) {
 		MessageBox(NULL, "Unable to find game .exe file.", "Fatal error", MB_ICONERROR);
