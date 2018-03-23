@@ -108,12 +108,130 @@ namespace MSCMP {
 				UpdatePlayer();
 			}
 
+			if (!devView && ((ourDebugPlayer != null) && characterAnimationComponent != null)) {
+				if (Input.GetKeyDown(KeyCode.Keypad7)) {
+					characterAnimationComponent.CrossFade("Idle");
+				}
+
+				if (Input.GetKeyDown(KeyCode.Keypad8)) {
+					characterAnimationComponent.CrossFade("Walk");
+				}//test
+
+				if (Input.GetKeyDown(KeyCode.Keypad5)) {
+					characterAnimationComponent.CrossFade("Jump");
+				}
+
+				if (Input.GetKeyDown(KeyCode.Keypad4)) {
+					characterAnimationComponent.CrossFade("DrunkIdle");
+				}
+
+				if (Input.GetKeyDown(KeyCode.Keypad1)) {
+					if (useLean) PlayActionAnim("Lean", false);
+					else PlayActionAnim("Lean", true);
+
+					useLean = !useLean;
+				}
+
+				if (Input.GetKeyDown(KeyCode.Keypad3)) {
+					if (useHitchhike){
+						useHitchhike = false;
+						PlayActionAnim("Hitchhike", false);
+					}
+
+					if (useFinger) PlayActionAnim("Finger", false);
+					else PlayActionAnim("Finger", true);
+
+					useFinger = !useFinger;
+				}
+
+				if (Input.GetKeyDown(KeyCode.Keypad2)) {
+					if (useFinger) {
+						useFinger = false;
+						PlayActionAnim("Finger", false);
+					}
+
+					if (useHitchhike) PlayActionAnim("Hitchhike", false);
+					else PlayActionAnim("Hitchhike", true);
+
+					useHitchhike = !useHitchhike;
+				}
+			}
+		}
+
+		bool useLean = false;
+		bool useFinger = false;
+		bool useHitchhike = false;
+		public void PlayActionAnim(string animName, bool play) {
+			if (play) {
+				characterAnimationComponent[animName].wrapMode = WrapMode.ClampForever;
+				characterAnimationComponent[animName].speed = 1;
+				characterAnimationComponent[animName].enabled = true;
+				characterAnimationComponent[animName].weight = 1.0f;
+			}
+			else {
+				characterAnimationComponent[animName].wrapMode = WrapMode.Once;
+				characterAnimationComponent[animName].time = characterAnimationComponent[animName].length;
+				characterAnimationComponent[animName].speed = -1;
+				characterAnimationComponent[animName].weight = 1.0f;
+			}
+		}
+
+		GameObject ourDebugPlayer = null;
+		Animation characterAnimationComponent = null;
+		public GameObject LoadCustomCharacter(GameObject localPlayer) {
+			GameObject loadedModel = Client.LoadAsset<GameObject>("Assets/MPPlayerModel/MPPlayerModel.fbx");
+			GameObject ourCustomPlayer = (GameObject)GameObject.Instantiate((GameObject)loadedModel);
+
+			characterAnimationComponent = ourCustomPlayer.GetComponent<Animation>();
+			characterAnimationComponent["Jump"].layer = 1;
+			characterAnimationComponent["Lean"].layer = 2;
+			characterAnimationComponent["Lean"].blendMode = AnimationBlendMode.Additive;
+			characterAnimationComponent["Finger"].layer = 2;
+			characterAnimationComponent["Finger"].blendMode = AnimationBlendMode.Additive;
+			characterAnimationComponent["Hitchhike"].layer = 2;
+			characterAnimationComponent["Hitchhike"].blendMode = AnimationBlendMode.Additive;
+
+			ourCustomPlayer.transform.position = localPlayer.transform.position + Vector3.up * 0.60f + localPlayer.transform.rotation * Vector3.forward * 1.0f;
+			ourCustomPlayer.transform.rotation = localPlayer.transform.rotation * Quaternion.Euler(0, 180, 0);
+
+			return ourCustomPlayer;
+		}
+
+		public bool ApplyCustomTextures(GameObject gameObject) {
+			Renderer objectRenderer = ourDebugPlayer.GetComponentInChildren<Renderer>();
+			if (objectRenderer == null) return false;
+			//Logger.Log("Total Materials: " + testRenderer.materials.Length);
+
+			StreamReader SettingsFile = new StreamReader(Client.GetPath("myCharacter.ini"));
+			string line = null;
+			for(int i=0; i<=2;i++) {
+				if ((line = SettingsFile.ReadLine()) == null) break;
+				string[] LineData = line.Split('|');
+
+				float red = Convert.ToSingle(LineData[0]);
+				float green = Convert.ToSingle(LineData[1]);
+				float blue = Convert.ToSingle(LineData[2]);
+
+				Color OurColor = new Color(red, green, blue);
+				objectRenderer.materials[i].color = OurColor;
+			}
+
+			SettingsFile.Close();
+			return true;
+		}
+
+		public void UpdatePlayer(GameObject localPlayer) {
 			if (Input.GetKeyDown(KeyCode.F3)) {
 				devView = !devView;
 			}
 		}
 
 		public static void UpdatePlayer() {
+			// Testing New Model
+			if (Input.GetKey(KeyCode.KeypadMultiply) && localPlayer) {
+				ourDebugPlayer = LoadCustomCharacter(localPlayer);
+				//ApplyCustomTextures(ourDebugPlayer);
+			}
 
 			if (airBreak) {
 				// Pseudo AirBrk
