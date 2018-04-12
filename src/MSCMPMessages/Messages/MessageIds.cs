@@ -27,5 +27,6 @@ namespace MSCMPMessages.Messages {
 		RemoveBottle,
 		LightSwitch,
 		WeatherSync,
+		AnimSync
 	}
 }

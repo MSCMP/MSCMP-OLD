@@ -67,6 +67,8 @@ namespace MSCMP.Network {
 				msg.toggle = turnedOn;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
+
+			if (animManager == null) animManager = new PlayerAnimManager();
 		}
 
 		/// <summary>
@@ -82,6 +84,13 @@ namespace MSCMP.Network {
 
 			timeToUpdate -= Time.deltaTime;
 			if (timeToUpdate <= 0.0f && netManager.IsPlaying) {
+				if (animManager != null) {
+					animManager.PACKETS_LEFT_TO_SYNC--;
+					if (animManager.PACKETS_LEFT_TO_SYNC <= 0) {
+						animManager.PACKETS_LEFT_TO_SYNC = animManager.PACKETS_TOTAL_FOR_SYNC;
+						SendAnimSync();
+					}
+				}
 
 				switch (state) {
 					case State.DrivingVehicle:
@@ -129,6 +138,7 @@ namespace MSCMP.Network {
 			}
 
 			Messages.PlayerSyncMessage message = new Messages.PlayerSyncMessage();
+
 			message.position = Utils.GameVec3ToNet(playerObject.transform.position);
 			message.rotation = Utils.GameQuatToNet(playerObject.transform.rotation);
 
@@ -146,6 +156,39 @@ namespace MSCMP.Network {
 			}
 
 			timeToUpdate = (float)SYNC_INTERVAL / 1000;
+			return true;
+		}
+
+		/// <summary>
+		/// Send anim sync to the server.
+		/// </summary>
+		/// <returns>true if sync message was sent false otherwise</returns>
+		private bool SendAnimSync() {
+			GamePlayer player = GameWorld.Instance.Player;
+			if (player == null) return false;
+
+			GameObject playerObject = player.Object;
+			if (playerObject == null) return false;
+
+			Messages.AnimSyncMessage message = new Messages.AnimSyncMessage();
+
+			float leanRotation = Utils.GetPlaymakerScriptByName(playerObject, "Reach").Fsm.GetFsmFloat("Position").Value;
+			if (leanRotation != 0.0f) message.isLeaning = true;
+			else message.isLeaning = false;
+
+			message.isGrounded = playerObject.GetComponentInChildren<CharacterMotor>().grounded;
+			message.activeHandState = animManager.GetActiveHandState(playerObject);
+			message.aimRot = playerObject.transform.FindChild("Pivot/Camera/FPSCamera").transform.rotation.eulerAngles.x;
+
+			GameObject DrunkObject = playerObject.transform.FindChild("Pivot/Camera/FPSCamera/FPSCamera").gameObject;
+			float DrunkValue = Utils.GetPlaymakerScriptByName(DrunkObject, "Drunk Mode").Fsm.GetFsmFloat("DrunkYmax").Value;
+			if (DrunkValue >= 4.5f) message.isDrunk = true;
+			else message.isDrunk = false;
+
+			if (!netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
+				return false;
+			}
+
 			return true;
 		}
 

@@ -98,6 +98,7 @@
     <Compile Include="Network\NetMessageHandler.cs" />
     <Compile Include="Network\NetPickupable.cs" />
     <Compile Include="Network\NetStatistics.cs" />
+    <Compile Include="Network\PlayerAnimManager.cs" />
     <Compile Include="UI\Console.cs" />
     <Compile Include="UI\Handlers\MessageBoxHandler.cs" />
     <Compile Include="UI\MPGUI.cs" />

@@ -28,6 +28,7 @@ ModelImporter:
     100040: spine_mid
     100042: thigh(leftx)
     100044: thigh(right)
+    100046: shoulders
     400000: ankle_left
     400002: ankle_right
     400004: arm(leftx)
@@ -51,13 +52,14 @@ ModelImporter:
     400040: spine_mid
     400042: thigh(leftx)
     400044: thigh(right)
+    400046: shoulders
     4300000: bodymesh
     7400000: Idle
     7400002: Walk
     7400004: Jump
     7400006: Lean
     7400008: Finger
-    7400010: DrunkIdle
+    7400010: Drunk
     7400012: Hitchhike
     9500000: //RootNode
     11100000: //RootNode
@@ -227,7 +229,7 @@ ModelImporter:
       takeName: Take 001
       firstFrame: 208
       lastFrame: 232
-      wrapMode: 1
+      wrapMode: 2
       orientationOffsetY: 0
       level: 0
       cycleOffset: 0
@@ -511,10 +513,10 @@ ModelImporter:
       maskType: 0
       maskSource: {instanceID: 0}
     - serializedVersion: 16
-      name: DrunkIdle
+      name: Drunk
       takeName: Take 001
-      firstFrame: 266
-      lastFrame: 488
+      firstFrame: 267
+      lastFrame: 487
       wrapMode: 2
       orientationOffsetY: 0
       level: 0

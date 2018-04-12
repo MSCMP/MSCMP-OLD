@@ -13,7 +13,7 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// Offset for the character model.
 		/// </summary>
-		private Vector3 CHARACTER_OFFSET = new Vector3(0.0f, -0.16f, 0.0f);
+		private Vector3 CHARACTER_OFFSET = new Vector3(0.0f, 0.60f, 0.0f);
 
 		/// <summary>
 		/// Steam id of the player.
@@ -28,37 +28,14 @@ namespace MSCMP.Network {
 		protected NetManager netManager = null;
 
 		/// <summary>
+		/// The anim manager managing connection with this player.
+		/// </summary>
+		protected PlayerAnimManager animManager = null;
+
+		/// <summary>
 		/// The game object representing character.
 		/// </summary>
 		private GameObject characterGameObject = null;
-
-		/// <summary>
-		/// Cached animation component.
-		/// </summary>
-		private Animation characterAnimationComponent = null;
-
-		/// <summary>
-		/// The current animation state.
-		/// </summary>
-		private AnimationState activeAnimationState = null;
-
-		/// <summary>
-		/// The animation ids.
-		/// </summary>
-		enum AnimationId {
-			Walk,
-			Standing,
-		}
-
-		private string[] AnimationNames = new string[] {
-			"fat_walk",
-			"fat_standing"
-		};
-
-		/// <summary>
-		/// Currently played animation id.
-		/// </summary>
-		private AnimationId currentAnim = AnimationId.Standing;
 
 		/// <summary>
 		/// Did this player handshake with us during this session?
@@ -88,7 +65,7 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// Name of the game object we use as prefab for characters.
 		/// </summary>
-		private const string CHARACTER_PREFAB_NAME = "Hullu";
+		private const string CHARACTER_PREFAB_NAME = "Assets/MPPlayerModel/MPPlayerModel.fbx";
 
 		/// <summary>
 		/// Current player state.
@@ -155,35 +132,22 @@ namespace MSCMP.Network {
 		/// Spawns character object in world.
 		/// </summary>
 		public void Spawn() {
-			GameObject prefab = GameObject.Find(CHARACTER_PREFAB_NAME);
-
-			characterGameObject = (GameObject)GameObject.Instantiate((GameObject)prefab, interpolator.CurrentPosition, interpolator.CurrentRotation);
+			GameObject loadedModel = Client.LoadAsset<GameObject>(CHARACTER_PREFAB_NAME);
+			characterGameObject = (GameObject)GameObject.Instantiate((GameObject)loadedModel, interpolator.CurrentPosition, interpolator.CurrentRotation);
 
 			// If character will disappear we uncomment this
 			// GameObject.DontDestroyOnLoad(go);
 
-			// Remove all FSM's we do not want to have for the character.
+			//Getting the Animation component of the model, and setting the priority layers of each animation
+			if (animManager == null) { animManager = new PlayerAnimManager(); Logger.Debug("AnimManager: JUST CREATED MORE!"); }
+			else Logger.Debug("AnimManager: We had already (from NetLocal) our animManager");
+			animManager.SetupAnimations(characterGameObject.GetComponentInChildren<Animation>());
 
-			Action<string> RemoveFSM = (string name) => {
-				PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(characterGameObject, name);
-				if (fsm != null) {
-					GameObject.Destroy(fsm);
-
-					Logger.Log("REMOVED " + name + " FSM!");
-				}
-			};
-
-			RemoveFSM("Move"); // Performs random character moves.
-			RemoveFSM("Obstacle"); // Rotates character to side to not walk "to the wall" when touching it.
-			RemoveFSM("Raycast"); // Snaps character to ground.
-			RemoveFSM("CarHit"); // Spawns ragdoll when character gets hit by car.
-
-			characterAnimationComponent = characterGameObject.GetComponentInChildren<Animation>();
-			if (characterAnimationComponent != null) {
+			/*if (characterAnimationComponent != null) {
 				// Force character to stand.
 
 				PlayAnimation(AnimationId.Standing, true);
-			}
+			}*/
 
 			if (pickedUpObjectNetId != NetPickupable.INVALID_ID) {
 				UpdatePickedUpObject(true, false);
@@ -223,38 +187,17 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
-		/// Convert animation id to it's name.
+		/// Updates state of the player after the animations have been played.
 		/// </summary>
-		/// <param name="animation">The id of the animation.</param>
-		/// <returns>Name of the animation.</returns>
-		private string GetAnimationName(AnimationId animation) {
-			return AnimationNames[(int)animation];
-		}
+		public virtual void LateUpdate() {
+			if (characterGameObject && syncReceiveTime > 0) {
+				if (animManager != null) {
+					animManager.CheckBlendedOutAnimationStates();
 
-		/// <summary>
-		/// Play selected animation.
-		/// </summary>
-		/// <param name="animation"></param>
-		/// <param name="force"></param>
-		private void PlayAnimation(AnimationId animation, bool force = false) {
-			if (!force && currentAnim == animation) {
-				return;
+					float progress = (float)(netManager.GetNetworkClock() - syncReceiveTime) / INTERPOLATION_TIME;
+					animManager.SyncVerticalHeadLook(characterGameObject, progress);
+				}
 			}
-
-			currentAnim = animation;
-			if (characterAnimationComponent == null) {
-				return;
-			}
-
-			string animName = GetAnimationName(animation);
-			if (force) {
-				characterAnimationComponent.Play(animName);
-			}
-			else {
-				characterAnimationComponent.CrossFade(animName);
-			}
-
-			activeAnimationState = characterAnimationComponent[animName];
 		}
 
 		/// <summary>
@@ -283,16 +226,7 @@ namespace MSCMP.Network {
 					UpdatePickedupPosition();
 				}
 
-				if (speed > 0.001f) {
-					PlayAnimation(AnimationId.Walk);
-
-					// Set speed of the animation according to the speed of movement.
-
-					activeAnimationState.speed = (speed * 60.0f) / activeAnimationState.length;
-				}
-				else {
-					PlayAnimation(AnimationId.Standing);
-				}
+				if (animManager != null) animManager.HandleOnFootMovementAnimations(speed);
 			}
 
 		}
@@ -324,6 +258,7 @@ namespace MSCMP.Network {
 
 			Vector3 targetPos = Utils.NetVec3ToGame(msg.position);
 			Quaternion targetRot = Utils.NetQuatToGame(msg.rotation);
+
 			interpolator.SetTarget(targetPos, targetRot);
 			syncReceiveTime = netManager.GetNetworkClock();
 
@@ -336,6 +271,14 @@ namespace MSCMP.Network {
 				Teleport(targetPos, targetRot);
 				return;
 			}
+		}
+
+		/// <summary>
+		/// Handle received animation synchronization message.
+		/// </summary>
+		/// <param name="msg">The received synchronization message.</param>
+		public void HandleAnimSynchronize(Messages.AnimSyncMessage msg) {
+			if (animManager != null) animManager.HandleAnimations(msg);
 		}
 
 		/// <summary>
@@ -524,6 +467,10 @@ namespace MSCMP.Network {
 				Client.Assert(pickedUpObject != null, "Tried to drop item however player has no item in hands.");
 				pickedUpObject.layer = oldPickupableLayer;
 				pickedUpObject.GetComponent<Rigidbody>().isKinematic = false;
+				if (!drop) {
+					float thrust = 1;
+					pickedUpObject.GetComponent<Rigidbody>().AddForce(pickedUpObject.transform.forward * thrust);
+				}
 				pickedUpObject = null;
 			}
 		}
