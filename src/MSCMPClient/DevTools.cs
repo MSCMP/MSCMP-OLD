@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Text;
 using System.IO;
 using System;
@@ -8,18 +8,95 @@ namespace MSCMP {
 	/// <summary>
 	/// Development tools.
 	/// </summary>
-	class DevTools {
+	static class DevTools {
 
-		bool devView = false;
-		GameObject spawnedGo = null;
+		static bool devView = false;
+		static GameObject spawnedGo = null;
 
-		public void OnGUI(GameObject localPlayer) {
+		static bool displayClosestObjectNames = false;
+		static bool airBreak = false;
+
+		public static bool netStats = false;
+		public static bool displayPlayerDebug = false;
+
+		/// <summary>
+		/// Game object representing local player.
+		/// </summary>
+		static GameObject localPlayer = null;
+
+		public static void OnGUI() {
+			if (displayClosestObjectNames) {
+				DrawClosestObjectNames();
+			}
+
 			if (!devView) {
 				return;
 			}
 
-			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+			const float DEV_MENU_BUTTON_WIDTH = 150.0f;
+			const float TITLE_SECTION_WIDTH = 50.0f;
+			var devMenuButtonsRect = new Rect(5, 25.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
 
+			// section title
+			GUI.color = Color.white;
+			GUI.Label(devMenuButtonsRect, "Toggles:");
+			devMenuButtonsRect.x += TITLE_SECTION_WIDTH;
+
+			// net stats
+			GUI.color = netStats ? Color.green : Color.white;
+			if (GUI.Button(devMenuButtonsRect, "Net stats")) {
+				netStats = !netStats;
+			}
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+
+			// player debug
+			GUI.color = displayPlayerDebug ? Color.green : Color.white;
+			if (GUI.Button(devMenuButtonsRect, "Net stats - players dbg")) {
+				displayPlayerDebug = !displayPlayerDebug;
+			}
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+
+			// displayClosestObjectNames
+
+			GUI.color = displayClosestObjectNames ? Color.green : Color.white;
+			if (GUI.Button(devMenuButtonsRect, "Display object names")) {
+				displayClosestObjectNames = !displayClosestObjectNames;
+			}
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+
+			// airbreak toggle
+
+			GUI.color = airBreak ? Color.green : Color.white;
+			if (GUI.Button(devMenuButtonsRect, "AirBreak")) {
+				airBreak = !airBreak;
+			}
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+
+			// START TOOLS
+			devMenuButtonsRect.x = 5.0f;
+			devMenuButtonsRect.y = 55.0f;
+
+			GUI.color = Color.white;
+			GUI.Label(devMenuButtonsRect, "Actions:");
+			devMenuButtonsRect.x += TITLE_SECTION_WIDTH;
+
+			// world dump
+
+			GUI.color = Color.white;
+			if (GUI.Button(devMenuButtonsRect, "Dump world")) {
+				DumpWorld(Application.loadedLevelName);
+			}
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+
+			GUI.color = Color.white;
+			if (GUI.Button(devMenuButtonsRect, "Dump local player")) {
+				DumpLocalPlayer();
+			}
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+		}
+
+		static void DrawClosestObjectNames() {
+			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
 				if (localPlayer) {
 					if ((go.transform.position - localPlayer.transform.position).sqrMagnitude > 10) {
 						continue;
@@ -36,89 +113,52 @@ namespace MSCMP {
 			}
 		}
 
-		public void Update() {
+		public static void Update() {
+			if (localPlayer == null) {
+				localPlayer = GameObject.Find("PLAYER");
+			}
+			else {
+				UpdatePlayer();
+			}
+
 			if (Input.GetKeyDown(KeyCode.F3)) {
 				devView = !devView;
 			}
+		}
 
-			if (Input.GetKeyDown(KeyCode.F5)) {
-				DumpWorld(Application.loadedLevelName);
+		public static void UpdatePlayer() {
+
+			if (airBreak) {
+				// Pseudo AirBrk
+				if (Input.GetKey(KeyCode.KeypadPlus) && localPlayer) {
+					localPlayer.transform.position = localPlayer.transform.position + Vector3.up * 5.0f;
+				}
+				if (Input.GetKey(KeyCode.KeypadMinus) && localPlayer) {
+					localPlayer.transform.position = localPlayer.transform.position - Vector3.up * 5.0f;
+				}
+				if (Input.GetKey(KeyCode.Keypad8) && localPlayer) {
+					localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
+				}
+				if (Input.GetKey(KeyCode.Keypad2) && localPlayer) {
+					localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.forward * 5.0f;
+				}
+				if (Input.GetKey(KeyCode.Keypad4) && localPlayer) {
+					localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.right * 5.0f;
+				}
+				if (Input.GetKey(KeyCode.Keypad6) && localPlayer) {
+					localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.right * 5.0f;
+				}
 			}
 		}
 
-		public void UpdatePlayer(GameObject localPlayer) {
+		static void DumpLocalPlayer() {
+			StringBuilder builder = new StringBuilder();
+			Utils.PrintTransformTree(localPlayer.transform, 0, (int level, string text) => {
 
-			if (!devView) {
-				return;
-			}
-
-			// Pseudo AirBrk
-			if (Input.GetKey(KeyCode.KeypadPlus) && localPlayer) {
-				localPlayer.transform.position = localPlayer.transform.position + Vector3.up * 5.0f;
-			}
-			if (Input.GetKey(KeyCode.KeypadMinus) && localPlayer) {
-				localPlayer.transform.position = localPlayer.transform.position - Vector3.up * 5.0f;
-			}
-			if (Input.GetKey(KeyCode.Keypad8) && localPlayer) {
-				localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
-			}
-			if (Input.GetKey(KeyCode.Keypad2) && localPlayer) {
-				localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.forward * 5.0f;
-			}
-			if (Input.GetKey(KeyCode.Keypad4) && localPlayer) {
-				localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.right * 5.0f;
-			}
-			if (Input.GetKey(KeyCode.Keypad6) && localPlayer) {
-				localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.right * 5.0f;
-			}
-
-			if (Input.GetKeyDown(KeyCode.G) && localPlayer) {
-				PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(localPlayer, "PlayerFunctions");
-				if (fsm != null) {
-					fsm.SendEvent("MIDDLEFINGER");
-				}
-				else {
-					GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-					go.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 2.0f;
-				}
-			}
-
-			if (Input.GetKeyDown(KeyCode.I) && localPlayer) {
-
-				StringBuilder builder = new StringBuilder();
-				Utils.PrintTransformTree(localPlayer.transform, 0, (int level, string text) => {
-
-					for (int i = 0; i < level; ++i) builder.Append("    ");
-					builder.Append(text + "\n");
-				});
-				System.IO.File.WriteAllText(Client.GetPath("localPlayer.txt"), builder.ToString());
-			}
-
-
-			if (Input.GetKeyDown(KeyCode.F6) && localPlayer) {
-
-
-				GameObject prefab = GameObject.Find("JONNEZ ES(Clone)");
-				spawnedGo = GameObject.Instantiate(prefab);
-
-				// Remove component that overrides spawn position of JONNEZ.
-				PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(spawnedGo, "LOD");
-				GameObject.Destroy(fsm);
-
-				Vector3 direction = localPlayer.transform.rotation * Vector3.forward * 2.0f;
-				spawnedGo.transform.position = localPlayer.transform.position + direction;
-
-
-				/*StringBuilder builder = new StringBuilder();
-				PrintTrans(go.transform, 0, (int level, string text) => {
-
-					for (int i = 0; i < level; ++i)	builder.Append("    ");
-					builder.Append(text + "\n");
-				});
-				System.IO.File.WriteAllText("J:\\projects\\MSCMP\\MSCMP\\Debug\\charTree.txt", builder.ToString());*/
-
-
-			}
+				for (int i = 0; i < level; ++i) builder.Append("    ");
+				builder.Append(text + "\n");
+			});
+			System.IO.File.WriteAllText(Client.GetPath("localPlayer.txt"), builder.ToString());
 		}
 
 		public static void DumpWorld(string levelName) {

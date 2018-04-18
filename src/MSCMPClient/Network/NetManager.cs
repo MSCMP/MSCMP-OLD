@@ -494,13 +494,15 @@ namespace MSCMP.Network {
 
 			GUI.color = Color.white;
 
-			foreach (NetPlayer player in players) {
-				if (player != null) {
-					player.DrawDebugGUI();
+			if (DevTools.displayPlayerDebug) {
+				foreach (NetPlayer player in players) {
+					if (player != null) {
+						player.DrawDebugGUI();
+					}
 				}
 			}
 
-			Rect debugPanel = new Rect(10, 50, 500, 20);
+			Rect debugPanel = new Rect(10, 90, 500, 20);
 			GUI.Label(debugPanel, "Protocol version: " + PROTOCOL_VERSION);
 			debugPanel.y += 20.0f;
 			GUI.Label(debugPanel, "Time since last heartbeat: " + timeSinceLastHeartbeat);

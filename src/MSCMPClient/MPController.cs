@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 using System.Collections.Generic;
 using System;
@@ -13,13 +13,6 @@ namespace MSCMP {
 
 		public static MPController Instance = null;
 
-#if !PUBLIC_RELEASE
-		/// <summary>
-		/// Various utilities used for development.
-		/// </summary>
-		DevTools devTools = new DevTools();
-#endif
-
 		/// <summary>
 		/// Object managing whole networking.
 		/// </summary>
@@ -29,13 +22,6 @@ namespace MSCMP {
 		/// Name of the currently loaded level.
 		/// </summary>
 		string currentLevelName = "";
-
-#if !PUBLIC_RELEASE
-		/// <summary>
-		/// Game object representing local player.
-		/// </summary>
-		GameObject localPlayer = null;
-#endif
 
 		/// <summary>
 		/// Current scroll value of the invite panel.
@@ -121,6 +107,8 @@ namespace MSCMP {
 				GUI.Label(new Rect(2, 2, 500, 20), "OFFLINE");
 			}
 
+			MessagesList.Draw();
+
 			// Friends widget.
 
 			if (ShouldSeeInvitePanel()) {
@@ -128,9 +116,11 @@ namespace MSCMP {
 			}
 
 #if !PUBLIC_RELEASE
-			devTools.OnGUI(localPlayer);
+			DevTools.OnGUI();
 
-			netManager.DrawDebugGUI();
+			if (DevTools.netStats) {
+				netManager.DrawDebugGUI();
+			}
 
 			gameWorld.UpdateIMGUI();
 #endif
@@ -354,14 +344,7 @@ namespace MSCMP {
 
 				// Development stuff.
 #if !PUBLIC_RELEASE
-				devTools.Update();
-
-				if (localPlayer == null) {
-					localPlayer = GameObject.Find("PLAYER");
-				}
-				else {
-					devTools.UpdatePlayer(localPlayer);
-				}
+				DevTools.Update();
 #endif
 			});
 		}
