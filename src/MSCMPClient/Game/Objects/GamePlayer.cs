@@ -123,7 +123,7 @@ namespace MSCMP.Game.Objects {
 		/// Handle drop of the object.
 		/// </summary>
 		private void DropObject() {
-			Logger.Log("Drop object " + pickedUpGameObject);
+			Logger.Log($"Drop object {pickedUpGameObject}");
 			pickedUpGameObject = null;
 
 			if (GameCallbacks.onObjectRelease != null) {

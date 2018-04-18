@@ -61,6 +61,13 @@ ModelImporter:
     7400008: Finger
     7400010: Drunk
     7400012: Hitchhike
+    7400014: Crouch
+    7400016: CrouchLow
+    7400018: CrouchWalk
+    7400020: CrouchLowWalk
+    7400022: Run
+    7400024: Hit
+    7400026: Push
     9500000: //RootNode
     11100000: //RootNode
     13700000: bodymesh
@@ -569,6 +576,510 @@ ModelImporter:
       - path: pelvis/spine_mid/shoulders(xxxxx)/head
         weight: 1
       - path: pelvis/spine_mid/shoulders(xxxxx)/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: CrouchLow
+      takeName: Take 001
+      firstFrame: 491
+      lastFrame: 518
+      wrapMode: 2
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: Crouch
+      takeName: Take 001
+      firstFrame: 521
+      lastFrame: 550
+      wrapMode: 2
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: CrouchLowWalk
+      takeName: Take 001
+      firstFrame: 553
+      lastFrame: 583
+      wrapMode: 2
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: CrouchWalk
+      takeName: Take 001
+      firstFrame: 586
+      lastFrame: 607
+      wrapMode: 2
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: Run
+      takeName: Take 001
+      firstFrame: 609
+      lastFrame: 630
+      wrapMode: 2
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: Hit
+      takeName: Take 001
+      firstFrame: 632
+      lastFrame: 642.000061
+      wrapMode: 8
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
+        weight: 1
+      - path: thigh(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)
+        weight: 1
+      - path: thigh(leftx)/leg(leftx)/ankle_left
+        weight: 1
+      - path: thigh(right)
+        weight: 1
+      - path: thigh(right)/leg(right)
+        weight: 1
+      - path: thigh(right)/leg(right)/ankle_right
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: Push
+      takeName: Take 001
+      firstFrame: 644
+      lastFrame: 660
+      wrapMode: 8
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bodymesh
+        weight: 1
+      - path: pelvis
+        weight: 1
+      - path: pelvis/spine_mid
+        weight: 1
+      - path: pelvis/spine_mid/shoulders
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_left/shoulder(leftx)/arm(leftx)/hand_left/finger_left
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/collar_right/shoulder(right)/arm(right)/hand_right/fingers_right
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head
+        weight: 1
+      - path: pelvis/spine_mid/shoulders/head/Speak
         weight: 1
       - path: thigh(leftx)
         weight: 1

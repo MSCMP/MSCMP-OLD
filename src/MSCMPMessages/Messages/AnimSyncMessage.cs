@@ -1,10 +1,12 @@
 namespace MSCMPMessages.Messages {
 	[NetMessageDesc(MessageIds.AnimSync)]
 	class AnimSyncMessage {
-		System.Boolean      isLeaning;
-		System.Boolean		isGrounded;
-		byte				activeHandState;
-		float				aimRot;
-		System.Boolean		isDrunk;
+		bool	isRunning;
+		bool	isLeaning;
+		bool	isGrounded;
+		byte	activeHandState;
+		float	aimRot;
+		float	crouchPosition;
+		bool	isDrunk;
 	}
 }

@@ -401,12 +401,13 @@ namespace MSCMP.Game {
 		}
 
 		public GameObject CreateDublicateVehicle(GameObject gameObject) {
+			string UniqueTagPosition = Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value;
 			Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value = "";
 
-			Vector3 newPos = gameObject.transform.position + gameObject.transform.rotation * Vector3.forward * 4.0f;
+			Vector3 newPos = gameObject.transform.position + Vector3.up * 5.0f + gameObject.transform.rotation * Vector3.forward * 4.0f;
 			GameObject newVehicle = (GameObject)GameObject.Instantiate(gameObject, newPos, gameObject.transform.rotation);
 
-			Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value = "VanTransform";
+			Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value = UniqueTagPosition;
 			return newVehicle;
 		}
 	}

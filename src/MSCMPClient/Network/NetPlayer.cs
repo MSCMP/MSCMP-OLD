@@ -468,8 +468,8 @@ namespace MSCMP.Network {
 				pickedUpObject.layer = oldPickupableLayer;
 				pickedUpObject.GetComponent<Rigidbody>().isKinematic = false;
 				if (!drop) {
-					float thrust = 1;
-					pickedUpObject.GetComponent<Rigidbody>().AddForce(pickedUpObject.transform.forward * thrust);
+					float thrust = 50;
+					pickedUpObject.GetComponent<Rigidbody>().AddForce(pickedUpObject.transform.forward * thrust, ForceMode.Impulse);
 				}
 				pickedUpObject = null;
 			}

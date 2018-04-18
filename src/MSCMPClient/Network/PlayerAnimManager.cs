@@ -46,7 +46,14 @@ namespace MSCMP.Network {
 			Drunk,
 			Leaning,
 			Finger,
-			Hitchhike
+			Hitchhike,
+			Crouching,
+			CrouchingLow,
+			CrouchingWalk,
+			CrouchingLowWalk,
+			Running,
+			Hitting,
+			Pushing
 		}
 
 		private string[] AnimationNames = new string[] {
@@ -56,7 +63,14 @@ namespace MSCMP.Network {
 			"Drunk",
 			"Lean",
 			"Finger",
-			"Hitchhike"
+			"Hitchhike",
+			"Crouch",
+			"CrouchLow",
+			"CrouchWalk",
+			"CrouchLowWalk",
+			"Run",
+			"Hit",
+			"Push"
 		};
 
 		/// <summary>
@@ -68,13 +82,48 @@ namespace MSCMP.Network {
 			return AnimationNames[(int)animation];
 		}
 
+		private enum StanceId {
+			Standing,
+			Crouching,
+			CrouchingLow
+		}
+
+		private enum StanceId {
+			Standing,
+			Crouching,
+			CrouchingLow
+		}
+
+		/// <summary>
+		/// Convert stance id to animation id.
+		/// </summary>
+		/// <param name="stance">The id of the stance.</param>
+		/// <param name="standingAnim">True if it's standing, or else moving.</param>
+		/// <returns>Id of the animation.</returns>
+		private AnimationId GetAnimationFromStance(StanceId stance, bool standingAnim = true) {
+			switch (stance) {
+				case StanceId.Crouching: {
+					if (standingAnim) return AnimationId.Crouching;
+					else return AnimationId.CrouchingWalk;
+				}
+				case StanceId.CrouchingLow: {
+					if (standingAnim) return AnimationId.CrouchingLow;
+					else return AnimationId.CrouchingLowWalk;
+				}
+				default: {
+					if (standingAnim) return AnimationId.Standing;
+					else return AnimationId.Walk;
+				}
+			}
+		}
+
 		/// <summary>
 		/// The hand state ids.
 		/// </summary>
 		private enum HandStateId {
 			MiddleFingering,
 			Lifting,
-			Fisting,
+			Hitting,
 			Pushing,
 			Drinking
 		}
@@ -134,6 +183,10 @@ namespace MSCMP.Network {
 			characterAnimationComponent["Finger"].blendMode = AnimationBlendMode.Additive;
 			characterAnimationComponent["Hitchhike"].layer = 3;
 			characterAnimationComponent["Hitchhike"].blendMode = AnimationBlendMode.Additive;
+			characterAnimationComponent["Hit"].layer = 3;
+			characterAnimationComponent["Hit"].blendMode = AnimationBlendMode.Additive;
+			characterAnimationComponent["Push"].layer = 3;
+			characterAnimationComponent["Push"].blendMode = AnimationBlendMode.Additive;
 
 			RegisterAnimStates();
 		}
@@ -191,28 +244,6 @@ namespace MSCMP.Network {
 				characterAnimationComponent[animName].speed = -1;
 				characterAnimationComponent[animName].weight = 1.0f;
 			}
-		}
-
-		/// <summary>
-		/// Checks if player is playing a specific animation
-		/// </summary>
-		/// <param name="animName">The name of the animation</param>
-		private bool IsPlayingAnim(AnimationId animation) {
-			if (characterAnimationComponent == null) return false;
-
-			string animName = GetAnimationName(animation);
-			if (characterAnimationComponent[animName].enabled == true) return true;
-
-			return false;
-		}
-
-		/// <summary>
-		/// Will stop hand gestures except the one in the variable
-		/// </summary>
-		/// <param name="exceptThis">Except this gesture.</param>
-		private void StopOtherHandGesturesExcept(AnimationId exceptThis) {
-			if (exceptThis != AnimationId.Finger && IsPlayingAnim(AnimationId.Finger)) PlayActionAnim(AnimationId.Finger, false);
-			if (exceptThis != AnimationId.Hitchhike && IsPlayingAnim(AnimationId.Hitchhike)) PlayActionAnim(AnimationId.Hitchhike, false);
 		}
 
 		/// <summary>
@@ -291,20 +322,40 @@ namespace MSCMP.Network {
 			public override void Deactivate() { BlendOutAnimation(AnimationId.Drunk); }
 		}
 
+		private class HitState : AnimState {
+			public override bool CanActivate(Messages.AnimSyncMessage msg) { return GetHandState(msg.activeHandState) == HandStateId.Hitting; }
+			public override void Activate() { PlayActionAnim(AnimationId.Hitting, true); }
+			public override void Deactivate() { PlayActionAnim(AnimationId.Hitting, false); }
+		}
+
+		private class PushState : AnimState {
+			public override bool CanActivate(Messages.AnimSyncMessage msg) { return GetHandState(msg.activeHandState) == HandStateId.Pushing; }
+			public override void Activate() { PlayActionAnim(AnimationId.Pushing, true); }
+			public override void Deactivate() { PlayActionAnim(AnimationId.Pushing, false); }
+		}
+
 		private static void RegisterAnimStates() {
 			states.Add(new LeaningState());
 			states.Add(new JumpState());
 			states.Add(new FingerState());
 			states.Add(new HitchhikeState());
 			states.Add(new DrunkState());
+			states.Add(new HitState());
+			states.Add(new PushState());
 		}
 
+		//Animation Variables
+		bool isRunning = false;
 		float aimRot = 0.0f;
+		StanceId currentStance = StanceId.Standing;
+
 		/// <summary>
 		/// Handles the Action Animations
 		/// </summary>
 		public void HandleAnimations(Messages.AnimSyncMessage msg) {
+			isRunning = msg.isRunning;
 			aimRot = msg.aimRot;
+			HandleCrouchStates(msg.crouchPosition);
 
 			foreach (AnimState state in states) {
 				state.TryActivate(msg);
@@ -315,13 +366,14 @@ namespace MSCMP.Network {
 		/// Handles the Foot Movement Animations
 		/// </summary>
 		public void HandleOnFootMovementAnimations(float speed) {
-			if (speed > 0.001f) {
-				PlayAnimation(AnimationId.Walk);
+			if (speed > 0.001f) { //Moving
+				if (isRunning) PlayAnimation(AnimationId.Running); //Running
+				else PlayAnimation(GetAnimationFromStance(currentStance, false)); //Walking
 
-				// Set speed of the animation according to the speed of movement.
-				activeAnimationState.speed = (speed * 25.0f) / activeAnimationState.length;
+				// Set speed of the animation according to the speed of movement. (Not anymore as we have a running anim!)
+				//activeAnimationState.speed = (speed * 25.0f) / activeAnimationState.length; 
 			}
-			else PlayAnimation(AnimationId.Standing);
+			else PlayAnimation(GetAnimationFromStance(currentStance)); //Standing
 		}
 
 		/// <summary>
@@ -331,6 +383,15 @@ namespace MSCMP.Network {
 			Transform head = characterGameObject.transform.FindChild("pelvis/spine_mid/shoulders/head");
 			//float newAimRot = Mathf.LerpAngle(head.rotation.eulerAngles.z, aimRot, progress); COMMENTED OUT CAUSE IT DOESNT WORK! NEED NEW INTERPOLATION
 			head.rotation *= Quaternion.Euler(0, 0, -aimRot);
+		}
+
+		/// <summary>
+		/// Takes care of crouch states
+		/// </summary>
+		private void HandleCrouchStates(float crouchRotation) {
+			if (crouchRotation < 0.85f) currentStance = StanceId.CrouchingLow;
+			else if (crouchRotation < 1.4f) currentStance = StanceId.Crouching;
+			else currentStance = StanceId.Standing;
 		}
 	}
 }
