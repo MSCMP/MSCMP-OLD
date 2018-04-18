@@ -122,6 +122,8 @@ namespace MSCMP.Network {
 
 				Logger.Log("Hey you! I have lobby id for you! " + result.m_ulSteamIDLobby);
 
+				MessagesList.AddMessage("Session started.", MessageSeverity.Info);
+
 				// Setup local player.
 				players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
 
@@ -142,6 +144,8 @@ namespace MSCMP.Network {
 				players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
 
 				Logger.Log("Oh hello! " + result.m_ulSteamIDLobby);
+
+				MessagesList.AddMessage("Entered lobby.", MessageSeverity.Info);
 
 				mode = Mode.Player;
 				state = State.LoadingGameWorld;
@@ -365,6 +369,11 @@ namespace MSCMP.Network {
 		/// <param name="timeout">Was the disconnect caused by timeout?</param>
 		private void HandleDisconnect(bool timeout) {
 			ShowLoadingScreen(false);
+
+			if (IsHost) {
+				string reason = timeout ? "timeout" : "part";
+				MessagesList.AddMessage($"Player {players[1].GetName()} disconnected. ({reason})", MessageSeverity.Info);
+			}
 			CleanupPlayer();
 
 			// Go to main menu if we are normal player - the session just closed.
@@ -544,6 +553,8 @@ namespace MSCMP.Network {
 				// Check if version matches - if not ignore this player.
 
 				if (msg.protocolVersion != PROTOCOL_VERSION) {
+					MessagesList.AddMessage($"Player {players[1].GetName()} connection rejected. Version mismatch.", MessageSeverity.Error);
+
 					Logger.Error($"Player disconnected. Version mismatch. (Client: {PROTOCOL_VERSION}, Player: {msg.protocolVersion}).");
 					SendHandshake(players[1]);
 					players[1].Dispose();
@@ -555,6 +566,8 @@ namespace MSCMP.Network {
 
 				players[1].Spawn();
 				SendHandshake(players[1]);
+
+				MessagesList.AddMessage($"Player {players[1].GetName()} joined.", MessageSeverity.Info);
 			}
 			else {
 				if (players[1] == null) {
@@ -563,11 +576,9 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				Logger.Log("CONNECTION ESTABLISHED!");
+				MessagesList.AddMessage($"Connection established!", MessageSeverity.Info);
 
 				MPController.Instance.LoadLevel("GAME");
-
-				Logger.Debug("HandleHandshake() - player - joined");
 
 				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
@@ -580,7 +591,6 @@ namespace MSCMP.Network {
 		/// Sends handshake to the connected player.
 		/// </summary>
 		private void SendHandshake(NetPlayer player) {
-			Logger.Debug("SendHandshake()");
 			Messages.HandshakeMessage message = new Messages.HandshakeMessage();
 			message.protocolVersion		= PROTOCOL_VERSION;
 			message.clock				= GetNetworkClock();
