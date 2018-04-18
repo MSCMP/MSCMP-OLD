@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -7,6 +7,8 @@ using MSCMP.UI;
 namespace MSCMP.Network {
 	class NetManager {
 		private const int MAX_PLAYERS = 2;
+		private const int PROTOCOL_VERSION = 1;
+
 		private Steamworks.Callback<Steamworks.GameLobbyJoinRequested_t> gameLobbyJoinRequestedCallback = null;
 		private Steamworks.Callback<Steamworks.P2PSessionRequest_t> p2pSessionRequestCallback = null;
 		private Steamworks.CallResult<Steamworks.LobbyCreated_t> lobbyCreatedCallResult = null;
@@ -146,7 +148,7 @@ namespace MSCMP.Network {
 				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
 
 				ShowLoadingScreen(true);
-				SendHandshake();
+				SendHandshake(players[1]);
 			});
 
 			RegisterProtocolMessagesHandlers();
@@ -157,7 +159,6 @@ namespace MSCMP.Network {
 		/// </summary>
 		void RegisterProtocolMessagesHandlers() {
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.HandshakeMessage msg) => {
-				remoteClock = msg.clock;
 				HandleHandshake(sender, msg);
 			});
 
@@ -223,6 +224,7 @@ namespace MSCMP.Network {
 			if (players[1] == null) {
 				return false;
 			}
+
 			MemoryStream stream = new MemoryStream();
 			BinaryWriter writer = new BinaryWriter(stream);
 
@@ -264,8 +266,7 @@ namespace MSCMP.Network {
 				return false;
 			}
 
-			player.SendPacket(stream.GetBuffer(), sendType, channel);
-			return true;
+			return player.SendPacket(stream.GetBuffer(), sendType, channel);
 		}
 
 		/// <summary>
@@ -491,6 +492,8 @@ namespace MSCMP.Network {
 			}
 
 			Rect debugPanel = new Rect(10, 50, 500, 20);
+			GUI.Label(debugPanel, "Protocol version: " + PROTOCOL_VERSION);
+			debugPanel.y += 20.0f;
 			GUI.Label(debugPanel, "Time since last heartbeat: " + timeSinceLastHeartbeat);
 			debugPanel.y += 20.0f;
 			GUI.Label(debugPanel, "Time to send next heartbeat: " + timeToSendHeartbeat);
@@ -514,6 +517,18 @@ namespace MSCMP.Network {
 		/// <param name="senderSteamId">The steam id of the sender.</param>
 		/// <param name="msg">Hand shake message.</param>
 		private void HandleHandshake(Steamworks.CSteamID senderSteamId, Messages.HandshakeMessage msg) {
+			// Check if protocol version matches.
+
+			if (IsPlayer && (msg.protocolVersion != PROTOCOL_VERSION)) {
+				string errorMessage = $"Failed to join lobby. Protocol version mismatch. (Client: {PROTOCOL_VERSION}, Host: {msg.protocolVersion})";
+				MPGUI.Instance.ShowMessageBox(errorMessage);
+				Logger.Error(errorMessage);
+				MPController.Instance.LoadLevel("MainMenu");
+				return;
+			}
+
+			// All looks fine
+
 			if (IsHost) {
 				if (players[1] != null) {
 					Logger.Log("Received handshake from player but player is already here.");
@@ -526,11 +541,20 @@ namespace MSCMP.Network {
 				timeSinceLastHeartbeat = 0.0f;
 				players[1] = new NetPlayer(this, netWorld, senderSteamId);
 
+				// Check if version matches - if not ignore this player.
+
+				if (msg.protocolVersion != PROTOCOL_VERSION) {
+					Logger.Error($"Player disconnected. Version mismatch. (Client: {PROTOCOL_VERSION}, Player: {msg.protocolVersion}).");
+					SendHandshake(players[1]);
+					players[1].Dispose();
+					players[1] = null;
+					return;
+				}
+
 				// Player can be spawned here safely. Host is already in game and all game objects are here.
 
 				players[1].Spawn();
-
-				SendHandshake();
+				SendHandshake(players[1]);
 			}
 			else {
 				if (players[1] == null) {
@@ -543,19 +567,24 @@ namespace MSCMP.Network {
 
 				MPController.Instance.LoadLevel("GAME");
 
+				Logger.Debug("HandleHandshake() - player - joined");
+
 				// Host will be spawned when game will be loaded and OnGameWorldLoad callback will be called.
 			}
 
+			remoteClock = msg.clock;
 			players[1].hasHandshake = true;
 		}
 
 		/// <summary>
 		/// Sends handshake to the connected player.
 		/// </summary>
-		private void SendHandshake() {
+		private void SendHandshake(NetPlayer player) {
+			Logger.Debug("SendHandshake()");
 			Messages.HandshakeMessage message = new Messages.HandshakeMessage();
-			message.clock = GetNetworkClock();
-			BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendReliable);
+			message.protocolVersion		= PROTOCOL_VERSION;
+			message.clock				= GetNetworkClock();
+			SendMessage(player, message, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
 		/// <summary>
