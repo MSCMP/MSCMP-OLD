@@ -11,7 +11,6 @@ namespace MSCMP {
 	static class DevTools {
 
 		static bool devView = false;
-		static GameObject spawnedGo = null;
 
 		static bool displayClosestObjectNames = false;
 		static bool airBreak = false;
@@ -24,6 +23,10 @@ namespace MSCMP {
 		/// </summary>
 		static GameObject localPlayer = null;
 
+		const float DEV_MENU_BUTTON_WIDTH = 150.0f;
+		const float TITLE_SECTION_WIDTH = 50.0f;
+		static Rect devMenuButtonsRect = new Rect(5, 0.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
+
 		public static void OnGUI() {
 			if (displayClosestObjectNames) {
 				DrawClosestObjectNames();
@@ -33,66 +36,49 @@ namespace MSCMP {
 				return;
 			}
 
-			const float DEV_MENU_BUTTON_WIDTH = 150.0f;
-			const float TITLE_SECTION_WIDTH = 50.0f;
-			var devMenuButtonsRect = new Rect(5, 25.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
 
-			// section title
-			GUI.color = Color.white;
-			GUI.Label(devMenuButtonsRect, "Toggles:");
-			devMenuButtonsRect.x += TITLE_SECTION_WIDTH;
-
-			// net stats
-			GUI.color = netStats ? Color.green : Color.white;
-			if (GUI.Button(devMenuButtonsRect, "Net stats")) {
-				netStats = !netStats;
-			}
-			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
-
-			// player debug
-			GUI.color = displayPlayerDebug ? Color.green : Color.white;
-			if (GUI.Button(devMenuButtonsRect, "Net stats - players dbg")) {
-				displayPlayerDebug = !displayPlayerDebug;
-			}
-			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
-
-			// displayClosestObjectNames
-
-			GUI.color = displayClosestObjectNames ? Color.green : Color.white;
-			if (GUI.Button(devMenuButtonsRect, "Display object names")) {
-				displayClosestObjectNames = !displayClosestObjectNames;
-			}
-			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
-
-			// airbreak toggle
-
-			GUI.color = airBreak ? Color.green : Color.white;
-			if (GUI.Button(devMenuButtonsRect, "AirBreak")) {
-				airBreak = !airBreak;
-			}
-			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
-
-			// START TOOLS
 			devMenuButtonsRect.x = 5.0f;
-			devMenuButtonsRect.y = 55.0f;
+			devMenuButtonsRect.y = 0.0f;
 
-			GUI.color = Color.white;
-			GUI.Label(devMenuButtonsRect, "Actions:");
-			devMenuButtonsRect.x += TITLE_SECTION_WIDTH;
+			NewSection("Toggles:");
+			Checkbox("Net stats", ref netStats);
+			Checkbox("Net stats - players dbg", ref displayPlayerDebug);
+			Checkbox("Display object names", ref displayClosestObjectNames);
+			Checkbox("AirBreak", ref airBreak);
 
-			// world dump
+			NewSection("Actions:");
 
-			GUI.color = Color.white;
-			if (GUI.Button(devMenuButtonsRect, "Dump world")) {
+			if (Action("Dump world")) {
 				DumpWorld(Application.loadedLevelName);
 			}
-			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
 
-			GUI.color = Color.white;
-			if (GUI.Button(devMenuButtonsRect, "Dump local player")) {
+			if (Action("Dump local player")) {
 				DumpLocalPlayer();
 			}
+		}
+
+		static void NewSection(string title) {
+			devMenuButtonsRect.x = 5.0f;
+			devMenuButtonsRect.y += 25.0f;
+
+			GUI.color = Color.white;
+			GUI.Label(devMenuButtonsRect, title);
+			devMenuButtonsRect.x += TITLE_SECTION_WIDTH;
+		}
+
+		static void Checkbox(string name, ref bool state) {
+			GUI.color = state ? Color.green : Color.white;
+			if (GUI.Button(devMenuButtonsRect, name)) {
+				state = !state;
+			}
 			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+		}
+
+		static bool Action(string name) {
+			GUI.color = Color.white;
+			bool execute = GUI.Button(devMenuButtonsRect, name);
+			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
+			return execute;
 		}
 
 		static void DrawClosestObjectNames() {
