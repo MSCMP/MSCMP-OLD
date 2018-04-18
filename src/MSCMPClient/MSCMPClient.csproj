@@ -93,6 +93,7 @@
     <Compile Include="Game\Objects\GameVehicle.cs" />
     <Compile Include="Game\Objects\LightSwitch.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="MessagesList.cs" />
     <Compile Include="Network\NetMessageHandler.cs" />
     <Compile Include="Network\NetPickupable.cs" />
     <Compile Include="UI\Handlers\MessageBoxHandler.cs" />
