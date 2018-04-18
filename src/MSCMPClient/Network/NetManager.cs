@@ -243,6 +243,32 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
+		/// Send message to given player.
+		/// </summary>
+		/// <typeparam name="T">The type of the message to broadcast.</typeparam>
+		/// <param name="player">Player to who message should be send.</param>
+		/// <param name="message">The message to broadcast.</param>
+		/// <param name="sendType">The send type.</param>
+		/// <param name="channel">The channel used to deliver message.</param>
+		/// <returns>true if message was sent false otherwise</returns>
+		public bool SendMessage<T>(NetPlayer player, T message, Steamworks.EP2PSend sendType, int channel = 0) where T : INetMessage {
+			if (player == null) {
+				return false;
+			}
+			MemoryStream stream = new MemoryStream();
+			BinaryWriter writer = new BinaryWriter(stream);
+
+			writer.Write((byte)message.MessageId);
+			if (! message.Write(writer)) {
+				Client.FatalError("Failed to write network message " + message.MessageId);
+				return false;
+			}
+
+			player.SendPacket(stream.GetBuffer(), sendType, channel);
+			return true;
+		}
+
+		/// <summary>
 		/// Callback called when client accepts lobby join request from other steam user.
 		/// </summary>
 		/// <param name="request">The request.</param>
