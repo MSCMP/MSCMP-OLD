@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using MSCMP.Game.Objects;
 using HutongGames.PlayMaker;
+using System.Text;
 
 namespace MSCMP.Game {
 
 	/// <summary>
 	/// Object managing state of the game world.
 	/// </summary>
-	class GameWorld {
+	class GameWorld : IGameObjectCollector {
 
 
 		public static GameWorld Instance = null;
@@ -131,10 +132,9 @@ namespace MSCMP.Game {
 		private PlayMakerFSM lastnameFSM = null;
 
 		/// <summary>
-		/// Search for the red mailbox next to the player's home.
+		/// Setup red mailbox next to the player's home.
 		/// </summary>
-		public void LoadMailbox() {
-			GameObject mailboxGameObject = GameObject.Find("YARD/PlayerMailBox/mailbox_bottom_player/Name");
+		public void SetupMailbox(GameObject mailboxGameObject) {
 			lastnameTextMesh = mailboxGameObject.GetComponent<TextMesh>();
 			lastnameFSM = mailboxGameObject.GetComponent<PlayMakerFSM>();
 
@@ -142,14 +142,19 @@ namespace MSCMP.Game {
 			Client.Assert(lastnameTextMesh != null, "Mailbox TextMesh couldn't be found!");
 		}
 
+		List<IGameObjectCollector> gameObjectUsers = new List<IGameObjectCollector>();
+
 		public GameWorld() {
 			Instance = this;
+
+			gameObjectUsers.Add(this);
 		}
 
 		~GameWorld() {
 			Instance = null;
 		}
 
+		Dictionary<int, GameObject> gameObjectLibrary = new Dictionary<int, GameObject>();
 
 		int StringJenkinsHash(string str) {
 			int i = 0;
@@ -167,6 +172,23 @@ namespace MSCMP.Game {
 
 		int worldHash = 0;
 		bool worldHashGenerated = false;
+
+		GameObject sunGameObject = null;
+
+		public void CollectGameObject(GameObject gameObject) {
+			if (gameObject.name == "SUN") {
+				sunGameObject = gameObject;
+			}
+
+			if (gameObject.name == "YARD/PlayerMailBox/mailbox_bottom_player/Name") {
+				SetupMailbox(gameObject);
+			}
+
+			if (IsVehicleGameObject(gameObject)) {
+				vehicles.Add(new GameVehicle(gameObject));
+			}
+		}
+
 		/// <summary>
 		/// Callback called when world is loaded.
 		/// </summary>
@@ -182,13 +204,16 @@ namespace MSCMP.Game {
 						transform = transform.parent;
 					}
 				}
+
+				foreach (IGameObjectCollector collector in gameObjectUsers) {
+					collector.CollectGameObject(go);
+				}
 			}
 
 			Logger.Log("World hash: " + worldHash);
 			worldHashGenerated = true;
 
 			// Cache world time management fsm.
-			GameObject sunGameObject = GameObject.Find("SUN");
 			Client.Assert(sunGameObject != null, "SUN game object is missing!");
 
 			// Yep it's called "Color" :>
@@ -210,8 +235,6 @@ namespace MSCMP.Game {
 			doorsManager.OnWorldLoad();
 			beerCaseManager.OnWorldLoad();
 			lightSwitchManager.OnWorldLoad();
-			LoadMailbox();
-			LoadVehicles();
 
 			if (GameCallbacks.onWorldLoad != null) {
 				GameCallbacks.onWorldLoad();
@@ -248,24 +271,20 @@ namespace MSCMP.Game {
 				}
 			}
 		}
+		static readonly string[] vehicleGoNames = {
+			"JONNEZ ES(Clone)", "HAYOSIKO(1500kg, 250)", "SATSUMA(557kg, 248)",
+			"RCO_RUSCKO12(270)", "KEKMET(350-400psi)", "FLATBED", "FERNDALE(1630kg)", "GIFU(750/450psi)"
+		};
 
-		/// <summary>
-		/// Load game vehicles and create game objects for them.
-		/// </summary>
-		private void LoadVehicles() {
-			vehicles.Clear();
-
-			// Register all vehicles.
-
-			vehicles.Add(new GameVehicle(GameObject.Find("JONNEZ ES(Clone)")));
-			vehicles.Add(new GameVehicle(GameObject.Find("HAYOSIKO(1500kg, 250)")));
-			vehicles.Add(new GameVehicle(GameObject.Find("SATSUMA(557kg, 248)")));
-			vehicles.Add(new GameVehicle(GameObject.Find("RCO_RUSCKO12(270)")));
-			vehicles.Add(new GameVehicle(GameObject.Find("KEKMET(350-400psi)")));
-			vehicles.Add(new GameVehicle(GameObject.Find("FLATBED")));
-			vehicles.Add(new GameVehicle(GameObject.Find("FERNDALE(1630kg)")));
-			vehicles.Add(new GameVehicle(GameObject.Find("GIFU(750/450psi)")));
+		bool IsVehicleGameObject(GameObject gameObject) {
+			foreach (var name in vehicleGoNames) {
+				if (gameObject.name == name) {
+					return true;
+				}
+			}
+			return false;
 		}
+
 
 		public GameVehicle FindVehicleByName(string name) {
 			foreach (var veh in vehicles) {
