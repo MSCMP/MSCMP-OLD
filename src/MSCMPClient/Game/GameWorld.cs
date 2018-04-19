@@ -150,10 +150,43 @@ namespace MSCMP.Game {
 			Instance = null;
 		}
 
+
+		int StringJenkinsHash(string str) {
+			int i = 0;
+			int hash = 0;
+			while (i != str.Length) {
+				hash += str[i++];
+				hash += hash << 10;
+				hash ^= hash >> 6;
+			 }
+			hash += hash << 3;
+			hash ^= hash >> 11;
+			hash += hash << 15;
+			return hash;
+		}
+
+		int worldHash = 0;
+		bool worldHashGenerated = false;
 		/// <summary>
 		/// Callback called when world is loaded.
 		/// </summary>
 		public void OnLoad() {
+
+			GameObject[] gos = Resources.FindObjectsOfTypeAll<GameObject>();
+
+			foreach (GameObject go in gos) {
+				if (!worldHashGenerated) {
+					Transform transform = go.transform;
+					while (transform != null) {
+						worldHash ^= StringJenkinsHash(transform.name);
+						transform = transform.parent;
+					}
+				}
+			}
+
+			Logger.Log("World hash: " + worldHash);
+			worldHashGenerated = true;
+
 			// Cache world time management fsm.
 			GameObject sunGameObject = GameObject.Find("SUN");
 			Client.Assert(sunGameObject != null, "SUN game object is missing!");
