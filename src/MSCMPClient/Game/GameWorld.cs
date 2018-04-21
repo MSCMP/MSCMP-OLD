@@ -25,11 +25,6 @@ namespace MSCMP.Game {
 		private List<GameVehicle> vehicles = new List<GameVehicle>();
 
 		/// <summary>
-		/// Game animations database.
-		/// </summary>
-		GameAnimDatabase gameAnimDatabase = new GameAnimDatabase();
-
-		/// <summary>
 		/// Game pickupables database.
 		/// </summary>
 		GamePickupableDatabase gamePickupableDatabase = new GamePickupableDatabase();
@@ -229,7 +224,6 @@ namespace MSCMP.Game {
 			// Make sure world time is up-to-date with cache.
 			WorldTime = worldTimeCached;
 
-			gameAnimDatabase.Rebuild();
 			gamePickupableDatabase.Rebuild();
 
 			doorsManager.OnWorldLoad();
