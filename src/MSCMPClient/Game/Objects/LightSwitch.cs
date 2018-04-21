@@ -1,4 +1,4 @@
-﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker;
 using UnityEngine;
 
 namespace MSCMP.Game.Objects {
@@ -8,6 +8,8 @@ namespace MSCMP.Game.Objects {
 	/// </summary>
 	class LightSwitch {
 		GameObject go = null;
+		public GameObject GameObject { get { return go; } }
+
 		PlayMakerFSM fsm = null;
 
 		//Get switch status

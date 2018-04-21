@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using MSCMP.Game.Objects;
 
@@ -6,7 +6,7 @@ namespace MSCMP.Game {
 	/// <summary>
 	/// Class managing state of the light switches in game.
 	/// </summary>
-	class LightSwitchManager {
+	class LightSwitchManager : IGameObjectCollector {
 		/// <summary>
 		/// Singleton of the light switch manager.
 		/// </summary>
@@ -33,16 +33,39 @@ namespace MSCMP.Game {
 		}
 
 		/// <summary>
-		/// Builds light switch list on world load.
+		/// Check if given game object is a light switch.
 		/// </summary>
-		public void OnWorldLoad() {
-			lightSwitches.Clear();
-			GameObject[] gos = GameObject.FindObjectsOfType<GameObject>();
+		/// <param name="gameObject">Game object to check.</param>
+		/// <returns>true if given game object is light switch, false otherwise</returns>
+		bool IsLightSwitch(GameObject gameObject) {
+			return gameObject.name.StartsWith("switch_");
+		}
 
-			//Register all light switches in game.
-			foreach (var go in gos) {
-				if (go.name.StartsWith("switch_")) {
-					AddLightSwitch(go);
+		/// <summary>
+		/// Collect light switches.
+		/// </summary>
+		public void CollectGameObject(GameObject gameObject) {
+			if (IsLightSwitch(gameObject) && GetLightSwitchByGameObject(gameObject) == null) {
+				AddLightSwitch(gameObject);
+			}
+		}
+
+		/// <summary>
+		/// Destroy all collected objects references.
+		/// </summary>
+		public void DestroyObjects() {
+			lightSwitches.Clear();
+		}
+
+		/// <summary>
+		/// Handle destroy of game object.
+		/// </summary>
+		/// <param name="gameObject">The destroyed game object.</param>
+		public void DestroyObject(GameObject gameObject) {
+			if (IsLightSwitch(gameObject)) {
+				var lightSwitch = GetLightSwitchByGameObject(gameObject);
+				if (lightSwitch != null) {
+					lightSwitches.Remove(lightSwitch);
 				}
 			}
 		}
@@ -81,6 +104,20 @@ namespace MSCMP.Game {
 		public LightSwitch FindLightSwitch(Vector3 pos) {
 			foreach (LightSwitch light in lightSwitches) {
 				if ((Vector3.Distance(light.Position, pos) < 0.1f)) {
+					return light;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Get light switch by game object.
+		/// </summary>
+		/// <param name="gameObject">The game object to get lightswitch by.</param>
+		/// <returns>Lightswitch instance or null if there is no lightswitch matching this game object.</returns>
+		public LightSwitch GetLightSwitchByGameObject(GameObject gameObject) {
+			foreach (var light in lightSwitches) {
+				if (light.GameObject == gameObject) {
 					return light;
 				}
 			}

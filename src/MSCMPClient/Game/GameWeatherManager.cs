@@ -1,4 +1,4 @@
-﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace MSCMP.Game
 	/// <summary>
 	/// Class managing state of the doors in game.
 	/// </summary>
-	class GameWeatherManager
+	class GameWeatherManager : IGameObjectCollector
 	{
 		private const string RAIN_ENAME = "MPRAIN";
 		private const string THUNDER_ENAME = "MPTHUNDER";
@@ -106,18 +106,17 @@ namespace MSCMP.Game
 
 		public GameWeatherManager() {
 			Instance = this;
-
-			GameCallbacks.onWorldLoad += () => {
-				OnWorldLoad();
-			};
 		}
 
 		/// <summary>
 		/// Finds Cloud System and adds custom Multiplayer weather events.
 		/// </summary>
-		public void OnWorldLoad() {
-			GameObject cloudSystem = GameObject.Find("Clouds");
+		public void CollectGameObject(GameObject gameObject) {
+			if (gameObject.name != "Clouds") {
+				return;
+			}
 
+			GameObject cloudSystem = gameObject;
 			Client.Assert(cloudSystem != null, "cloudSystem couldn't be found!");
 
 			weatherSystemFSM = Utils.GetPlaymakerScriptByName(cloudSystem, "Weather");
@@ -129,6 +128,23 @@ namespace MSCMP.Game
 			PlayMakerUtils.AddNewGlobalTransition(weatherSystemFSM, rainEvent, "Rain");
 			PlayMakerUtils.AddNewGlobalTransition(weatherSystemFSM, thunderEvent, "Thunder");
 			PlayMakerUtils.AddNewGlobalTransition(weatherSystemFSM, noweatherEvent, "No weather");
+		}
+
+		/// <summary>
+		/// Destroy collected objects.
+		/// </summary>
+		public void DestroyObjects() {
+			weatherSystemFSM = null;
+		}
+
+		/// <summary>
+		/// Handle destroy of game object.
+		/// </summary>
+		/// <param name="gameObject">The destroyed game object.</param>
+		public void DestroyObject(GameObject gameObject) {
+			if (weatherSystemFSM != null && weatherSystemFSM.gameObject == gameObject) {
+				weatherSystemFSM = null;
+			}
 		}
 
 		/// <summary>

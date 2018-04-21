@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using HutongGames.PlayMaker;
 using System;
 using System.Reflection;
@@ -320,6 +320,26 @@ namespace MSCMP {
 			catch (Exception e) {
 				Client.FatalError("Safe call " + name + " failed.\n" + e.Message + "\n" + e.StackTrace);
 			}
+		}
+
+
+		/// <summary>
+		/// Calculate jenkins hash of the given string.
+		/// </summary>
+		/// <param name="str">The string to calculate jenkins hash of.</param>
+		/// <returns>The jenkins hash of the given string.</returns>
+		public static int StringJenkinsHash(string str) {
+			int i = 0;
+			int hash = 0;
+			while (i != str.Length) {
+				hash += str[i++];
+				hash += hash << 10;
+				hash ^= hash >> 6;
+			}
+			hash += hash << 3;
+			hash ^= hash >> 11;
+			hash += hash << 15;
+			return hash;
 		}
 	}
 }

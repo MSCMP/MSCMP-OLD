@@ -79,7 +79,6 @@
     <Compile Include="DevTools.cs" />
     <Compile Include="Game\BeerCaseManager.cs" />
     <Compile Include="Game\Components\PickupableMetaDataComponent.cs" />
-    <Compile Include="Game\GameAnimDatabase.cs" />
     <Compile Include="Game\GameCallbacks.cs" />
     <Compile Include="Game\GameDoorsManager.cs" />
     <Compile Include="Game\IGameObjectCollector.cs" />

@@ -10,8 +10,6 @@ namespace MSCMP.Game {
 	/// Object managing state of the game world.
 	/// </summary>
 	class GameWorld : IGameObjectCollector {
-
-
 		public static GameWorld Instance = null;
 
 		/// <summary>
@@ -132,55 +130,135 @@ namespace MSCMP.Game {
 		public void SetupMailbox(GameObject mailboxGameObject) {
 			lastnameTextMesh = mailboxGameObject.GetComponent<TextMesh>();
 			lastnameFSM = mailboxGameObject.GetComponent<PlayMakerFSM>();
-
-			Client.Assert(lastnameFSM != null, "Mailbox FSM couldn't be found!");
-			Client.Assert(lastnameTextMesh != null, "Mailbox TextMesh couldn't be found!");
 		}
 
+		/// <summary>
+		/// List containing all game objects collectors.
+		/// </summary>
 		List<IGameObjectCollector> gameObjectUsers = new List<IGameObjectCollector>();
 
 		public GameWorld() {
 			Instance = this;
 
+			// Make sure game world will get notified about play maker CreateObject/DestroyObject calls.
+
+			GameCallbacks.onPlayMakerObjectCreate += (GameObject instance, GameObject prefab) => {
+				HandleNewObject(instance);
+			};
+			GameCallbacks.onPlayMakerObjectDestroy += (GameObject instance) => {
+				HandleObjectDestroy(instance);
+			};
+
+			// Register game objects users.
+
 			gameObjectUsers.Add(this);
+			gameObjectUsers.Add(doorsManager);
+			gameObjectUsers.Add(gamePickupableDatabase);
+			gameObjectUsers.Add(beerCaseManager);
+			gameObjectUsers.Add(lightSwitchManager);
+			gameObjectUsers.Add(gameWeatherManager);
 		}
 
 		~GameWorld() {
 			Instance = null;
 		}
 
-		Dictionary<int, GameObject> gameObjectLibrary = new Dictionary<int, GameObject>();
+		/// <summary>
+		/// The current game world hash.
+		/// </summary>
+		int worldHash = 0;
 
-		int StringJenkinsHash(string str) {
-			int i = 0;
-			int hash = 0;
-			while (i != str.Length) {
-				hash += str[i++];
-				hash += hash << 10;
-				hash ^= hash >> 6;
-			 }
-			hash += hash << 3;
-			hash ^= hash >> 11;
-			hash += hash << 15;
-			return hash;
+		/// <summary>
+		/// Get unique world hash.
+		/// </summary>
+		public int WorldHash
+		{
+			get { return worldHash; }
 		}
 
-		int worldHash = 0;
+		/// <summary>
+		/// Was game world has already generated?
+		/// </summary>
 		bool worldHashGenerated = false;
 
-		GameObject sunGameObject = null;
-
+		/// <summary>
+		/// Collect given objects.
+		/// </summary>
+		/// <param name="gameObject">The game object to collect.</param>
 		public void CollectGameObject(GameObject gameObject) {
-			if (gameObject.name == "SUN") {
-				sunGameObject = gameObject;
-			}
+			if (gameObject.name == "SUN" && worldTimeFsm == null) {
+				// Yep it's called "Color" :>
+				worldTimeFsm = Utils.GetPlaymakerScriptByName(gameObject, "Color");
+				if (worldTimeFsm == null) {
+					return;
+				}
 
-			if (gameObject.name == "YARD/PlayerMailBox/mailbox_bottom_player/Name") {
+				// Register refresh world time event.
+				if (!worldTimeFsm.Fsm.HasEvent(REFRESH_WORLD_TIME_EVENT)) {
+					FsmEvent mpRefreshWorldTimeEvent = worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
+					PlayMakerUtils.AddNewGlobalTransition(worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
+				}
+
+				// Make sure world time is up-to-date with cache.
+				WorldTime = worldTimeCached;
+			}
+			else if (Utils.IsGameObjectHierarchyMatching(gameObject, "mailbox_bottom_player/Name")) {
 				SetupMailbox(gameObject);
 			}
-
-			if (IsVehicleGameObject(gameObject)) {
+			else if (IsVehicleGameObject(gameObject)) {
 				vehicles.Add(new GameVehicle(gameObject));
+			}
+		}
+
+		/// <summary>
+		/// Handle collected objects destroy.
+		/// </summary>
+		public void DestroyObjects() {
+			worldTimeFsm = null;
+			lastnameTextMesh = null;
+			lastnameFSM = null;
+			vehicles.Clear();
+		}
+
+		/// <summary>
+		/// Handle destroy of game object.
+		/// </summary>
+		/// <param name="gameObject">The destroyed game object.</param>
+		public void DestroyObject(GameObject gameObject) {
+			if (worldTimeFsm != null && worldTimeFsm.gameObject == gameObject) {
+				worldTimeFsm = null;
+			}
+			else if (lastnameFSM != null && lastnameFSM.gameObject == gameObject) {
+				lastnameFSM = null;
+				lastnameTextMesh = null;
+			}
+			else if (IsVehicleGameObject(gameObject)) {
+				var vehicle = GetVehicleByGameObject(gameObject);
+				if (vehicle != null) {
+					vehicles.Remove(vehicle);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Handle creation/load of new game object.
+		/// </summary>
+		/// <param name="gameObject">The new game object.</param>
+		void HandleNewObject(GameObject gameObject) {
+			foreach (IGameObjectCollector collector in gameObjectUsers) {
+				collector.CollectGameObject(gameObject);
+			}
+		}
+
+		/// <summary>
+		/// Handle destroy of the given object.
+		/// </summary>
+		/// <param name="gameObject">Destroyed game object.</param>
+		void HandleObjectDestroy(GameObject gameObject) {
+			// Iterate backwards so pickupable users will be notified before the database.
+
+			for (int i = gameObjectUsers.Count; i > 0; --i) {
+				gameObjectUsers[i - 1].DestroyObject(gameObject);
 			}
 		}
 
@@ -188,6 +266,7 @@ namespace MSCMP.Game {
 		/// Callback called when world is loaded.
 		/// </summary>
 		public void OnLoad() {
+			// Register all game objects.
 
 			GameObject[] gos = Resources.FindObjectsOfTypeAll<GameObject>();
 
@@ -195,40 +274,24 @@ namespace MSCMP.Game {
 				if (!worldHashGenerated) {
 					Transform transform = go.transform;
 					while (transform != null) {
-						worldHash ^= StringJenkinsHash(transform.name);
+						worldHash ^= Utils.StringJenkinsHash(transform.name);
 						transform = transform.parent;
 					}
 				}
 
-				foreach (IGameObjectCollector collector in gameObjectUsers) {
-					collector.CollectGameObject(go);
-				}
+				HandleNewObject(go);
 			}
 
 			Logger.Log("World hash: " + worldHash);
 			worldHashGenerated = true;
 
-			// Cache world time management fsm.
-			Client.Assert(sunGameObject != null, "SUN game object is missing!");
+			// Check mandatory objects.
 
-			// Yep it's called "Color" :>
-			worldTimeFsm = Utils.GetPlaymakerScriptByName(sunGameObject, "Color");
 			Client.Assert(worldTimeFsm != null, "Now world time FSM found :(");
+			Client.Assert(lastnameFSM != null, "Mailbox FSM couldn't be found!");
+			Client.Assert(lastnameTextMesh != null, "Mailbox TextMesh couldn't be found!");
 
-			// Register refresh world time event.
-			if (!worldTimeFsm.Fsm.HasEvent(REFRESH_WORLD_TIME_EVENT)) {
-				FsmEvent mpRefreshWorldTimeEvent = worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
-				PlayMakerUtils.AddNewGlobalTransition(worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
-			}
-
-			// Make sure world time is up-to-date with cache.
-			WorldTime = worldTimeCached;
-
-			gamePickupableDatabase.Rebuild();
-
-			doorsManager.OnWorldLoad();
-			beerCaseManager.OnWorldLoad();
-			lightSwitchManager.OnWorldLoad();
+			// Notify different parts of the mod about the world load.
 
 			if (GameCallbacks.onWorldLoad != null) {
 				GameCallbacks.onWorldLoad();
@@ -239,13 +302,16 @@ namespace MSCMP.Game {
 		/// Callback called when world gets unloaded.
 		/// </summary>
 		public void OnUnload() {
-			worldTimeFsm = null;
+			// Iterate backwards so pickupable users will be notified before the database.
+
+			for (int i = gameObjectUsers.Count; i > 0; --i) {
+				gameObjectUsers[i - 1].DestroyObjects();
+			}
 
 			if (GameCallbacks.onWorldUnload != null) {
 				GameCallbacks.onWorldUnload();
 			}
 
-			vehicles.Clear();
 			player = null;
 		}
 
@@ -265,11 +331,21 @@ namespace MSCMP.Game {
 				}
 			}
 		}
+
+		/// <summary>
+		/// List of vehicle gameobject names.
+		/// </summary>
 		static readonly string[] vehicleGoNames = {
 			"JONNEZ ES(Clone)", "HAYOSIKO(1500kg, 250)", "SATSUMA(557kg, 248)",
 			"RCO_RUSCKO12(270)", "KEKMET(350-400psi)", "FLATBED", "FERNDALE(1630kg)", "GIFU(750/450psi)"
 		};
 
+
+		/// <summary>
+		/// Check if given game object is vehicle.
+		/// </summary>
+		/// <param name="gameObject">The game object to check.</param>
+		/// <returns>true if given game object is a vehicle, false otherwise</returns>
 		bool IsVehicleGameObject(GameObject gameObject) {
 			foreach (var name in vehicleGoNames) {
 				if (gameObject.name == name) {
@@ -279,10 +355,28 @@ namespace MSCMP.Game {
 			return false;
 		}
 
-
+		/// <summary>
+		/// Get game vehicle object by game object name.
+		/// </summary>
+		/// <param name="name">The name of the vehicle game object to look for game vehicle for.</param>
+		/// <returns>The game vehicle object or null if there is no game vehicle matching this name.</returns>
 		public GameVehicle FindVehicleByName(string name) {
 			foreach (var veh in vehicles) {
 				if (veh.Name == name) {
+					return veh;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Get game vehicle object by game object.
+		/// </summary>
+		/// <param name="gameObject">The game object to find vehicle wrapper for.</param>
+		/// <returns>The game vehicle object or null if there is no game vehicle matching this game object.</returns>
+		public GameVehicle GetVehicleByGameObject(GameObject gameObject) {
+			foreach (var veh in vehicles) {
+				if (veh.GameObject == gameObject) {
 					return veh;
 				}
 			}

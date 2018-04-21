@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using MSCMP.Game.Objects;
 using MSCMP.Game;
@@ -7,7 +7,7 @@ namespace MSCMP.Game {
 	/// <summary>
 	/// Class managing state of the beercases in game.
 	/// </summary>
-	class BeerCaseManager {
+	class BeerCaseManager : IGameObjectCollector {
 		/// <summary>
 		/// Singleton of the beercase manager.
 		/// </summary>
@@ -39,15 +39,43 @@ namespace MSCMP.Game {
 		}
 
 		/// <summary>
-		/// Builds beercase list on world load.
+		/// Check if the given game object is beer case.
 		/// </summary>
-		public void OnWorldLoad() {
-			beercases.Clear();
-			GameObject[] gos = GameObject.FindObjectsOfType<GameObject>();
+		/// <param name="gameObject">The game object.</param>
+		/// <returns>true if game object is a beer case, false otherwise</returns>
+		bool IsBeerCase(GameObject gameObject) {
+			var metaData = gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
+			return metaData != null && metaData.PrefabDescriptor.type == GamePickupableDatabase.PrefabType.BeerCase;
+		}
 
-			//Register all beercases in game.
-			foreach (var go in gos) {
-				//AddBeerCase(go);
+		/// <summary>
+		/// Collect all beer cases.
+		/// </summary>
+		public void CollectGameObject(GameObject gameObject) {
+			if (IsBeerCase(gameObject)) {
+				AddBeerCase(gameObject);
+			}
+		}
+
+		/// <summary>
+		/// Destroy all references to collected objects.
+		/// </summary>
+		public void DestroyObjects() {
+			beercases.Clear();
+		}
+
+		/// <summary>
+		/// Handle destroy of game object.
+		/// </summary>
+		/// <param name="gameObject">The destroyed game object.</param>
+		public void DestroyObject(GameObject gameObject) {
+			if (!IsBeerCase(gameObject)) {
+				return;
+			}
+
+			var beerCase = FindBeerCase(gameObject);
+			if (beerCase != null) {
+				beercases.Remove(beerCase);
 			}
 		}
 
@@ -56,26 +84,23 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="beerGO">BeerCase GameObject.</param>
 		public void AddBeerCase(GameObject beerGO) {
-			var metaData = beerGO.GetComponent<Game.Components.PickupableMetaDataComponent>();
+			bool isDuplicate = false;
 
-			if (metaData.PrefabDescriptor.type == GamePickupableDatabase.PrefabType.BeerCase) {
-				bool isDuplicate = false;
-
-				foreach(BeerCase beer in beercases) {
-					GameObject beerGameObject = beer.GetGameObject;
-					if (beerGameObject == beerGO) {
-						Logger.Debug($"Duplicate beercase rejected: {beerGameObject.name}");
-						isDuplicate = true;
-					}
+			foreach (BeerCase beer in beercases) {
+				GameObject beerGameObject = beer.GetGameObject;
+				if (beerGameObject == beerGO) {
+					Logger.Debug($"Duplicate beercase rejected: {beerGameObject.name}");
+					isDuplicate = true;
 				}
-				if (isDuplicate == false) {
-					BeerCase beer = new BeerCase(beerGO);
-					beercases.Add(beer);
+			}
 
-					beer.onConsumedBeer = (beerObj) => {
-						onBottleConsumed(beer.GetGameObject);
-					};
-				}
+			if (isDuplicate == false) {
+				BeerCase beer = new BeerCase(beerGO);
+				beercases.Add(beer);
+
+				beer.onConsumedBeer = (beerObj) => {
+					onBottleConsumed(beer.GetGameObject);
+				};
 			}
 		}
 

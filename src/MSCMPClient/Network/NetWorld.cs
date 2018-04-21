@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -433,7 +433,7 @@ namespace MSCMP.Network {
 		public void RegisterPickupables() {
 			netPickupables.Clear();
 
-			var pickupables = Game.GamePickupableDatabase.Instance.CollectAllPickupables(false);
+			var pickupables = Game.GamePickupableDatabase.Instance.Pickupables;
 			foreach (var pickupable in pickupables) {
 				if (netPickupables.Count == MAX_PICKUPABLES) {
 					throw new Exception("Out of pickupables pool!");

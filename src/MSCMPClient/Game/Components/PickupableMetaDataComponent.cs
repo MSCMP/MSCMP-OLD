@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace MSCMP.Game.Components {
 	/// <summary>
@@ -6,6 +6,20 @@ namespace MSCMP.Game.Components {
 	/// </summary>
 	class PickupableMetaDataComponent : MonoBehaviour {
 		public int prefabId = -1;
+
+		/// <summary>
+		/// Register this pickupable.
+		/// </summary>
+		private void OnEnable() {
+			GamePickupableDatabase.Instance.RegisterPickupable(gameObject);
+		}
+
+		/// <summary>
+		/// Register this pickupable.
+		/// </summary>
+		private void OnDisable() {
+			GamePickupableDatabase.Instance.UnregisterPickupable(gameObject);
+		}
 
 		/// <summary>
 		/// Getter for the prefab descriptor.

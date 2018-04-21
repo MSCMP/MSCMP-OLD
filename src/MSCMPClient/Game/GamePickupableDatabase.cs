@@ -1,4 +1,4 @@
-﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,12 +7,24 @@ namespace MSCMP.Game {
 	/// <summary>
 	/// Database containing prefabs of all pickupables.
 	/// </summary>
-	class GamePickupableDatabase {
+	class GamePickupableDatabase : IGameObjectCollector  {
 		static GamePickupableDatabase instance;
 		public static GamePickupableDatabase Instance {
 			get {
 				return instance;
 			}
+		}
+
+		/// <summary>
+		/// All instances of gameobject pickupables.
+		/// </summary>
+		List<GameObject> pickupables = new List<GameObject>();
+
+		/// <summary>
+		/// Getter for pickupables.
+		/// </summary>
+		public List<GameObject> Pickupables {
+			get { return pickupables; }
 		}
 
 		public GamePickupableDatabase() {
@@ -107,61 +119,55 @@ namespace MSCMP.Game {
 		List<PrefabDesc> prefabs = new List<PrefabDesc>();
 
 		/// <summary>
-		/// Collect all pickup-ables from game world.
+		/// Rebuild pickupables database.
 		/// </summary>
-		/// <param name="active">Should it return only active pickupables?</param>
-		/// <returns>List containing all pickupable instances in game world.</returns>
-		public List<GameObject> CollectAllPickupables(bool active) {
-			GameObject []gos = null;
-			if (active) {
-				gos = Object.FindObjectsOfType<GameObject>();
+		public void CollectGameObject(GameObject gameObject) {
+			if (!IsPickupable(gameObject)) {
+				return;
 			}
-			else {
-				gos = Resources.FindObjectsOfTypeAll<GameObject>();
-			}
-			List<GameObject> pickupables = new List<GameObject>();
-			foreach (var go in gos) {
-				if (!IsPickupable(go)) {
-					continue;
-				}
 
-				if (go.transform.root == MPController.Instance.transform) {
-					continue;
-				}
+			int prefabId = prefabs.Count;
+			var metaDataComponent = gameObject.AddComponent<Components.PickupableMetaDataComponent>();
+			metaDataComponent.prefabId = prefabId;
 
-				pickupables.Add(go);
-			}
-			return pickupables;
+			var prefab = Object.Instantiate(gameObject);
+			prefab.SetActive(false);
+			prefab.transform.SetParent(MPController.Instance.transform);
+
+			Logger.Debug($"Registering {prefab.name} ({prefab.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId}, Source pickupable id: {gameObject.GetInstanceID()})");
+
+			PrefabDesc desc = new PrefabDesc();
+			desc.gameObject = prefab;
+			desc.id = prefabId;
+			SetupPrefabDescriptorType(desc);
+
+			prefabs.Add(desc);
 		}
 
 		/// <summary>
-		/// Rebuild pickupables database.
+		/// Handle collected objects destroy.
 		/// </summary>
-		public void Rebuild() {
-			var pickupables = CollectAllPickupables(false);
-
+		public void DestroyObjects() {
 			prefabs.Clear();
-
-			foreach (var pickupable in pickupables) {
-				int prefabId = prefabs.Count;
-				var metaDataComponent = pickupable.AddComponent<Components.PickupableMetaDataComponent>();
-				metaDataComponent.prefabId = prefabId;
-
-				var prefab = Object.Instantiate(pickupable);
-				prefab.SetActive(false);
-				prefab.transform.SetParent(MPController.Instance.transform);
-
-				Logger.Debug($"Registering {prefab.name} ({prefab.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId}, Source pickupable id: {pickupable.GetInstanceID()})");
-
-				PrefabDesc desc = new PrefabDesc();
-				desc.gameObject = prefab;
-				desc.id = prefabId;
-				SetupPrefabDescriptorType(desc);
-
-				prefabs.Add(desc);
-			}
 		}
 
+		/// <summary>
+		/// Handle destroy of game object.
+		/// </summary>
+		/// <param name="gameObject">The destroyed game object.</param>
+		public void DestroyObject(GameObject gameObject) {
+			if (!IsPickupable(gameObject)) {
+				return;
+			}
+
+			var prefab = GetPrefabDesc(gameObject);
+			if (prefab != null) {
+				Logger.Debug($"Deleting prefab descriptor - {gameObject.name}.");
+
+				// Cannot use Remove() because GetPickupablePrefab() depends on indices to stay untouched.
+				prefabs[prefab.id] = null;
+			}
+		}
 
 		/// <summary>
 		/// Setup prefab type of the given prefab descriptor.
@@ -172,8 +178,8 @@ namespace MSCMP.Game {
 			desc.gameObject.SetActive(true);
 
 			fsm = Utils.GetPlaymakerScriptByName(desc.gameObject, "Use");
-			if(fsm != null) {
-				if(fsm.FsmVariables.FindFsmInt("DestroyedBottles") != null && fsm.Fsm.GetState("Remove bottle") != null) {
+			if (fsm != null) {
+				if (fsm.FsmVariables.FindFsmInt("DestroyedBottles") != null && fsm.Fsm.GetState("Remove bottle") != null) {
 					// Found BeerCase
 					desc.type = PrefabType.BeerCase;
 				}
@@ -201,7 +207,7 @@ namespace MSCMP.Game {
 		/// <returns>Prefab descriptor if given prefab is valid.</returns>
 		public PrefabDesc GetPrefabDesc(GameObject prefab) {
 			foreach (var desc in prefabs) {
-				if (desc.gameObject == prefab) {
+				if (desc != null && desc.gameObject == prefab) {
 					return desc;
 				}
 			}
@@ -217,10 +223,6 @@ namespace MSCMP.Game {
 			if (!gameObject.CompareTag("PART") && !gameObject.CompareTag("ITEM")) {
 				return false;
 			}
-			//Transform parent = gameObject.transform.parent;
-			//if (parent && IsPickupable(parent.gameObject)) {
-			//	return false;
-			//}
 
 			if (!gameObject.GetComponent<Rigidbody>()) {
 				return false;
@@ -228,5 +230,20 @@ namespace MSCMP.Game {
 			return true;
 		}
 
+		/// <summary>
+		/// Register pickupable into database.
+		/// </summary>
+		/// <param name="gameObject">The pickupable gameobject to register.</param>
+		public void RegisterPickupable(GameObject gameObject) {
+			pickupables.Add(gameObject);
+		}
+
+		/// <summary>
+		/// Unregister pickupable into database.
+		/// </summary>
+		/// <param name="gameObject">The pickupable gameobject to unregister.</param>
+		public void UnregisterPickupable(GameObject gameObject) {
+			pickupables.Remove(gameObject);
+		}
 	}
 }

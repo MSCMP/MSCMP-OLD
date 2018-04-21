@@ -1,4 +1,4 @@
-﻿using HutongGames.PlayMaker;
+using HutongGames.PlayMaker;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,8 +11,22 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Game doors game obejct.
 		/// </summary>
-		GameObject go = null;
+		GameObject gameObject = null;
 
+		/// <summary>
+		/// Returns GameObject of the door.
+		/// </summary>
+		/// <returns>GameObject</returns>
+		public GameObject GameObject {
+			get {
+				return gameObject;
+			}
+		}
+
+		/// <summary>
+		/// The owning object manager.
+		/// </summary>
+		GameDoorsManager manager = null;
 
 		/// <summary>
 		/// Doors PlayMaker finite state machine.
@@ -34,22 +48,9 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		public Vector3 Position {
 			get {
-				return go.transform.position;
+				return gameObject.transform.position;
 			}
 		}
-
-		public delegate void OnOpen(GameObject door);
-		public delegate void OnClose(GameObject door);
-
-		/// <summary>
-		/// Callback called when doors are opened.
-		/// </summary>
-		public OnOpen onOpen;
-
-		/// <summary>
-		/// Callback called when doors are closed.
-		/// </summary>
-		public OnClose onClose;
 
 		private const string OPEN_EVENT_NAME = "OPEN";
 		private const string CLOSE_EVENT_NAME = "CLOSE";
@@ -60,12 +61,15 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Constructor.
 		/// </summary>
+		/// <param name="manager">The manager that owns this door.</param>
 		/// <param name="gameObject">Game object of the doors to represent by this wrapper.</param>
-		public GameDoor(GameObject gameObject) {
-			go = gameObject;
-			fsm = Utils.GetPlaymakerScriptByName(go, "Use");
+		public GameDoor(GameDoorsManager manager, GameObject gameObject) {
+			this.manager = manager;
+			this.gameObject = gameObject;
+
+			fsm = Utils.GetPlaymakerScriptByName(gameObject, "Use");
 			if (fsm.Fsm.HasEvent(MP_OPEN_EVENT_NAME)) {
-				Logger.Log("Failed to hook game door " + go.name + ". It is already hooked.");
+				Logger.Log("Failed to hook game door " + gameObject.name + ". It is already hooked.");
 				return;
 			}
 
@@ -98,7 +102,9 @@ namespace MSCMP.Game.Objects {
 					return;
 				}
 
-				gameDoor.onOpen(gameDoor.go);
+				// Notify manager about the action.
+
+				gameDoor.manager.HandleDoorsAction(gameDoor, true);
 			}
 		}
 
@@ -113,7 +119,6 @@ namespace MSCMP.Game.Objects {
 			}
 
 			public override void OnEnter() {
-
 				Finish();
 
 				// If close was not triggered by local player do not send call the callback.
@@ -122,7 +127,9 @@ namespace MSCMP.Game.Objects {
 					return;
 				}
 
-				gameDoor.onClose(gameDoor.go);
+				// Notify manager about the action.
+
+				gameDoor.manager.HandleDoorsAction(gameDoor, false);
 
 			}
 		}
@@ -137,16 +144,6 @@ namespace MSCMP.Game.Objects {
 			}
 			else {
 				fsm.SendEvent(MP_CLOSE_EVENT_NAME);
-			}
-		}
-
-		/// <summary>
-		/// Returns GameObject of the door.
-		/// </summary>
-		/// <returns>GameObject</returns>
-		public GameObject getGameObject {
-			get {
-				return go;
 			}
 		}
 	}
