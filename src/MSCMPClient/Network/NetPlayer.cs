@@ -141,7 +141,7 @@ namespace MSCMP.Network {
 			//Getting the Animation component of the model, and setting the priority layers of each animation
 			if (animManager == null) { animManager = new PlayerAnimManager(); Logger.Debug("AnimManager: JUST CREATED MORE!"); }
 			else Logger.Debug("AnimManager: We had already (from NetLocal) our animManager");
-			animManager.SetupAnimations(characterGameObject.GetComponentInChildren<Animation>());
+			animManager.SetupAnimations(characterGameObject);
 
 			/*if (characterAnimationComponent != null) {
 				// Force character to stand.

@@ -84,7 +84,7 @@ namespace MSCMP.Game.Objects {
 		/// <param name="gameObject">The game object to pickup.</param>
 		public GamePlayer(GameObject gameObject) {
 			this.gameObject = gameObject;
-
+			
 			pickupFsm = Utils.GetPlaymakerScriptByName(gameObject, "PickUp");
 
 			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Part picked"), new OnPickupAction(this));
