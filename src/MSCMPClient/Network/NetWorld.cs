@@ -457,6 +457,8 @@ namespace MSCMP.Network {
 		/// <param name="msg">The message to write to.</param>
 		public void WriteFullWorldSync(Messages.FullWorldSyncMessage msg) {
 
+			Logger.Debug("Writing full world synchronization message.");
+
 			// Write time
 
 			Game.GameWorld gameWorld = Game.GameWorld.Instance;
@@ -473,6 +475,7 @@ namespace MSCMP.Network {
 			int doorsCount = doors.Count;
 			msg.doors = new Messages.DoorsInitMessage[doorsCount];
 
+			Logger.Debug($"Writing state of {doorsCount} doors.");
 			for (int i = 0; i < doorsCount; ++i) {
 				var doorMsg = new Messages.DoorsInitMessage();
 				Game.Objects.GameDoor door = doors[i];
@@ -483,10 +486,12 @@ namespace MSCMP.Network {
 
 			// Write light switches.
 
+
 			List<Game.Objects.LightSwitch> lights = Game.LightSwitchManager.Instance.lightSwitches;
 			int lightCount = lights.Count;
 			msg.lights = new Messages.LightSwitchMessage[lightCount];
 
+			Logger.Debug($"Writing light switches state of {lightCount}");
 			for (int i = 0; i < lightCount; i++) {
 				var lightMsg = new Messages.LightSwitchMessage();
 				Game.Objects.LightSwitch light = lights[i];
@@ -504,6 +509,7 @@ namespace MSCMP.Network {
 			int vehiclesCount = vehicles.Count;
 			msg.vehicles = new Messages.VehicleInitMessage[vehiclesCount];
 
+			Logger.Debug($"Writing state of {vehiclesCount} vehicles");
 			for (int i = 0; i < vehiclesCount; ++i) {
 				var vehicleMsg = new Messages.VehicleInitMessage();
 				NetVehicle vehicle = vehicles[i];
@@ -516,6 +522,7 @@ namespace MSCMP.Network {
 			// Write pickupables.
 
 			var pickupableMessages = new List<Messages.PickupableSpawnMessage>();
+			Logger.Debug($"Writing state of {netPickupables.Count} pickupables");
 			foreach (var kv in netPickupables) {
 				NetPickupable pickupable = kv.Value;
 				if (pickupable.gameObject == null) {
@@ -547,6 +554,8 @@ namespace MSCMP.Network {
 			msg.pickupables = pickupableMessages.ToArray();
 
 			netManager.GetLocalPlayer().WriteSpawnState(msg);
+
+			Logger.Debug("World state has been written.");
 		}
 
 

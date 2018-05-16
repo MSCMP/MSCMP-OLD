@@ -434,14 +434,14 @@ namespace MSCMP.Network {
 		/// Process incomming network messages.
 		/// </summary>
 		private void ProcessMessages() {
-
-
 			uint size = 0;
 			while (Steamworks.SteamNetworking.IsP2PPacketAvailable(out size)) {
 				if (size == 0) {
 					Logger.Log("Received empty p2p packet");
 					continue;
 				}
+
+				Logger.Debug($"Trying to read p2p packet of size {size}.");
 
 				// TODO: Pre allocate this buffer and reuse it here - we don't want garbage collector to go crazy with that.
 
@@ -450,15 +450,16 @@ namespace MSCMP.Network {
 				uint msgSize = 0;
 				Steamworks.CSteamID senderSteamId = Steamworks.CSteamID.Nil;
 				if (!Steamworks.SteamNetworking.ReadP2PPacket(data, size, out msgSize, out senderSteamId)) {
+					Logger.Error("Failed to read p2p packet!");
 					continue;
 				}
-
-				// TODO: Joining of the messages if are split?
 
 				if (msgSize != size || msgSize == 0) {
-					Logger.Log("Invalid packet size");
+					Logger.Error("Invalid packet size");
 					continue;
 				}
+
+				Logger.Debug($"Received p2p packet from user {senderSteamId}.");
 
 				MemoryStream stream = new MemoryStream(data);
 				BinaryReader reader = new BinaryReader(stream);
@@ -470,6 +471,7 @@ namespace MSCMP.Network {
 				}
 
 				byte messageId = reader.ReadByte();
+				Logger.Debug($"Received message {messageId}.");
 				netMessageHandler.ProcessMessage(messageId, senderSteamId, reader);
 			}
 		}
