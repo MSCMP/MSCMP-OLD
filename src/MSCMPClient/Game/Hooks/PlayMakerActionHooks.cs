@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Collections.Generic;
 using HutongGames.PlayMaker;
@@ -25,7 +25,9 @@ namespace MSCMP.Game.Hooks {
 		/// </summary>
 		class MyDestroyObject : DestroyObject {
 			public override void OnEnter() {
-				GameCallbacks.onPlayMakerObjectDestroy?.Invoke(gameObject.Value);
+				if (gameObject.Value != null) {
+					GameCallbacks.onPlayMakerObjectDestroy?.Invoke(gameObject.Value);
+				}
 				base.OnEnter();
 			}
 		}
