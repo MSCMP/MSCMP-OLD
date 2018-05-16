@@ -287,7 +287,7 @@ namespace MSCMP.Game {
 
 			// Check mandatory objects.
 
-			Client.Assert(worldTimeFsm != null, "Now world time FSM found :(");
+			Client.Assert(worldTimeFsm != null, "No world time FSM found :(");
 			Client.Assert(lastnameFSM != null, "Mailbox FSM couldn't be found!");
 			Client.Assert(lastnameTextMesh != null, "Mailbox TextMesh couldn't be found!");
 
