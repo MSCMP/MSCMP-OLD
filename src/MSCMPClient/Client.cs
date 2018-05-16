@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 using UnityEngine;
@@ -49,6 +49,10 @@ namespace MSCMP
 
 			go = new GameObject("Multiplayer Controller");
 			go.AddComponent<MPController>();
+
+			UI.Console.RegisterCommand("quit", (string[] args) => {
+				Application.Quit();
+			});
 		}
 
 		/// <summary>
@@ -125,6 +129,16 @@ namespace MSCMP
 			string version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 			version += " " + MOD_DEVELOPMENT_STAGE;
 			return version;
+		}
+
+		/// <summary>
+		/// Add message to the console.
+		/// </summary>
+		/// <param name="message">The message to add.</param>
+		static public void ConsoleMessage(string message) {
+			if (UI.Console.Instance != null) {
+				UI.Console.Instance.AddMessage(message);
+			}
 		}
 	}
 }

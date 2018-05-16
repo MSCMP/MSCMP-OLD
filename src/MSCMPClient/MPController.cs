@@ -38,6 +38,11 @@ namespace MSCMP {
 		/// </summary>
 		GameWorld gameWorld = new GameWorld();
 
+		/// <summary>
+		/// Console object.
+		/// </summary>
+		UI.Console console = new UI.Console();
+
 		Texture2D fillText = new Texture2D(1, 1);
 
 		MPController() {
@@ -124,6 +129,8 @@ namespace MSCMP {
 
 			gameWorld.UpdateIMGUI();
 #endif
+
+			console.Draw();
 		}
 
 		/// <summary>

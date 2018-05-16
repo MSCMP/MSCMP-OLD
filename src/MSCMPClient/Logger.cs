@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 
 namespace MSCMP {
 	static class Logger {
@@ -52,6 +52,7 @@ namespace MSCMP {
 			if (logFile != null) {
 				logFile.WriteLine(message);
 			}
+			Client.ConsoleMessage(message);
 		}
 
 		/// <summary>
