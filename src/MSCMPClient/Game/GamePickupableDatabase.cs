@@ -130,18 +130,28 @@ namespace MSCMP.Game {
 			var metaDataComponent = gameObject.AddComponent<Components.PickupableMetaDataComponent>();
 			metaDataComponent.prefabId = prefabId;
 
-			var prefab = Object.Instantiate(gameObject);
-			prefab.SetActive(false);
-			prefab.transform.SetParent(MPController.Instance.transform);
-
-			Logger.Debug($"Registering {prefab.name} ({prefab.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId}, Source pickupable id: {gameObject.GetInstanceID()})");
-
 			PrefabDesc desc = new PrefabDesc();
-			desc.gameObject = prefab;
+			desc.gameObject = gameObject;
 			desc.id = prefabId;
+
+			// Activate game object if it's not active to make sure we can access all play maker fsm.
+
+			bool wasActive = desc.gameObject.activeSelf;
+			if (!wasActive) {
+				desc.gameObject.SetActive(true);
+			}
+
 			SetupPrefabDescriptorType(desc);
 
+			// Deactivate game object back if needed.
+
+			if (!wasActive) {
+				desc.gameObject.SetActive(false);
+			}
+
 			prefabs.Add(desc);
+
+			Logger.Debug($"Registered new prefab {gameObject.name} ({gameObject.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId})");
 		}
 
 		/// <summary>
@@ -175,8 +185,6 @@ namespace MSCMP.Game {
 		/// <param name="desc">The descriptor to setup type for.</param>
 		private void SetupPrefabDescriptorType(PrefabDesc desc) {
 			PlayMakerFSM fsm = null;
-			desc.gameObject.SetActive(true);
-
 			fsm = Utils.GetPlaymakerScriptByName(desc.gameObject, "Use");
 			if (fsm != null) {
 				if (fsm.FsmVariables.FindFsmInt("DestroyedBottles") != null && fsm.Fsm.GetState("Remove bottle") != null) {
@@ -184,8 +192,6 @@ namespace MSCMP.Game {
 					desc.type = PrefabType.BeerCase;
 				}
 			}
-
-			desc.gameObject.SetActive(false);
 		}
 
 		/// <summary>
