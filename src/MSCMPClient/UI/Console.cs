@@ -196,7 +196,6 @@ namespace MSCMP.UI {
 					--currentHistoryEntryIndex;
 				}
 			}
-			Logger.Debug($"{currentHistoryEntryIndex}");
 
 			if (currentHistoryEntryIndex == -1) {
 				inputText = "";
