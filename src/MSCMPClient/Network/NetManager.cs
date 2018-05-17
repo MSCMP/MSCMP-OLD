@@ -12,6 +12,7 @@ namespace MSCMP.Network {
 
 		private Steamworks.Callback<Steamworks.GameLobbyJoinRequested_t> gameLobbyJoinRequestedCallback = null;
 		private Steamworks.Callback<Steamworks.P2PSessionRequest_t> p2pSessionRequestCallback = null;
+		private Steamworks.Callback<Steamworks.P2PSessionConnectFail_t> p2pConnectFailCallback = null;
 		private Steamworks.CallResult<Steamworks.LobbyCreated_t> lobbyCreatedCallResult = null;
 		private Steamworks.CallResult<Steamworks.LobbyEnter_t> lobbyEnterCallResult = null;
 		public enum Mode {
@@ -103,60 +104,89 @@ namespace MSCMP.Network {
 			netMessageHandler = new NetMessageHandler(this);
 			netWorld = new NetWorld(this);
 
-			p2pSessionRequestCallback = Steamworks.Callback<Steamworks.P2PSessionRequest_t>.Create((Steamworks.P2PSessionRequest_t result) => {
-				if (!Steamworks.SteamNetworking.AcceptP2PSessionWithUser(result.m_steamIDRemote)) {
-					Logger.Log("Accepted p2p session with " + result.m_steamIDRemote.ToString());
-				}
-			});
-
+			p2pSessionRequestCallback = Steamworks.Callback<Steamworks.P2PSessionRequest_t>.Create(OnP2PSessionRequest);
+			p2pConnectFailCallback = Steamworks.Callback<Steamworks.P2PSessionConnectFail_t>.Create(OnP2PConnectFail);
 			gameLobbyJoinRequestedCallback = Steamworks.Callback<Steamworks.GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
-
-			lobbyCreatedCallResult = new Steamworks.CallResult<Steamworks.LobbyCreated_t>((Steamworks.LobbyCreated_t result, bool ioFailure) => {
-				if (result.m_eResult != Steamworks.EResult.k_EResultOK) {
-					Logger.Log("Oh my fucking god i failed to create a lobby for you. Please forgive me. (result: " + result.m_eResult + ")");
-
-					MPGUI.Instance.ShowMessageBox("Failed to create lobby due to steam error.\n" + result.m_eResult, () => {
-						MPController.Instance.LoadLevel("MainMenu");
-					});
-					return;
-				}
-
-				Logger.Log("Hey you! I have lobby id for you! " + result.m_ulSteamIDLobby);
-
-				MessagesList.AddMessage("Session started.", MessageSeverity.Info);
-
-				// Setup local player.
-				players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
-
-				mode = Mode.Host;
-				state = State.Playing;
-				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
-			});
-
-			lobbyEnterCallResult = new Steamworks.CallResult<Steamworks.LobbyEnter_t>((Steamworks.LobbyEnter_t result, bool ioFailure) => {
-				if (result.m_EChatRoomEnterResponse != (uint)Steamworks.EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess) {
-					Logger.Log("Oh my fucking god i failed to join the lobby for you. Please forgive me. (reponse: " + result.m_EChatRoomEnterResponse + ")");
-
-					players[1] = null;
-					return;
-				}
-
-				// Setup local player.
-				players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
-
-				Logger.Log("Oh hello! " + result.m_ulSteamIDLobby);
-
-				MessagesList.AddMessage("Entered lobby.", MessageSeverity.Info);
-
-				mode = Mode.Player;
-				state = State.LoadingGameWorld;
-				currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
-
-				ShowLoadingScreen(true);
-				SendHandshake(players[1]);
-			});
+			lobbyCreatedCallResult = new Steamworks.CallResult<Steamworks.LobbyCreated_t>(OnLobbyCreated);
+			lobbyEnterCallResult = new Steamworks.CallResult<Steamworks.LobbyEnter_t>(OnLobbyEnter);
 
 			RegisterProtocolMessagesHandlers();
+		}
+
+		/// <summary>
+		/// Handle steam networking P2P connect fail callback.
+		/// </summary>
+		/// <param name="result">The callback result.</param>
+		void OnP2PConnectFail(Steamworks.P2PSessionConnectFail_t result) {
+			Logger.Error($"P2P Connection failed, session error: {result.m_eP2PSessionError}, remote: {result.m_steamIDRemote}");
+		}
+
+		/// <summary>
+		/// Handle steam networking P2P session request callback.
+		/// </summary>
+		/// <param name="result">The callback result.</param>
+		void OnP2PSessionRequest(Steamworks.P2PSessionRequest_t result) {
+			if (Steamworks.SteamNetworking.AcceptP2PSessionWithUser(result.m_steamIDRemote)) {
+				Logger.Log($"Accepted p2p session with {result.m_steamIDRemote}");
+			}
+			else {
+				Logger.Error($"Failed to accept P2P session with {result.m_steamIDRemote}");
+			}
+		}
+
+		/// <summary>
+		/// Handle result of create lobby operation.
+		/// </summary>
+		/// <param name="result">The operation result.</param>
+		/// <param name="ioFailure">Did IO failure happen?</param>
+		void OnLobbyCreated(Steamworks.LobbyCreated_t result, bool ioFailure) {
+			if (result.m_eResult != Steamworks.EResult.k_EResultOK || ioFailure) {
+				Logger.Log($"Failed to create lobby. (result: {result.m_eResult}, io failure: {ioFailure})");
+
+				MPGUI.Instance.ShowMessageBox($"Failed to create lobby due to steam error.\n{result.m_eResult}/{ioFailure}", () => {
+					MPController.Instance.LoadLevel("MainMenu");
+				});
+				return;
+			}
+
+			Logger.Debug($"Lobby has been created, lobby id: {result.m_ulSteamIDLobby}");
+			MessagesList.AddMessage("Session started.", MessageSeverity.Info);
+
+			// Setup local player.
+			players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
+
+			mode = Mode.Host;
+			state = State.Playing;
+			currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
+		}
+
+		/// <summary>
+		/// Handle result of join lobby operation.
+		/// </summary>
+		/// <param name="result">The operation result.</param>
+		/// <param name="ioFailure">Did IO failure happen?</param>
+		void OnLobbyEnter(Steamworks.LobbyEnter_t result, bool ioFailure) {
+			if (ioFailure || result.m_EChatRoomEnterResponse != (uint)Steamworks.EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess) {
+				Logger.Error("Failed to join lobby. (reponse: {result.m_EChatRoomEnterResponse}, ioFailure: {ioFailure})");
+				MPGUI.Instance.ShowMessageBox($"Failed to join lobby.\n(reponse: {result.m_EChatRoomEnterResponse}, ioFailure: {ioFailure})");
+
+				players[1] = null;
+				return;
+			}
+
+			// Setup local player.
+			players[0] = new NetLocalPlayer(this, netWorld, Steamworks.SteamUser.GetSteamID());
+
+			Logger.Debug("Entered lobby: " + result.m_ulSteamIDLobby);
+
+			MessagesList.AddMessage("Entered lobby.", MessageSeverity.Info);
+
+			mode = Mode.Player;
+			state = State.LoadingGameWorld;
+			currentLobbyId = new Steamworks.CSteamID(result.m_ulSteamIDLobby);
+
+			ShowLoadingScreen(true);
+			SendHandshake(players[1]);
 		}
 
 		/// <summary>
@@ -293,11 +323,12 @@ namespace MSCMP.Network {
 		private void OnGameLobbyJoinRequested(Steamworks.GameLobbyJoinRequested_t request) {
 			Steamworks.SteamAPICall_t apiCall = Steamworks.SteamMatchmaking.JoinLobby(request.m_steamIDLobby);
 			if (apiCall == Steamworks.SteamAPICall_t.Invalid) {
-				Logger.Log("Unable to join lobby.");
+				Logger.Error($"Unable to join lobby {request.m_steamIDLobby}. JoinLobby call failed.");
+				MPGUI.Instance.ShowMessageBox($"Failed to join lobby.\nPlease try again later.");
 				return;
 			}
 
-			Logger.Log("Setup player.");
+			Logger.Debug("Setup player.");
 
 			// Setup remote player. The HOST.
 			timeSinceLastHeartbeat = 0.0f;
