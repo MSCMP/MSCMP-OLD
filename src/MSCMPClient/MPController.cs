@@ -95,6 +95,10 @@ namespace MSCMP {
 		/// Updates IMGUI of the multiplayer.
 		/// </summary>
 		void OnGUI() {
+			if (netManager.IsOnline) {
+				netManager.DrawNameTags();
+			}
+
 			GUI.color = Color.white;
 			GUI.Label(new Rect(2, Screen.height - 18, 500, 20), "MSCMP " + Client.GetMODDisplayVersion());
 

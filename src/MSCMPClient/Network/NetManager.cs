@@ -575,6 +575,15 @@ namespace MSCMP.Network {
 #endif
 
 		/// <summary>
+		/// Draw player nametags.
+		/// </summary>
+		public void DrawNameTags() {
+			if (players[1] != null) {
+				players[1].DrawNametag();
+			}
+		}
+
+		/// <summary>
 		/// Reject remote player during connection phase.
 		/// </summary>
 		/// <param name="reason">The rejection reason.</param>

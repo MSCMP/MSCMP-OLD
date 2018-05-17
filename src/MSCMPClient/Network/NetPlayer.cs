@@ -308,7 +308,13 @@ namespace MSCMP.Network {
 				"animSpeed = "	+ (activeAnimationState == null ? 0 : activeAnimationState.speed) + "\n" +
 				"state = "		+ state + "\n"
 			);
+		}
+#endif
 
+		/// <summary>
+		/// Draw this player name tag.
+		/// </summary>
+		public void DrawNametag() {
 			if (characterGameObject != null) {
 				Vector3 spos = Camera.main.WorldToScreenPoint(characterGameObject.transform.position + Vector3.up * 2.0f);
 				if (spos.z > 0.0f) {
@@ -322,7 +328,6 @@ namespace MSCMP.Network {
 				}
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Handle received synchronization message.
