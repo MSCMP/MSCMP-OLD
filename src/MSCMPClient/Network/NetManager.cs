@@ -544,23 +544,35 @@ namespace MSCMP.Network {
 #endif
 
 		/// <summary>
+		/// Reject remote player during connection phase.
+		/// </summary>
+		/// <param name="reason">The rejection reason.</param>
+		void RejectPlayer(string reason) {
+			MessagesList.AddMessage($"Player {players[1].GetName()} connection rejected. {reason}", MessageSeverity.Error);
+
+			Logger.Error($"Player rejected. {reason}");
+			SendHandshake(players[1]);
+			players[1].Dispose();
+			players[1] = null;
+		}
+
+		/// <summary>
+		/// Abort joinign the lobby during connection phase.
+		/// </summary>
+		/// <param name="reason">The abort reason.</param>
+		void AbortJoining(string reason) {
+			string errorMessage = $"Failed to join lobby.\n{reason}";
+			MPGUI.Instance.ShowMessageBox(errorMessage);
+			Logger.Error(errorMessage);
+			MPController.Instance.LoadLevel("MainMenu");
+		}
+
+		/// <summary>
 		/// Process handshake message received from the given steam id.
 		/// </summary>
 		/// <param name="senderSteamId">The steam id of the sender.</param>
 		/// <param name="msg">Hand shake message.</param>
 		private void HandleHandshake(Steamworks.CSteamID senderSteamId, Messages.HandshakeMessage msg) {
-			// Check if protocol version matches.
-
-			if (IsPlayer && (msg.protocolVersion != PROTOCOL_VERSION)) {
-				string errorMessage = $"Failed to join lobby. Protocol version mismatch. (Client: {PROTOCOL_VERSION}, Host: {msg.protocolVersion})";
-				MPGUI.Instance.ShowMessageBox(errorMessage);
-				Logger.Error(errorMessage);
-				MPController.Instance.LoadLevel("MainMenu");
-				return;
-			}
-
-			// All looks fine
-
 			if (IsHost) {
 				if (players[1] != null) {
 					Logger.Log("Received handshake from player but player is already here.");
@@ -576,12 +588,7 @@ namespace MSCMP.Network {
 				// Check if version matches - if not ignore this player.
 
 				if (msg.protocolVersion != PROTOCOL_VERSION) {
-					MessagesList.AddMessage($"Player {players[1].GetName()} connection rejected. Version mismatch.", MessageSeverity.Error);
-
-					Logger.Error($"Player disconnected. Version mismatch. (Client: {PROTOCOL_VERSION}, Player: {msg.protocolVersion}).");
-					SendHandshake(players[1]);
-					players[1].Dispose();
-					players[1] = null;
+					RejectPlayer($"Mod version mismatch.");
 					return;
 				}
 
@@ -598,6 +605,23 @@ namespace MSCMP.Network {
 					LeaveLobby();
 					return;
 				}
+
+				// Check if protocol version matches.
+
+				if (msg.protocolVersion != PROTOCOL_VERSION) {
+					string message;
+					if (msg.protocolVersion > PROTOCOL_VERSION) {
+						message = "Host has newer version of the mod.";
+					}
+					else {
+						message = "Host has older version of the mod.";
+					}
+
+					AbortJoining($"{message}\n(Your mod version: {PROTOCOL_VERSION}, Host mod version: {msg.protocolVersion})");
+					return;
+				}
+
+				// All is fine - load game world.
 
 				MessagesList.AddMessage($"Connection established!", MessageSeverity.Info);
 
