@@ -151,7 +151,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (!Wow64Process && IsOS64Bit()) {
-		MessageBox(NULL, "Mod does not support 64bit version of the game. To play multiplayer go to steam and opt out of 64bit beta.", "Fatal error", MB_ICONERROR);
+		MessageBox(NULL, "Mod does not support 64bit version of the game. To play multiplayer go to steam and and select default_32bit beta.\n\nOpen steam client > LIBRARY > right click on the My Summer Car > Properties > Beta tab and then select default_32bit.", "Fatal error", MB_ICONERROR);
 		TerminateProcess(processInformation.hProcess, 0);
 		return 0;
 	}
