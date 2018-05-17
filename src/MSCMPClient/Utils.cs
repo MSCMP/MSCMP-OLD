@@ -341,5 +341,32 @@ namespace MSCMP {
 			hash += hash << 15;
 			return hash;
 		}
+
+		/// <summary>
+		/// Check if hierarchy of the given game object matches.
+		/// </summary>
+		/// <param name="obj">The game object.</param>
+		/// <param name="hierarchy">The hierarchy pattern to check.</param>
+		/// <returns>true if hierarchy is matching, false otherwise</returns>
+		public static bool IsGameObjectHierarchyMatching(GameObject obj, string hierarchy) {
+			Transform current = obj.transform;
+			var names = hierarchy.Split('/');
+			for (int i = names.Length; i > 0; --i) {
+				if (current == null) {
+					return false;
+				}
+
+				if (names[i - 1] == "*") {
+					continue;
+				}
+
+				if (current.name != names[i - 1]) {
+					return false;
+				}
+
+				current = current.parent;
+			}
+			return true;
+		}
 	}
 }
