@@ -27,10 +27,8 @@ namespace MSCMP.Game.Components {
 		public GamePickupableDatabase.PrefabDesc PrefabDescriptor
 		{
 			get {
-				if (prefabId != -1) {
-					return GamePickupableDatabase.Instance.GetPickupablePrefab(prefabId);
-				}
-				return null;
+				Client.Assert(prefabId != -1, "Prefab id is not set!");
+				return GamePickupableDatabase.Instance.GetPickupablePrefab(prefabId);
 			}
 		}
 	}
