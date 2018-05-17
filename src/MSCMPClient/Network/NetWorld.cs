@@ -129,6 +129,7 @@ namespace MSCMP.Network {
 
 				NetPickupable pickupable = GetPickupableByGameObject(instance);
 				if (pickupable == null) {
+					Logger.Debug($"Pickupable {instance.name} has been destroyed however it is not registered, skipping removal.");
 					return;
 				}
 
@@ -526,21 +527,28 @@ namespace MSCMP.Network {
 			foreach (var kv in netPickupables) {
 				NetPickupable pickupable = kv.Value;
 				if (pickupable.gameObject == null) {
-					Logger.Log($"Null ptr of the pickupable game object {pickupable.NetId}");
+					Logger.Debug($"Null ptr of the pickupable game object {pickupable.NetId}");
 					continue;
 				}
+
 				var pickupableMsg = new Messages.PickupableSpawnMessage();
 				pickupableMsg.id = pickupable.NetId;
+
 				var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
+				Client.Assert(metaData != null && metaData.PrefabDescriptor != null, $"Pickupable with broken meta data -- {pickupable.gameObject.name}.");
+
 				pickupableMsg.prefabId = metaData.prefabId;
+
 				Transform transform = pickupable.gameObject.transform;
 				pickupableMsg.transform.position = Utils.GameVec3ToNet(transform.position);
 				pickupableMsg.transform.rotation = Utils.GameQuatToNet(transform.rotation);
+
 				pickupableMsg.active = pickupable.gameObject.activeSelf;
+
 				List<float> data = new List<float>();
 
-				//Beercases
-				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase && pickupable.gameObject.name != "beer case") {
+				// Beercases
+				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
 					Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(pickupable.gameObject);
 					data.Add(Game.BeerCaseManager.Instance.FullCaseBottles - beer.UsedBottles);
 				}
@@ -704,12 +712,12 @@ namespace MSCMP.Network {
 				msg.id = netPickupable.NetId;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 
-				Logger.Log($"Handle pickupable destroy {pickupable.name}");
+				Logger.Debug($"Handle pickupable destroy {pickupable.name}");
 				netPickupables.Remove(netPickupable.NetId);
 			}
 			else {
-				Logger.Log($"Unhandled pickupable has been destroyed {pickupable.name}");
-				Logger.Log(Environment.StackTrace);
+				Logger.Debug($"Unhandled pickupable has been destroyed {pickupable.name}");
+				Logger.Debug(Environment.StackTrace);
 			}
 		}
 
@@ -746,7 +754,7 @@ namespace MSCMP.Network {
 				Game.GamePickupableDatabase.PrefabDesc desc = Game.GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
 				HandlePickupablesSpawnData(pickupable, desc.type, msg.Data);
 			}
-			RegisterPickupable(msg.id, pickupable);
+			RegisterPickupable(msg.id, pickupable, true);
 		}
 
 		/// <summary>
@@ -769,18 +777,18 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="netId">The network id of the pickupable.</param>
 		/// <param name="pickupable">The game object representing pickupable.</param>
-		public void RegisterPickupable(ushort netId, GameObject pickupable) {
+		/// <param name="remote">Is this remote pickupable?</param>
+		public void RegisterPickupable(ushort netId, GameObject pickupable, bool remote = false) {
 			Client.Assert(!netPickupables.ContainsKey(netId), $"Duplicate net id {netId}");
 			var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
 			Client.Assert(metaData != null, $"Failed to register pickupable. No meta data found. {pickupable.name} ({pickupable.GetInstanceID()})");
 
-			Logger.Log($"Registering pickupable {pickupable.name} (net id: {netId}, instance id: {pickupable.GetInstanceID()})");
+			Logger.Debug($"Registering pickupable {pickupable.name} (net id: {netId}, instance id: {pickupable.GetInstanceID()})");
 
 			netPickupables.Add(netId, new NetPickupable(netId, pickupable));
 
-			if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
-				// "beer case" will not be added to the BeerCaseManager correctly, unsure of a better solution.
-				if (pickupable.name != "beer case") {
+			if (remote) {
+				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
 					Game.BeerCaseManager.Instance.AddBeerCase(pickupable);
 				}
 			}
