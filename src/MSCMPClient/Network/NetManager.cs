@@ -7,7 +7,7 @@ using MSCMP.UI;
 namespace MSCMP.Network {
 	class NetManager {
 		private const int MAX_PLAYERS = 2;
-		private const int PROTOCOL_VERSION = 1;
+		private const int PROTOCOL_VERSION = 2;
 		private const uint PROTOCOL_ID = 0x6d73636d;
 
 		private Steamworks.Callback<Steamworks.GameLobbyJoinRequested_t> gameLobbyJoinRequestedCallback = null;
