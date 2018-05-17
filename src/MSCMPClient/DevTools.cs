@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Text;
 using System.IO;
 using System;
+using System.Diagnostics;
 
 namespace MSCMP {
 #if !PUBLIC_RELEASE
@@ -148,7 +149,20 @@ namespace MSCMP {
 		}
 
 		public static void DumpWorld(string levelName) {
-			GameObject []gos = gos = GameObject.FindObjectsOfType<GameObject>();
+			Utils.CallSafe("DUmpWorld", ()=> {
+				Development.WorldDumper worldDumper = new Development.WorldDumper();
+				string dumpFolder = Client.GetPath($"HTMLWorldDump\\{levelName}");
+				Directory.Delete(dumpFolder, true);
+				Directory.CreateDirectory(dumpFolder);
+
+				var watch = Stopwatch.StartNew();
+
+				worldDumper.Dump(dumpFolder);
+
+				Logger.Log($"World dump finished - took {watch.ElapsedMilliseconds} ms");
+			});
+
+			/*GameObject[] gos = gos = GameObject.FindObjectsOfType<GameObject>();
 
 			string path = Client.GetPath($"WorldDump\\{levelName}");
 			Directory.CreateDirectory(path);
@@ -164,7 +178,8 @@ namespace MSCMP {
 				string dumpFilePath = path + "\\" + SanitizedName + ".txt";
 				try {
 					DumpObject(trans, dumpFilePath);
-				} catch (Exception e) {
+				}
+				catch (Exception e) {
 					Logger.Log("Unable to dump objects: " + SanitizedName + "\n");
 					Logger.Log(e.Message + "\n");
 				}
@@ -173,7 +188,7 @@ namespace MSCMP {
 				++index;
 			}
 
-			System.IO.File.WriteAllText(path + "\\dumpLog.txt", builder.ToString());
+			System.IO.File.WriteAllText(path + "\\dumpLog.txt", builder.ToString());*/
 		}
 
 		public static void DumpObject(Transform obj, string file) {
