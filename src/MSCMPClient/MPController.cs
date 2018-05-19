@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System;
 using MSCMP.Network;
 using MSCMP.Game;
+using MSCMP.Utilities;
 
 namespace MSCMP {
 	/// <summary>
@@ -43,8 +44,6 @@ namespace MSCMP {
 		/// </summary>
 		UI.Console console = new UI.Console();
 
-		Texture2D fillText = new Texture2D(1, 1);
-
 		MPController() {
 			Instance = this;
 		}
@@ -62,9 +61,7 @@ namespace MSCMP {
 
 			modLogo = Client.LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
 
-			fillText.SetPixel(0, 0, Color.white);
-			fillText.wrapMode = TextureWrapMode.Repeat;
-			fillText.Apply();
+			IMGUIUtils.Setup();
 		}
 
 		/// <summary>
@@ -255,7 +252,7 @@ namespace MSCMP {
 			// Draw header
 
 			GUI.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
-			GUI.DrawTexture(invitePanelRect, fillText);
+			IMGUIUtils.DrawPlainColorRect(invitePanelRect);
 
 			GUI.color = Color.white;
 			invitePanelRect.x += 2.0f;
@@ -268,7 +265,7 @@ namespace MSCMP {
 			invitePanelRect.height = invitePanelHeight;
 
 			GUI.color = new Color(0.0f, 0.0f, 0.0f, 0.8f);
-			GUI.DrawTexture(invitePanelRect, fillText);
+			IMGUIUtils.DrawPlainColorRect(invitePanelRect);
 
 			GUI.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
 			int onlineFriendsCount = onlineFriends.Count;
