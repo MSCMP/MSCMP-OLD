@@ -343,7 +343,7 @@ namespace MSCMP {
 		/// <summary>
 		/// Update multiplayer state.
 		/// </summary>
-		void Update() {
+		void LateUpdate() {
 			Utils.CallSafe("Update", () => {
 				Steamworks.SteamAPI.RunCallbacks();
 
