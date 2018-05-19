@@ -297,20 +297,6 @@ namespace MSCMP.Network {
 
 		}
 
-#if !PUBLIC_RELEASE
-		/// <summary>
-		/// Update debug IMGUI of this player.
-		/// </summary>
-		public virtual void DrawDebugGUI() {
-			GUI.Label(new Rect(300, 200, 300, 200), "Remote player\n" +
-				"position = "	+ interpolator.CurrentPosition.ToString() + "\n" +
-				"anim = "		+ currentAnim + "\n" +
-				"animSpeed = "	+ (activeAnimationState == null ? 0 : activeAnimationState.speed) + "\n" +
-				"state = "		+ state + "\n"
-			);
-		}
-#endif
-
 		/// <summary>
 		/// Draw this player name tag.
 		/// </summary>

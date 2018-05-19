@@ -1,4 +1,4 @@
-﻿using MSCMP.Game;
+using MSCMP.Game;
 using MSCMP.Game.Objects;
 using UnityEngine;
 
@@ -68,22 +68,6 @@ namespace MSCMP.Network {
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 		}
-
-#if !PUBLIC_RELEASE
-		/// <summary>
-		/// Update debug IMGUI for the player.
-		/// </summary>
-		public override void DrawDebugGUI() {
-			int debugWidth = 300;
-			int debugX = Screen.width - debugWidth;
-			Rect debugRect = new Rect(debugX, 100, debugWidth, 200);
-			GUI.Label(debugRect, "Local player\ntime to update: " + timeToUpdate + "\nstate: " + state + "\nWorld time: " + GameWorld.Instance.WorldTime + "\nWorld day: " + GameWorld.Instance.WorldDay);
-
-			if (currentVehicle != null) {
-				currentVehicle.UpdateIMGUI();
-			}
-		}
-#endif
 
 		/// <summary>
 		/// Update state of the local player.
