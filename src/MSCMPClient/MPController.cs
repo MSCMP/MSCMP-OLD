@@ -62,6 +62,11 @@ namespace MSCMP {
 			modLogo = Client.LoadAsset<Texture2D>("Assets/Textures/MSCMPLogo.png");
 
 			IMGUIUtils.Setup();
+
+#if !PUBLIC_RELEASE
+			// Skip splash screen in development builds.
+			Application.LoadLevel("MainMenu");
+#endif
 		}
 
 		/// <summary>
