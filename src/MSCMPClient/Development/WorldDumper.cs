@@ -144,12 +144,14 @@ namespace MSCMP.Development {
 					return;
 				}
 
+				// Make sure FSM is initialized.
+				fsm.Init(component);
+
 				writer.StartTag("h2");
 				writer.WriteValue($"Name: {fsm.Name}");
 				writer.EndTag();
 
 				writer.WriteValue($"<b>Active state:</b> {fsm.ActiveStateName}<br/>");
-
 
 				foreach (var state in fsm.States) {
 					writer.StartTag("div", "class=\"fsm_state " + ((fsm.ActiveState == state) ? "fsm_active_state" : "") + $"\" id=\"{state.Name}\"");
