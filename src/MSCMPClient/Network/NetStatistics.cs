@@ -32,11 +32,21 @@ namespace MSCMP.Network {
 		long bytesReceivedCurrentFrame = 0;
 
 		/// <summary>
+		/// Network manager owning this object.
+		/// </summary>
+		NetManager netManager = null;
+
+		/// <summary>
 		/// Line material used to draw the graph.
 		/// </summary>
 		Material lineMaterial = null;
 
-		public void SetupLineMaterial() {
+
+		public NetStatistics(NetManager netManager) {
+			this.netManager = netManager;
+		}
+
+		void SetupLineMaterial() {
 			if (lineMaterial != null) { return; }
 
 			// Setup graph lines material.
@@ -128,6 +138,22 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
+		/// Draws text label.
+		/// </summary>
+		/// <remarks>GUI color after this call may not be white!</remarks>
+		/// <param name="name">Name of the statistic.</param>
+		/// <param name="text">The text value.</param>
+		void DrawTextHelper(ref Rect rct, string name, string text) {
+			GUI.color = Color.white;
+			GUI.Label(rct, name);
+			rct.x += rct.width;
+			GUI.Label(rct, text);
+
+			rct.x -= rct.width;
+			rct.y += rct.height;
+		}
+
+		/// <summary>
 		/// Draw line using GL.
 		/// </summary>
 		/// <param name="start">Line start position.</param>
@@ -207,7 +233,7 @@ namespace MSCMP.Network {
 		public void Draw() {
 			GUI.color = Color.white;
 			const int WINDOW_WIDTH = 300;
-			const int WINDOW_HEIGHT = 500;
+			const int WINDOW_HEIGHT = 600;
 			Rect statsWindowRect = new Rect(Screen.width - WINDOW_WIDTH - 10, Screen.height - WINDOW_HEIGHT - 10, WINDOW_WIDTH, WINDOW_HEIGHT);
 			GUI.Window(666, statsWindowRect, (int window) => {
 
@@ -270,6 +296,33 @@ namespace MSCMP.Network {
 				DrawStatHelper(ref rct, "bytesSendCurrentFrame", bytesSentCurrentFrame, 1000);
 				DrawStatHelper(ref rct, "bytesReceivedCurrentFrame", bytesReceivedCurrentFrame, 1000);
 
+				// Draw separator
+
+				rct.y += 2;
+				GUI.color = Color.black;
+				IMGUIUtils.DrawPlainColorRect(new Rect(0, rct.y, WINDOW_WIDTH, 2));
+				rct.y += 2;
+
+				// Draw P2P session state.
+
+				DrawTextHelper(ref rct, "Steam session state:", "");
+
+				Steamworks.P2PSessionState_t sessionState = new Steamworks.P2PSessionState_t();
+				if (netManager.GetP2PSessionState(out sessionState)) {
+					DrawTextHelper(ref rct, "Is Connecting", sessionState.m_bConnecting.ToString());
+					DrawTextHelper(ref rct, "Is connection active", sessionState.m_bConnectionActive == 0 ? "no" : "yes");
+					DrawTextHelper(ref rct, "Using relay?", sessionState.m_bConnectionActive == 0 ? "no" : "yes");
+					DrawTextHelper(ref rct, "Session error", Utils.P2PSessionErrorToString((Steamworks.EP2PSessionError)sessionState.m_eP2PSessionError));
+					DrawTextHelper(ref rct, "Bytes queued for send", FormatBytes(sessionState.m_nBytesQueuedForSend));
+					DrawTextHelper(ref rct, "Packets queued for send", sessionState.m_nPacketsQueuedForSend.ToString());
+					uint uip = sessionState.m_nRemoteIP;
+					string ip = string.Format("{0}.{1}.{2}.{3}", (uip>>24)&0xff, (uip>>16)&0xff, (uip>>8)&0xff, uip&0xff);
+					DrawTextHelper(ref rct, "Remote ip", ip);
+					DrawTextHelper(ref rct, "Remote port", sessionState.m_nRemotePort.ToString());
+				}
+				else {
+					DrawTextHelper(ref rct, "Session inactive.", "");
+				}
 			}, "Network statistics");
 		}
 	}

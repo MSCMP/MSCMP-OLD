@@ -368,5 +368,22 @@ namespace MSCMP {
 			}
 			return true;
 		}
+
+
+		/// <summary>
+		/// Convert p2p session error to string.
+		/// </summary>
+		/// <param name="sessionError">The session error.</param>
+		/// <returns>Session error string.</returns>
+		public static string P2PSessionErrorToString(Steamworks.EP2PSessionError sessionError) {
+			switch (sessionError) {
+				case Steamworks.EP2PSessionError.k_EP2PSessionErrorNone: return "none";
+				case Steamworks.EP2PSessionError.k_EP2PSessionErrorNotRunningApp: return "not running app";
+				case Steamworks.EP2PSessionError.k_EP2PSessionErrorNoRightsToApp: return "no rights to app";
+				case Steamworks.EP2PSessionError.k_EP2PSessionErrorDestinationNotLoggedIn: return "user not logged in";
+				case Steamworks.EP2PSessionError.k_EP2PSessionErrorTimeout: return "timeout";
+				default:return  "unknown";
+			}
+		}
 	}
 }

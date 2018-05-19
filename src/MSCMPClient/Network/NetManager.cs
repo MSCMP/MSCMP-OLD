@@ -103,10 +103,11 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// Network statistics object.
 		/// </summary>
-		NetStatistics statistics = new NetStatistics();
+		NetStatistics statistics;
 
 		public NetManager() {
-			this.netManagerCreationTime = DateTime.UtcNow;
+			statistics = new NetStatistics(this);
+			netManagerCreationTime = DateTime.UtcNow;
 			netMessageHandler = new NetMessageHandler(this);
 			netWorld = new NetWorld(this);
 
@@ -124,7 +125,7 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="result">The callback result.</param>
 		void OnP2PConnectFail(Steamworks.P2PSessionConnectFail_t result) {
-			Logger.Error($"P2P Connection failed, session error: {result.m_eP2PSessionError}, remote: {result.m_steamIDRemote}");
+			Logger.Error($"P2P Connection failed, session error: {Utils.P2PSessionErrorToString((Steamworks.EP2PSessionError)result.m_eP2PSessionError)}, remote: {result.m_steamIDRemote}");
 		}
 
 		/// <summary>
@@ -706,6 +707,20 @@ namespace MSCMP.Network {
 		/// </summary>
 		public void OnNetworkWorldLoaded() {
 			state = State.Playing;
+		}
+
+
+		/// <summary>
+		/// Get current p2p session state.
+		/// </summary>
+		/// <param name="sessionState">The session state.</param>
+		/// <returns>true if session state is available, false otherwise</returns>
+		public bool GetP2PSessionState(out Steamworks.P2PSessionState_t sessionState) {
+			if (players[1] == null) {
+				sessionState = new Steamworks.P2PSessionState_t();
+				return false;
+			}
+			return Steamworks.SteamNetworking.GetP2PSessionState(players[1].SteamId, out sessionState);
 		}
 	}
 }
