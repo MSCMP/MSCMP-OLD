@@ -123,7 +123,8 @@ namespace MSCMP.Network {
 		/// <param name="name">Name of the statistic.</param>
 		/// <param name="value">The statistic value.</param>
 		/// <param name="critical">The critical statistic value to highlight. (if -1 there is no critical value)</param>
-		void DrawStatHelper(ref Rect rct, string name, long value, int critical = -1) {
+		/// <param name="bytes">Is the stat representing bytes?</param>
+		void DrawStatHelper(ref Rect rct, string name, long value, int critical = -1, bool bytes = false) {
 			GUI.color = Color.white;
 			GUI.Label(rct, name);
 
@@ -131,7 +132,12 @@ namespace MSCMP.Network {
 			GUI.color = isCriticalValue ? Color.red : Color.white;
 
 			rct.x += rct.width;
-			GUI.Label(rct, value.ToString());
+			if (bytes) {
+				GUI.Label(rct, FormatBytes(value));
+			}
+			else {
+				GUI.Label(rct, value.ToString());
+			}
 
 			rct.x -= rct.width;
 			rct.y += rct.height;
@@ -289,12 +295,12 @@ namespace MSCMP.Network {
 				DrawStatHelper(ref rct, "packetsReceivedLastFrame", packetsReceivedLastFrame, 1000);
 				DrawStatHelper(ref rct, "packetsSendCurrentFrame", packetsSendCurrentFrame, 1000);
 				DrawStatHelper(ref rct, "packetsReceivedCurrentFrame", packetsReceivedCurrentFrame, 1000);
-				DrawStatHelper(ref rct, "bytesSendTotal", bytesSentTotal);
-				DrawStatHelper(ref rct, "bytesReceivedTotal", bytesReceivedTotal);
-				DrawStatHelper(ref rct, "bytesSendLastFrame", bytesSentLastFrame, 1000);
-				DrawStatHelper(ref rct, "bytesReceivedLastFrame", bytesReceivedLastFrame, 1000);
-				DrawStatHelper(ref rct, "bytesSendCurrentFrame", bytesSentCurrentFrame, 1000);
-				DrawStatHelper(ref rct, "bytesReceivedCurrentFrame", bytesReceivedCurrentFrame, 1000);
+				DrawStatHelper(ref rct, "bytesSendTotal", bytesSentTotal, -1, true);
+				DrawStatHelper(ref rct, "bytesReceivedTotal", bytesReceivedTotal, -1, true);
+				DrawStatHelper(ref rct, "bytesSendLastFrame", bytesSentLastFrame, 1000, true);
+				DrawStatHelper(ref rct, "bytesReceivedLastFrame", bytesReceivedLastFrame, 1000, true);
+				DrawStatHelper(ref rct, "bytesSendCurrentFrame", bytesSentCurrentFrame, 1000, true);
+				DrawStatHelper(ref rct, "bytesReceivedCurrentFrame", bytesReceivedCurrentFrame, 1000, true);
 
 				// Draw separator
 
