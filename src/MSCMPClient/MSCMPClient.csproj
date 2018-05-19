@@ -97,6 +97,7 @@
     <Compile Include="MessagesList.cs" />
     <Compile Include="Network\NetMessageHandler.cs" />
     <Compile Include="Network\NetPickupable.cs" />
+    <Compile Include="Network\NetStatistics.cs" />
     <Compile Include="UI\Console.cs" />
     <Compile Include="UI\Handlers\MessageBoxHandler.cs" />
     <Compile Include="UI\MPGUI.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="PlayMakerUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\HTMLWriter.cs" />
+    <Compile Include="Utilities\IMGUIUtils.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup />
