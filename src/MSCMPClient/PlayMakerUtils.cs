@@ -1,5 +1,6 @@
 ﻿using HutongGames.PlayMaker;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MSCMP {
 	/// <summary>
@@ -41,6 +42,44 @@ namespace MSCMP {
 				temp.Add(v);
 			}
 			state.Actions = temp.ToArray();
+		}
+
+		/// <summary>
+		/// Removes an event and global transition from an fsm
+		/// </summary>
+		/// <param name="fsm">The FSM you want to delete it from</param>
+		/// <param name="eventName">The event(and global transition) name</param>
+		static public void RemoveEvent(PlayMakerFSM fsm, string eventName) {
+			FsmTransition[] oldTransitions = fsm.FsmGlobalTransitions;
+			List<FsmTransition> temp = new List<FsmTransition>();
+			foreach (FsmTransition t in oldTransitions) {
+				if (t.EventName != eventName) temp.Add(t);
+			}
+			fsm.Fsm.GlobalTransitions = temp.ToArray();
+
+			FsmEvent[] oldEvents = fsm.Fsm.Events;
+			List<FsmEvent> temp2 = new List<FsmEvent>();
+			foreach (FsmEvent t in oldEvents) {
+				if (t.Name != eventName) temp2.Add(t);
+			}
+			fsm.Fsm.Events = temp2.ToArray();
+		}
+
+		/// <summary>
+		/// Set a gameObject's state
+		/// </summary>
+		/// <param name="gameObject">The gameObject you want to set</param>
+		/// <param name="fsmName">The FSM that contains the state</param>
+		/// <param name="state">The name of the state</param>
+		static public void SetToState(GameObject gameObject, string fsmName, string state) {
+			string hookedEventName = state + "-MSCMP";
+			PlayMakerFSM fsm = Utils.GetPlaymakerScriptByName(gameObject, fsmName);
+
+			FsmEvent ourEvent = fsm.Fsm.GetEvent(hookedEventName);
+			PlayMakerUtils.AddNewGlobalTransition(fsm, ourEvent, state);
+
+			fsm.SendEvent(hookedEventName);
+			RemoveEvent(fsm, hookedEventName);
 		}
 	}
 }
