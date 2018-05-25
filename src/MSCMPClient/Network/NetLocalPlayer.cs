@@ -170,6 +170,8 @@ namespace MSCMP.Network {
 			GameObject playerObject = player.Object;
 			if (playerObject == null) return false;
 
+			if (playerObject.GetComponentInChildren<CharacterMotor>() == null) return false; //Player is dying!
+
 			Messages.AnimSyncMessage message = new Messages.AnimSyncMessage();
 
 			message.isRunning = (Utils.GetPlaymakerScriptByName(playerObject, "Running").Fsm.ActiveStateName == "Run");
@@ -190,8 +192,7 @@ namespace MSCMP.Network {
 
 			if (!animManager.AreDrinksPreloaded()) animManager.PreloadDrinkObjects(playerObject);
 
-			//if (animManager.GetHandState(message.activeHandState) == PlayerAnimManager.HandStateId.Drinking)
-				message.drinkId = animManager.GetDrinkingObject(playerObject);
+			message.drinkId = animManager.GetDrinkingObject(playerObject);
 
 			if (!netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
 				return false;
