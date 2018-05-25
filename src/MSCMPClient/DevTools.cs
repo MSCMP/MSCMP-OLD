@@ -24,6 +24,7 @@ namespace MSCMP {
 		/// Game object representing local player.
 		/// </summary>
 		static GameObject localPlayer = null;
+		static GameObject playerCamera = null;
 
 		const float DEV_MENU_BUTTON_WIDTH = 150.0f;
 		const float TITLE_SECTION_WIDTH = 50.0f;
@@ -141,6 +142,7 @@ namespace MSCMP {
 		public static void Update() {
 			if (localPlayer == null) {
 				localPlayer = GameObject.Find("PLAYER");
+				playerCamera = GameObject.Find("FPSCamera");
 			}
 			else {
 				UpdatePlayer();
@@ -153,25 +155,35 @@ namespace MSCMP {
 
 		public static void UpdatePlayer() {
 
+			// Pseudo AirBrk
 			if (airBreak) {
-				// Pseudo AirBrk
-				if (Input.GetKey(KeyCode.KeypadPlus) && localPlayer) {
-					localPlayer.transform.position = localPlayer.transform.position + Vector3.up * 5.0f;
+				Single speed = 3.0f;
+
+				if (Input.GetKey(KeyCode.Mouse0)) speed += 2.5f;
+				if (Input.GetKey(KeyCode.Mouse1)) speed -= 2.5f;
+
+				if (Input.GetKeyDown(KeyCode.Keypad5)) {
+					localPlayer.GetComponent<CharacterController>().enabled = !localPlayer.GetComponent<CharacterController>().enabled;
 				}
-				if (Input.GetKey(KeyCode.KeypadMinus) && localPlayer) {
-					localPlayer.transform.position = localPlayer.transform.position - Vector3.up * 5.0f;
+				if (Input.GetKey(KeyCode.KeypadPlus)) {
+					localPlayer.transform.position = localPlayer.transform.position + Vector3.up * speed;
 				}
-				if (Input.GetKey(KeyCode.Keypad8) && localPlayer) {
-					localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
+				if (Input.GetKey(KeyCode.KeypadMinus)) {
+					localPlayer.transform.position = localPlayer.transform.position - Vector3.up * speed;
 				}
-				if (Input.GetKey(KeyCode.Keypad2) && localPlayer) {
-					localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.forward * 5.0f;
+				if (Input.GetKey(KeyCode.Keypad8)) {
+					//localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * speed;
+					localPlayer.transform.position = localPlayer.transform.position + playerCamera.transform.rotation * Vector3.forward * speed;
 				}
-				if (Input.GetKey(KeyCode.Keypad4) && localPlayer) {
-					localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.right * 5.0f;
+				if (Input.GetKey(KeyCode.Keypad2)) {
+					//localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.forward * speed;
+					localPlayer.transform.position = localPlayer.transform.position - playerCamera.transform.rotation * Vector3.forward * speed;
 				}
-				if (Input.GetKey(KeyCode.Keypad6) && localPlayer) {
-					localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.right * 5.0f;
+				if (Input.GetKey(KeyCode.Keypad4)) {
+					localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.right * speed;
+				}
+				if (Input.GetKey(KeyCode.Keypad6)) {
+					localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.right * speed;
 				}
 			}
 		}
