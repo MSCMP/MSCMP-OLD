@@ -202,6 +202,11 @@ namespace MSCMP.UI {
 			else {
 				inputText = inputHistory[currentHistoryEntryIndex];
 			}
+
+			//Moving the cursor to the last character
+			TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+			editor.selectPos = inputText.Length + 1;
+			editor.pos = inputText.Length + 1;
 		}
 
 		/// <summary>

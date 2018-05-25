@@ -31,21 +31,46 @@ namespace MSCMP {
 		static Rect devMenuButtonsRect = new Rect(5, 0.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
 
 		public static void OnInit() {
+			//List of commands
+			UI.Console.RegisterCommand("help", (string[] args) =>
+			{
+				Client.ConsoleMessage($"Available Commands:");
+				Client.ConsoleMessage($"   gotospot [spotName]");
+				Client.ConsoleMessage($"   gethere [gameObjectName]");
+				Client.ConsoleMessage($"   goto [gameObjectName]");
+				Client.ConsoleMessage($"   gotoxyz [x] [y] [z] [Optional: Rotation]");
+				Client.ConsoleMessage($"   savepos");
+			});
+
+			//Teleports yourself to the given spot
+			UI.Console.RegisterCommand("gotospot", (string[] args) => {
+				if (args.Length == 1) { Client.ConsoleMessage($"Valid Spots: Home, Island, Teemo, Fleetari, Pigman, Jokkeold, Jokkenew, Drag."); return; }
+
+				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+
+				string ourSpot = args[1].ToLower();
+				if (ourSpot == "home") SetPosition(-10.0f, -0.3f, 7.6f, 180);
+				else if (ourSpot == "island") SetPosition(-851.5f, -2.9f, 516.6f, 163);
+				else if (ourSpot == "teemo") SetPosition(-1546.3f, 3.2f, 1176.8f, 354);
+				else if (ourSpot == "fleetari") SetPosition(1550.0f, 4.8f, 734.3f, 62);
+				else if (ourSpot == "pigman") SetPosition(-171.1f, -3.9f, 1024.9f, 133);
+				else if (ourSpot == "jokkeold") SetPosition(1939.4f, 7.1f, -222.5f, 126);
+				else if (ourSpot == "jokkenew") SetPosition(-1285.6f, 0.2f, 1088.3f, 210);
+				else if (ourSpot == "drag") SetPosition(-1312.6f, 2.2f, -937.6f, 99);
+				else { Client.ConsoleMessage($"{args[1]} is an invalid spot. Type 'gotospot' with no parameters to see all the available spots!"); return; }
+
+				Client.ConsoleMessage($"Teleported to {args[1]}!");
+			});
+
 			//Teleports a game object to you
 			UI.Console.RegisterCommand("gethere", (string[] args) => {
-				if (args.Length == 1) {
-					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'.");
-					return;
-				}
+				if (args.Length == 1) { Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'."); return; }
 
 				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
 
 				string ourObjectName = String.Join(" ", args.Skip(1).ToArray());
 				GameObject ourObject = GameObject.Find(ourObjectName);
-				if (ourObject == null) {
-					Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}.");
-					return;
-				}
+				if (ourObject == null) { Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}."); return; }
 
 				ourObject.transform.rotation = localPlayer.transform.rotation;
 				ourObject.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
@@ -64,6 +89,27 @@ namespace MSCMP {
 
 				localPlayer.transform.position = ourObject.transform.position + Vector3.up * 2.0f;
 				Client.ConsoleMessage($"Teleported to {ourObjectName} !");
+			});
+
+			//Teleports yourself to the specific coordinates
+			UI.Console.RegisterCommand("gotoxyz", (string[] args) => {
+				if (args.Length < 4) { Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gotoxyz [x] [y] [z] [Optional: Rotation]'."); return; }
+				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+
+				localPlayer.transform.position = new Vector3(float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
+
+				if (args.Length == 5) localPlayer.transform.eulerAngles = new Vector3(0, float.Parse(args[4]), 0);
+				Client.ConsoleMessage($"Teleported to {args[1]}, {args[2]}, {args[3]}!");
+			});
+
+			//Logs your position and rotation
+			UI.Console.RegisterCommand("savepos", (string[] args) => {
+				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+
+				Logger.Log("Saved Position:");
+				Logger.Log($"Pos: {localPlayer.transform.position}");
+				Logger.Log($"Rot: {localPlayer.transform.eulerAngles}");
+				Client.ConsoleMessage("Saved your position!");
 			});
 		}
 
@@ -248,7 +294,12 @@ namespace MSCMP {
 				bldr.Append(text + "\n");
 			});
 
-			System.IO.File.WriteAllText(file, bldr.ToString());
+			File.WriteAllText(file, bldr.ToString());
+		}
+
+		static void SetPosition(Single x, Single y, Single z, Single rot = -1) {
+			localPlayer.transform.position = new Vector3 (x, y, z);
+			if (rot != -1) localPlayer.transform.eulerAngles = new Vector3(0, rot, 0);
 		}
 	}
 #endif
