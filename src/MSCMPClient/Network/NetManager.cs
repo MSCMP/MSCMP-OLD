@@ -543,16 +543,6 @@ namespace MSCMP.Network {
 			}
 		}
 
-		public void LateUpdate() {
-			if (!IsOnline) {
-				return;
-			}
-
-			foreach (NetPlayer player in players) {
-				player?.LateUpdate();
-			}
-		}
-
 #if !PUBLIC_RELEASE
 		/// <summary>
 		/// Update network debug IMGUI.

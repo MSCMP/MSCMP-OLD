@@ -187,20 +187,6 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
-		/// Updates state of the player after the animations have been played.
-		/// </summary>
-		public virtual void LateUpdate() {
-			if (characterGameObject && syncReceiveTime > 0) {
-				if (animManager != null) {
-					animManager.CheckBlendedOutAnimationStates();
-
-					float progress = (float)(netManager.GetNetworkClock() - syncReceiveTime) / INTERPOLATION_TIME;
-					animManager.SyncVerticalHeadLook(characterGameObject, progress);
-				}
-			}
-		}
-
-		/// <summary>
 		/// Updates state of the player.
 		/// </summary>
 		public virtual void Update() {
@@ -226,7 +212,11 @@ namespace MSCMP.Network {
 					UpdatePickedupPosition();
 				}
 
-				if (animManager != null) animManager.HandleOnFootMovementAnimations(speed);
+				if (animManager != null) {
+					animManager.HandleOnFootMovementAnimations(speed);
+					animManager.CheckBlendedOutAnimationStates();
+					animManager.SyncVerticalHeadLook(characterGameObject, progress);
+				}
 			}
 
 		}
