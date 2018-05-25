@@ -3,6 +3,7 @@ using System.Text;
 using System.IO;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace MSCMP {
 #if !PUBLIC_RELEASE
@@ -27,6 +28,43 @@ namespace MSCMP {
 		const float DEV_MENU_BUTTON_WIDTH = 150.0f;
 		const float TITLE_SECTION_WIDTH = 50.0f;
 		static Rect devMenuButtonsRect = new Rect(5, 0.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
+
+		public static void OnInit() {
+			//Teleports a game object to you
+			UI.Console.RegisterCommand("gethere", (string[] args) => {
+				if (args.Length == 1) {
+					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'.");
+					return;
+				}
+
+				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+
+				string ourObjectName = String.Join(" ", args.Skip(1).ToArray());
+				GameObject ourObject = GameObject.Find(ourObjectName);
+				if (ourObject == null) {
+					Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}.");
+					return;
+				}
+
+				ourObject.transform.rotation = localPlayer.transform.rotation;
+				ourObject.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
+				Client.ConsoleMessage($"Teleported {ourObjectName} to you!");
+			});
+
+			//Teleports yourself to a game object
+			UI.Console.RegisterCommand("goto", (string[] args) => {
+				if (args.Length == 1) { Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'goto [gameObjectName]'."); return; }
+
+				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+
+				string ourObjectName = String.Join(" ", args.Skip(1).ToArray());
+				GameObject ourObject = GameObject.Find(ourObjectName);
+				if (ourObject == null) { Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}."); return; }
+
+				localPlayer.transform.position = ourObject.transform.position + Vector3.up * 2.0f;
+				Client.ConsoleMessage($"Teleported to {ourObjectName} !");
+			});
+		}
 
 		public static void OnGUI() {
 			if (displayClosestObjectNames) {

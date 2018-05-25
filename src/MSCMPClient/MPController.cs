@@ -66,6 +66,8 @@ namespace MSCMP {
 #if !PUBLIC_RELEASE
 			// Skip splash screen in development builds.
 			Application.LoadLevel("MainMenu");
+
+			DevTools.OnInit();
 #endif
 		}
 
