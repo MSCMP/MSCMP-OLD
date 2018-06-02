@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -44,7 +45,10 @@ namespace MSCMP.UI {
 					return true;
 				}
 			}
-			catch {}
+			catch (Exception e) {
+				Client.ConsoleMessage($"COMMAND ERROR: {e}");
+				return true; //True, so it won't say Invalid Command
+			}
 			return false;
 		}
 
