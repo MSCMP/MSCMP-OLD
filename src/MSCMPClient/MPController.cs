@@ -274,7 +274,28 @@ namespace MSCMP {
 
 			GUI.color = new Color(1.0f, 0.5f, 0.0f, 0.8f);
 			int onlineFriendsCount = onlineFriends.Count;
+
 			invitePanelRect.height -= 2.0f;
+
+			if (onlineFriendsCount == 0) {
+				GUI.color = Color.white;
+
+				var previousAlignment = GUI.skin.label.alignment;
+				GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+				bool playerIsOffline = Steamworks.SteamFriends.GetPersonaState() == Steamworks.EPersonaState.k_EPersonaStateOffline;
+				if (playerIsOffline) {
+					GUI.Label(invitePanelRect, "You cannot invite friends while in steam offline mode.\n\nSwitch back your steam status to online to be able to invite players.");
+				}
+				else {
+					GUI.Label(invitePanelRect, "You don't have any friends online.");
+				}
+				GUI.skin.label.alignment = previousAlignment;
+
+
+				return;
+			}
+
+
 			friendsScrollViewPos = GUI.BeginScrollView(invitePanelRect, friendsScrollViewPos, new Rect(0, 0, invitePanelWidth - 20.0f, 20.0f * onlineFriendsCount));
 
 			int firstVisibleFriendId = (int)(friendsScrollViewPos.y / rowHeight);
