@@ -482,6 +482,7 @@ namespace MSCMP.Network {
 			aimRot = msg.aimRot;
 			HandleCrouchStates(msg.crouchPosition);
 			HandleDrinking(msg.drinkId);
+			HandleSwearing(msg.swearId);
 
 			foreach (AnimState state in states) {
 				state.TryActivate(msg);
@@ -526,5 +527,24 @@ namespace MSCMP.Network {
 
 			if (oldDrinkingId != currentDrinkId) SetDrinkingObject(currentDrinkId);
 		}
+
+		/// <summary>
+		/// Takes care of Finger Swearing/Swearing/Saying 'Yes'/Drunk Speaking
+		/// </summary>
+		/// <param name="SwearID"></param>
+		private void HandleSwearing(int SwearID) {
+			if (SwearID != int.MaxValue && SwearID != currentSwearId) {
+				if (SwearID >= DrunkSpeaking_Offset) MasterAudio.PlaySound3DFollowTransformAndForget("Drunk", characterGameObject.transform, 1, 1, 0, SwearID.ToString());
+				else if (SwearID >= Agreeing_Offset) MasterAudio.PlaySound3DFollowTransformAndForget("Yes", characterGameObject.transform, 8, 1, 0, SwearID.ToString());
+				else if (SwearID >= Swears_Offset) MasterAudio.PlaySound3DFollowTransformAndForget("Swearing", characterGameObject.transform, 1, 1, 0, SwearID.ToString());
+				else MasterAudio.PlaySound3DFollowTransformAndForget("Fuck", characterGameObject.transform, 1, 1, 0, SwearID.ToString());
+			}
+			currentSwearId = SwearID;
+		}
+		int currentSwearId = int.MaxValue;
+
+		public int Swears_Offset = 100;
+		public int Agreeing_Offset = 200;
+		public int DrunkSpeaking_Offset = 300;
 	}
 }

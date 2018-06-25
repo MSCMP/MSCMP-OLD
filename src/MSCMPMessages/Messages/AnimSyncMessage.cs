@@ -9,5 +9,6 @@ namespace MSCMPMessages.Messages {
 		float	crouchPosition;
 		bool	isDrunk;
 		byte	drinkId;
+		int 	swearId;
 	}
 }
