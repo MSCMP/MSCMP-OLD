@@ -60,7 +60,7 @@ namespace MSCMP.Network {
 			RegisterVehicle("FERNDALE(1630kg)");
 			RegisterVehicle("GIFU(750/450psi)");
 
-			RegisterVehicle("HAYOSIKO(1500kg, 250)(Clone)");
+			//RegisterVehicle("HAYOSIKO(1500kg, 250)(Clone)");
 
 			Game.GameCallbacks.onWorldUnload += () => {
 				OnGameWorldUnload();
