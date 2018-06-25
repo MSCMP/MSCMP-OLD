@@ -4,6 +4,7 @@ using System.IO;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MSCMP {
 #if !PUBLIC_RELEASE
@@ -30,6 +31,20 @@ namespace MSCMP {
 		const float TITLE_SECTION_WIDTH = 50.0f;
 		static Rect devMenuButtonsRect = new Rect(5, 0.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
 
+		/// <summary>
+		/// List of spots to be used in /gotospot. List contains each spot's name, their XYZ Position, and W as Rotation
+		/// </summary>
+		static Dictionary<string, Vector4> Spots = new Dictionary<string, Vector4>() {
+			{ "Home", new Vector4(-10.0f, -0.3f, 7.6f, 180) },
+			{ "Island", new Vector4(-851.5f, -2.9f, 516.6f, 163) },
+			{ "Teemo", new Vector4(-1546.3f, 3.2f, 1176.8f, 354) },
+			{ "Fleetari", new Vector4(1550.0f, 4.8f, 734.3f, 62) },
+			{ "Pigman", new Vector4(-171.1f, -3.9f, 1024.9f, 133) },
+			{ "Jokkeold", new Vector4(1939.4f, 7.1f, -222.5f, 126) },
+			{ "Jokkenew", new Vector4(-1285.6f, 0.2f, 1088.3f, 210) },
+			{ "Drag", new Vector4(-1312.6f, 2.2f, -937.6f, 99) }
+		};
+
 		public static void OnInit() {
 			//List of commands
 			UI.Console.RegisterCommand("help", (string[] args) =>
@@ -44,33 +59,49 @@ namespace MSCMP {
 
 			//Teleports yourself to the given spot
 			UI.Console.RegisterCommand("gotospot", (string[] args) => {
-				if (args.Length == 1) { Client.ConsoleMessage($"Valid Spots: Home, Island, Teemo, Fleetari, Pigman, Jokkeold, Jokkenew, Drag."); return; }
+				if (args.Length == 1) {
+					string availableSpots = "";
+					foreach (var spot in Spots) availableSpots += spot.Key + " ";
 
-				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+					Client.ConsoleMessage($"Valid Spots: {availableSpots}.");
+					return;
+				}
+
+				if (localPlayer == null) {
+					Client.ConsoleMessage("ERROR: Couldn't find local player.");
+					return;
+				}
 
 				string ourSpot = args[1].ToLower();
-				if (ourSpot == "home") SetPosition(-10.0f, -0.3f, 7.6f, 180);
-				else if (ourSpot == "island") SetPosition(-851.5f, -2.9f, 516.6f, 163);
-				else if (ourSpot == "teemo") SetPosition(-1546.3f, 3.2f, 1176.8f, 354);
-				else if (ourSpot == "fleetari") SetPosition(1550.0f, 4.8f, 734.3f, 62);
-				else if (ourSpot == "pigman") SetPosition(-171.1f, -3.9f, 1024.9f, 133);
-				else if (ourSpot == "jokkeold") SetPosition(1939.4f, 7.1f, -222.5f, 126);
-				else if (ourSpot == "jokkenew") SetPosition(-1285.6f, 0.2f, 1088.3f, 210);
-				else if (ourSpot == "drag") SetPosition(-1312.6f, 2.2f, -937.6f, 99);
-				else { Client.ConsoleMessage($"{args[1]} is an invalid spot. Type 'gotospot' with no parameters to see all the available spots!"); return; }
+				foreach (var spot in Spots) {
+					if (spot.Key.ToLower() == ourSpot) {
+						SetPosition(spot.Value.x, spot.Value.y, spot.Value.z, spot.Value.w);
+						Client.ConsoleMessage($"Teleported to {spot}!");
+						return;
+					}
+				}
 
-				Client.ConsoleMessage($"Teleported to {args[1]}!");
+				Client.ConsoleMessage($"{args[1]} is an invalid spot. Type 'gotospot' with no parameters to see all the available spots!");
 			});
 
 			//Teleports a game object to you
 			UI.Console.RegisterCommand("gethere", (string[] args) => {
-				if (args.Length == 1) { Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'."); return; }
+				if (args.Length == 1) {
+					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'.");
+					return;
+				}
 
-				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+				if (localPlayer == null) {
+					Client.ConsoleMessage("ERROR: Couldn't find local player.");
+					return;
+				}
 
 				string ourObjectName = String.Join(" ", args.Skip(1).ToArray());
 				GameObject ourObject = GameObject.Find(ourObjectName);
-				if (ourObject == null) { Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}."); return; }
+				if (ourObject == null) {
+					Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}.");
+					return;
+				}
 
 				ourObject.transform.rotation = localPlayer.transform.rotation;
 				ourObject.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
@@ -79,13 +110,22 @@ namespace MSCMP {
 
 			//Teleports yourself to a game object
 			UI.Console.RegisterCommand("goto", (string[] args) => {
-				if (args.Length == 1) { Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'goto [gameObjectName]'."); return; }
+				if (args.Length == 1) {
+					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'goto [gameObjectName]'.");
+					return;
+				}
 
-				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+				if (localPlayer == null) {
+					Client.ConsoleMessage("ERROR: Couldn't find local player.");
+					return;
+				}
 
 				string ourObjectName = String.Join(" ", args.Skip(1).ToArray());
 				GameObject ourObject = GameObject.Find(ourObjectName);
-				if (ourObject == null) { Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}."); return; }
+				if (ourObject == null) {
+					Client.ConsoleMessage($"ERROR: Couldn't find {ourObjectName}.");
+					return;
+				}
 
 				localPlayer.transform.position = ourObject.transform.position + Vector3.up * 2.0f;
 				Client.ConsoleMessage($"Teleported to {ourObjectName} !");
@@ -93,8 +133,15 @@ namespace MSCMP {
 
 			//Teleports yourself to the specific coordinates
 			UI.Console.RegisterCommand("gotoxyz", (string[] args) => {
-				if (args.Length < 4) { Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gotoxyz [x] [y] [z] [Optional: Rotation]'."); return; }
-				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+				if (args.Length < 4) {
+					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gotoxyz [x] [y] [z] [Optional: Rotation]'.");
+					return;
+				}
+
+				if (localPlayer == null) {
+					Client.ConsoleMessage("ERROR: Couldn't find local player.");
+					return;
+				}
 
 				localPlayer.transform.position = new Vector3(float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
 
@@ -104,7 +151,10 @@ namespace MSCMP {
 
 			//Logs your position and rotation
 			UI.Console.RegisterCommand("savepos", (string[] args) => {
-				if (localPlayer == null) { Client.ConsoleMessage("ERROR: Couldn't find local player."); return; }
+				if (localPlayer == null) {
+					Client.ConsoleMessage("ERROR: Couldn't find local player.");
+					return;
+				}
 
 				Logger.Log("Saved Position:");
 				Logger.Log($"Pos: {localPlayer.transform.position}");
@@ -203,7 +253,7 @@ namespace MSCMP {
 
 			// Pseudo AirBrk
 			if (airBreak) {
-				Single speed = 3.0f;
+				float speed = 3.0f;
 
 				if (Input.GetKey(KeyCode.Mouse0)) speed += 2.5f;
 				if (Input.GetKey(KeyCode.Mouse1)) speed -= 2.5f;
@@ -297,7 +347,7 @@ namespace MSCMP {
 			File.WriteAllText(file, bldr.ToString());
 		}
 
-		static void SetPosition(Single x, Single y, Single z, Single rot = -1) {
+		static void SetPosition(float x, float y, float z, float rot = -1) {
 			localPlayer.transform.position = new Vector3 (x, y, z);
 			if (rot != -1) localPlayer.transform.eulerAngles = new Vector3(0, rot, 0);
 		}

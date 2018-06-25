@@ -204,7 +204,7 @@ namespace MSCMP.UI {
 			}
 
 			//Moving the cursor to the last character
-			TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+			var editor = GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl) as TextEditor;
 			editor.selectPos = inputText.Length + 1;
 			editor.pos = inputText.Length + 1;
 		}
