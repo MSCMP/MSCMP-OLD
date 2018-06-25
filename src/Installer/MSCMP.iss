@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "MSCMP"
-#define MyAppVersion "0.2"
+#define MyAppVersion "0.2.5"
 #define MyAppPublisher "MSCMP Team"
 #define MyAppURL "http://mysummercar.mp"
 #define MyAppExeName "MSCMP.exe"
