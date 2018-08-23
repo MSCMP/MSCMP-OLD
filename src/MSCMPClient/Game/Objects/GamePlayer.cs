@@ -1,5 +1,8 @@
-﻿using HutongGames.PlayMaker;
+using System;
+using HutongGames.PlayMaker;
 using UnityEngine;
+using MSCMP.Game.Components;
+using MSCMP.Network;
 
 namespace MSCMP.Game.Objects {
 	/// <summary>
@@ -24,6 +27,11 @@ namespace MSCMP.Game.Objects {
 		public GameObject PickedUpObject {
 			get { return pickedUpGameObject;  }
 		}
+
+		/// <summary>
+		/// Instance.
+		/// </summary>
+		public static GamePlayer Instance;
 
 
 		/// <summary>
@@ -84,6 +92,7 @@ namespace MSCMP.Game.Objects {
 		/// <param name="gameObject">The game object to pickup.</param>
 		public GamePlayer(GameObject gameObject) {
 			this.gameObject = gameObject;
+			Instance = this;
 			
 			pickupFsm = Utils.GetPlaymakerScriptByName(gameObject, "PickUp");
 
@@ -91,7 +100,22 @@ namespace MSCMP.Game.Objects {
 			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Item picked"), new OnPickupAction(this));
 
 			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Throw part"), new OnThrowAction(this));
-			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Drop part"), new OnDropAction(this));
+
+			EventHook.Add(pickupFsm, "Drop part", new Func<bool>(() => {
+				this.DropObject();
+				return false;
+			}));
+
+			//PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Drop part"), new OnDropAction(this));
+
+			GameObject trigger = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+			trigger.transform.localScale = new Vector3(100, 100, 100);
+			trigger.GetComponent<SphereCollider>().isTrigger = true;
+			GameObject.Destroy(trigger.GetComponent<MeshRenderer>());
+
+			trigger.transform.position = gameObject.transform.position;
+			trigger.transform.parent = gameObject.transform;
+			ObjectSyncPlayerComponent ospc = trigger.AddComponent<ObjectSyncPlayerComponent>();
 		}
 
 
@@ -100,11 +124,11 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		private void PickupObject() {
 			pickedUpGameObject = pickupFsm.Fsm.GetFsmGameObject("PickedObject").Value;
-			Logger.Log("PickupObject " + pickedUpGameObject);
+			ObjectSyncComponent osc = pickedUpGameObject.GetComponent<ObjectSyncComponent>();
+			osc.TakeSyncControl();
+			osc.SendConstantSync(true);
 
-			if (GameCallbacks.onObjectPickup != null) {
-				GameCallbacks.onObjectPickup(pickedUpGameObject);
-			}
+			Logger.Log("PickupObject " + pickedUpGameObject);
 		}
 
 		/// <summary>
@@ -112,23 +136,24 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		private void ThrowObject() {
 			Logger.Log("Throwed object " + pickedUpGameObject);
+			pickedUpGameObject.GetComponent<ObjectSyncComponent>().SendConstantSync(false);
 			pickedUpGameObject = null;
-
-			if (GameCallbacks.onObjectRelease != null) {
-				GameCallbacks.onObjectRelease(false);
-			}
 		}
 
 		/// <summary>
 		/// Handle drop of the object.
 		/// </summary>
 		private void DropObject() {
-			Logger.Log($"Drop object {pickedUpGameObject}");
+			Logger.Log("Drop object " + pickedUpGameObject);
+			pickedUpGameObject.GetComponent<ObjectSyncComponent>().SendConstantSync(false);
 			pickedUpGameObject = null;
+		}
 
-			if (GameCallbacks.onObjectRelease != null) {
-				GameCallbacks.onObjectRelease(true);
-			}
+		/// <summary>
+		/// Drops object when it has been stolen from the player.
+		/// </summary>
+		public void DropStolenObject() {
+			pickupFsm.SendEvent("MP_Drop part");
 		}
 	}
 }

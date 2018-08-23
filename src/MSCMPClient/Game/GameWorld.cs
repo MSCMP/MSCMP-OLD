@@ -49,6 +49,16 @@ namespace MSCMP.Game {
 		GameWeatherManager gameWeatherManager = new GameWeatherManager();
 
 		/// <summary>
+		/// Game vehicle database.
+		/// </summary>
+		GameVehicleDatabase gameVehicleDatabase = new GameVehicleDatabase();
+
+		/// <summary>
+		/// Object sync manager.
+		/// </summary>
+		ObjectSyncManager objectSyncManager = new ObjectSyncManager();
+
+		/// <summary>
 		/// Event hook.
 		/// </summary>
 		EventHook eventHook = new EventHook();
@@ -163,6 +173,7 @@ namespace MSCMP.Game {
 			gameObjectUsers.Add(beerCaseManager);
 			gameObjectUsers.Add(lightSwitchManager);
 			gameObjectUsers.Add(gameWeatherManager);
+			gameObjectUsers.Add(gameVehicleDatabase);
 		}
 
 		~GameWorld() {

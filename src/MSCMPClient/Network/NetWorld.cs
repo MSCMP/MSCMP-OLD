@@ -392,6 +392,69 @@ namespace MSCMP.Network {
 				vehicle.SetVehicleSwitch(msg.switchID, msg.switchValue, newValueFloat);
 			});
 
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ObjectSyncMessage msg) => {
+				ObjectSyncComponent osc;
+				ObjectSyncManager.SyncTypes type = (ObjectSyncManager.SyncTypes)msg.SyncType;
+				try {
+					osc = ObjectSyncManager.Instance.ObjectIDs[msg.objectID];
+				}
+				catch {
+					Logger.Log($"Specified object is not yet added to the ObjectID's Dictionary! (Object ID: {msg.objectID})");
+					return;
+				}
+				if (osc != null) {
+					// Set owner.
+					if (type == ObjectSyncManager.SyncTypes.SetOwner) {
+						if (osc.Owner == ObjectSyncManager.NO_OWNER) {
+							osc.OwnerSetToRemote(sender.m_SteamID);
+							netManager.GetLocalPlayer().SendObjectSyncResponse(osc.ObjectID, true);
+							Logger.Log($"Owner set for object: {osc.transform.name} New owner: {sender.m_SteamID}");
+						}
+						else {
+							Logger.Debug($"Set owner request rejected for object: {osc.transform.name} (Owner: {osc.Owner})");
+						}
+					}
+					// Remove owner.
+					else if (type == ObjectSyncManager.SyncTypes.RemoveOwner) {
+						if (osc.Owner == sender.m_SteamID) {
+							osc.Owner = 0;
+						}
+					}
+					// Force set owner.
+					else if (type == ObjectSyncManager.SyncTypes.ForceSetOwner) {
+						osc.Owner = sender.m_SteamID;
+						netManager.GetLocalPlayer().SendObjectSyncResponse(osc.ObjectID, true);
+						osc.SyncTakenByForce();
+					}
+
+					// Set object's position and variables
+					if (osc.Owner == sender.m_SteamID || type == ObjectSyncManager.SyncTypes.PeriodicSync) {
+						if (msg.HasSyncedVariables == true) {
+							osc.HandleSyncedVariables(msg.SyncedVariables);
+						}
+						osc.SetPositionAndRotation(Utils.NetVec3ToGame(msg.position), Utils.NetQuatToGame(msg.rotation));
+					}
+				}
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ObjectSyncResponseMessage msg) => {
+				ObjectSyncComponent osc = ObjectSyncManager.Instance.ObjectIDs[msg.objectID];
+				if (msg.accepted) {
+					osc.SyncEnabled = true;
+					osc.Owner = Steamworks.SteamUser.GetSteamID().m_SteamID;
+				}
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ObjectSyncRequestMessage msg) => {
+				try {
+					ObjectSyncComponent osc = ObjectSyncManager.Instance.ObjectIDs[msg.objectID];
+					osc.SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+				}
+				catch {
+					Logger.Error($"Remote client tried to request object sync of an unknown object, Object ID: {msg.objectID}");
+				}
+			});
+
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.EventHookSyncMessage msg) => {
 				if (msg.request) {
 					EventHook.SendSync(msg.fsmID);

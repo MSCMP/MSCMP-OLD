@@ -99,11 +99,31 @@ namespace MSCMP.Network {
 			get { return netMessageHandler;  }
 		}
 
+		public static NetManager Instance;
 
 		/// <summary>
 		/// Network statistics object.
 		/// </summary>
 		NetStatistics statistics;
+
+		/// <summary>
+		/// The time the connection was started in UTC.
+		/// </summary>
+		DateTime connectionStartedTime;
+
+		/// <summary>
+		/// Get ticks since connection started.
+		/// </summary>
+		public ulong TicksSinceConnectionStarted {
+			get {
+				if (connectionStartedTime != null) {
+					return (ulong)((DateTime.UtcNow - this.connectionStartedTime).Ticks);
+				}
+				else {
+					return 0;
+				}
+			}
+		}
 
 		public NetManager() {
 			statistics = new NetStatistics(this);
@@ -116,6 +136,8 @@ namespace MSCMP.Network {
 			gameLobbyJoinRequestedCallback = Steamworks.Callback<Steamworks.GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
 			lobbyCreatedCallResult = new Steamworks.CallResult<Steamworks.LobbyCreated_t>(OnLobbyCreated);
 			lobbyEnterCallResult = new Steamworks.CallResult<Steamworks.LobbyEnter_t>(OnLobbyEnter);
+
+			Instance = this;
 
 			RegisterProtocolMessagesHandlers();
 		}
@@ -135,6 +157,7 @@ namespace MSCMP.Network {
 		void OnP2PSessionRequest(Steamworks.P2PSessionRequest_t result) {
 			if (Steamworks.SteamNetworking.AcceptP2PSessionWithUser(result.m_steamIDRemote)) {
 				Logger.Log($"Accepted p2p session with {result.m_steamIDRemote}");
+				connectionStartedTime = DateTime.UtcNow;
 			}
 			else {
 				Logger.Error($"Failed to accept P2P session with {result.m_steamIDRemote}");
