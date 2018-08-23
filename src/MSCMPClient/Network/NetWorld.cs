@@ -360,6 +360,38 @@ namespace MSCMP.Network {
 				light.TurnOn(msg.toggle);
 			});
 
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleStateMessage msg) => {
+				float startTime = -1;
+
+				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				if (vehicle == null) {
+					Logger.Log("Remote player tried to set state of vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					return;
+				}
+
+				if (msg.HasStartTime) {
+					startTime = msg.StartTime;
+				}
+
+				vehicle.SetEngineState(msg.state, msg.dashstate, startTime);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSwitchMessage msg) => {
+				float newValueFloat = -1;
+
+				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				if (vehicle == null) {
+					Logger.Log("Remote player tried to change a switch in vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					return;
+				}
+
+				if (msg.HasSwitchValueFloat) {
+					newValueFloat = msg.SwitchValueFloat;
+				}
+
+				vehicle.SetVehicleSwitch(msg.switchID, msg.switchValue, newValueFloat);
+			});
+
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.EventHookSyncMessage msg) => {
 				if (msg.request) {
 					EventHook.SendSync(msg.fsmID);

@@ -227,7 +227,7 @@ namespace MSCMP.Network {
 
 			Messages.VehicleEnterMessage msg = new Messages.VehicleEnterMessage();
 			msg.vehicleId = vehicle.NetId;
-			msg.passenger = false;
+			msg.passenger = passenger;
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
@@ -238,6 +238,38 @@ namespace MSCMP.Network {
 			base.LeaveVehicle();
 
 			netManager.BroadcastMessage(new Messages.VehicleLeaveMessage(), Steamworks.EP2PSend.k_EP2PSendReliable);
+		}
+
+		/// <summary>
+		/// Write vehicle engine state into state message.
+		/// </summary>
+		/// <param name="state">The engine state to write.</param>
+		public void WriteVehicleStateMessage(NetVehicle vehicle, GameVehicle.EngineStates state, GameVehicle.DashboardStates dashstate, float startTime) {
+			Logger.Debug($"Writing state message! State: {state.ToString()}, Dashboard state: {dashstate.ToString()}");
+			Messages.VehicleStateMessage msg = new Messages.VehicleStateMessage();
+			msg.vehicleId = vehicle.NetId;
+			msg.state = (int)state;
+			msg.dashstate = (int)dashstate;
+			if (startTime != -1) {
+				msg.StartTime = startTime;
+			}
+			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+		}
+
+		/// <summary>
+		/// Write vehicle switch changes into vehicle switch message.
+		/// </summary>
+		/// <param name="state">The engine state to write.</param>
+		public void WriteVehicleSwitchMessage(NetVehicle vehicle, GameVehicle.SwitchIDs switchID, bool newValue, float newValueFloat) {
+			Logger.Debug($"Writing vehicle switch message! Switch: {switchID.ToString()}, Value: {newValue}, ValueFloat: {newValueFloat}");
+			Messages.VehicleSwitchMessage msg = new Messages.VehicleSwitchMessage();
+			msg.vehicleId = vehicle.NetId;
+			msg.switchID = (int)switchID;
+			msg.switchValue = newValue;
+			if (newValueFloat != -1) {
+				msg.SwitchValueFloat = newValueFloat;
+			}
+			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
 		/// <summary>

@@ -94,6 +94,7 @@
     <Compile Include="Game\Objects\GamePlayer.cs" />
     <Compile Include="Game\Objects\GameVehicle.cs" />
     <Compile Include="Game\Objects\LightSwitch.cs" />
+    <Compile Include="Game\Objects\PassengerSeat.cs" />
     <Compile Include="Game\TrafficManager.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MessagesList.cs" />
