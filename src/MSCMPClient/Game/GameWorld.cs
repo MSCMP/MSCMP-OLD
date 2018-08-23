@@ -214,6 +214,9 @@ namespace MSCMP.Game {
 			else if (IsVehicleGameObject(gameObject)) {
 				vehicles.Add(new GameVehicle(gameObject));
 			}
+			else if (gameObject.name == "TRAFFIC") {
+				new TrafficManager(gameObject);
+			}
 		}
 
 		/// <summary>
