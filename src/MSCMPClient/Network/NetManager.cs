@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using MSCMP.UI;
@@ -55,7 +54,7 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// Timeout time of the connection.
 		/// </summary>
-		const float TIMEOUT_TIME = 20.0f;
+		const float TIMEOUT_TIME = 60.0f; // This was raised as too many people had issues with joining onn slow PCs. A better solution will be implemented in the future.
 
 		/// <summary>
 		/// How many seconds left before sending next heartbeat?

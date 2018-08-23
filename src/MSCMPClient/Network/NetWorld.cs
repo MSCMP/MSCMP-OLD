@@ -63,8 +63,6 @@ namespace MSCMP.Network {
 			RegisterVehicle("FERNDALE(1630kg)");
 			RegisterVehicle("GIFU(750/450psi)");
 
-			//RegisterVehicle("HAYOSIKO(1500kg, 250)(Clone)");
-
 			Game.GameCallbacks.onWorldUnload += () => {
 				OnGameWorldUnload();
 			};
@@ -352,8 +350,6 @@ namespace MSCMP.Network {
 				}
 				player.ReleaseObject(msg.drop);
 			});
-
-
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
 				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));

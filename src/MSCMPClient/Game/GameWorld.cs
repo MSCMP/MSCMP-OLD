@@ -419,16 +419,5 @@ namespace MSCMP.Game {
 			Client.Assert(prefabDescriptor != null, $"Unable to find pickupable prefab {prefabId}");
 			return prefabDescriptor.Spawn(position, rotation);
 		}
-
-		public GameObject CreateDublicateVehicle(GameObject gameObject) {
-			string UniqueTagPosition = Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value;
-			Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value = "";
-
-			Vector3 newPos = gameObject.transform.position + Vector3.up * 5.0f + gameObject.transform.rotation * Vector3.forward * 4.0f;
-			GameObject newVehicle = (GameObject)GameObject.Instantiate(gameObject, newPos, gameObject.transform.rotation);
-
-			Utils.GetPlaymakerScriptByName(gameObject, "LOD").Fsm.GetFsmString("UniqueTagPosition").Value = UniqueTagPosition;
-			return newVehicle;
-		}
 	}
 }
