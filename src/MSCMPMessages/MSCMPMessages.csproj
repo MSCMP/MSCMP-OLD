@@ -61,12 +61,16 @@
     <Compile Include="Messages\AskForWorldStateMessage.cs" />
     <Compile Include="Messages\DisconnectMessage.cs" />
     <Compile Include="Messages\DropObjectMessage.cs" />
+    <Compile Include="Messages\EventHookSyncMessage.cs" />
     <Compile Include="Messages\FullWorldSyncMessage.cs" />
     <Compile Include="Messages\HandshakeMessage.cs" />
     <Compile Include="Messages\HeartbeatMessage.cs" />
     <Compile Include="Messages\HeartbeatResponseMessage.cs" />
     <Compile Include="Messages\LightSwitchMessage.cs" />
     <Compile Include="Messages\MessageIds.cs" />
+    <Compile Include="Messages\ObjectSyncMessage.cs" />
+    <Compile Include="Messages\ObjectSyncRequestMessage.cs" />
+    <Compile Include="Messages\ObjectSyncResponseMessage.cs" />
     <Compile Include="Messages\OpenDoorsMessage.cs" />
     <Compile Include="Messages\PickupableActivateMessage.cs" />
     <Compile Include="Messages\PickupableDestroyMessage.cs" />
@@ -80,6 +84,8 @@
     <Compile Include="Messages\Vector3Message.cs" />
     <Compile Include="Messages\VehicleEnterMessage.cs" />
     <Compile Include="Messages\VehicleLeaveMessage.cs" />
+    <Compile Include="Messages\VehicleStateMessage.cs" />
+    <Compile Include="Messages\VehicleSwitchMessage.cs" />
     <Compile Include="Messages\VehicleSyncMessage.cs" />
     <Compile Include="Messages\WeatherUpdateMessage.cs" />
     <Compile Include="Messages\WorldPeriodicalUpdateMessage.cs" />

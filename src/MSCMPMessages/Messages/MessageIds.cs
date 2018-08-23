@@ -27,6 +27,12 @@ namespace MSCMPMessages.Messages {
 		RemoveBottle,
 		LightSwitch,
 		WeatherSync,
-		AnimSync
+		AnimSync,
+		VehicleState,
+		VehicleSwitch,
+		ObjectSync,
+		ObjectSyncResponse,
+		EventHookSync,
+		RequestObjectSync
 	}
 }
