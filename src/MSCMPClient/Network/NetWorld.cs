@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using MSCMP.Game.Components;
+using MSCMP.Game.Objects;
+using MSCMP.Game;
 
 namespace MSCMP.Network {
 	class NetWorld {
@@ -355,6 +358,20 @@ namespace MSCMP.Network {
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
 				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
 				light.TurnOn(msg.toggle);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.EventHookSyncMessage msg) => {
+				if (msg.request) {
+					EventHook.SendSync(msg.fsmID);
+				}
+				else {
+					if (msg.HasFsmEventName) {
+						EventHook.HandleEventSync(msg.fsmID, msg.fsmEventID, msg.FsmEventName);
+					}
+					else {
+						EventHook.HandleEventSync(msg.fsmID, msg.fsmEventID);
+					}
+				}
 			});
 		}
 

@@ -10,6 +10,11 @@ namespace MSCMP.Network {
 	class NetLocalPlayer : NetPlayer {
 
 		/// <summary>
+		/// Instance.
+		/// </summary>
+		public static NetLocalPlayer Instance = null;
+
+		/// <summary>
 		/// How much time in seconds left until next synchronization packet will be sent.
 		/// </summary>
 		private float timeToUpdate = 0.0f;
@@ -26,6 +31,7 @@ namespace MSCMP.Network {
 		/// <param name="netWorld">Network world owning this player.</param>
 		/// <param name="steamId">The steam id of the player.</param>
 		public NetLocalPlayer(NetManager netManager, NetWorld netWorld, Steamworks.CSteamID steamId) : base(netManager, netWorld, steamId) {
+			Instance = this;
 
 			GameDoorsManager.Instance.onDoorsOpen = (GameObject door) => {
 				Messages.OpenDoorsMessage msg = new Messages.OpenDoorsMessage();
@@ -262,6 +268,36 @@ namespace MSCMP.Network {
 					msg.pickedUpObject = netWorld.GetPickupableNetId(pickedUpObject);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Send EventHook sync message.
+		/// </summary>
+		/// <param name="fsmID">FSM ID</param>
+		/// <param name="fsmEventID">FSM Event ID</param>
+		/// <param name="fsmEventName">Optional FSM Event name</param>
+		public void SendEventHookSync(int fsmID, int fsmEventID, string fsmEventName = "none") {
+			Messages.EventHookSyncMessage msg = new Messages.EventHookSyncMessage();
+			msg.fsmID = fsmID;
+			msg.fsmEventID = fsmEventID;
+			msg.request = false;
+			if (fsmEventName != "none") {
+				msg.FsmEventName = fsmEventName;
+			}
+			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+		}
+
+		/// <summary>
+		/// Request event sync from host.
+		/// </summary>
+		/// <param name="fsmID">FSM ID</param>
+		/// <param name="fsmEventID">FSM Event ID</param>
+		public void RequestEventHookSync(int fsmID) {
+			Messages.EventHookSyncMessage msg = new Messages.EventHookSyncMessage();
+			msg.fsmID = fsmID;
+			msg.fsmEventID = -1;
+			msg.request = true;
+			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
 		/// <summary>

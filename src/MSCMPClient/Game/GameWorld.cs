@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MSCMP.Game.Objects;
+using MSCMP.Game.Components;
 using HutongGames.PlayMaker;
 using System.Text;
 
@@ -46,6 +47,11 @@ namespace MSCMP.Game {
 		/// Weather manager.
 		/// </summary>
 		GameWeatherManager gameWeatherManager = new GameWeatherManager();
+
+		/// <summary>
+		/// Event hook.
+		/// </summary>
+		EventHook eventHook = new EventHook();
 
 		private GamePlayer player = null;
 
