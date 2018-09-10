@@ -21,27 +21,27 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
 	}
 
 	if (!WriteProcessMemory(process, remoteLibPath, dllPath, libPathLen, &bytesWritten)) {
-		VirtualFreeEx(process, remoteLibPath, sizeof(remoteLibPath), MEM_RELEASE);
+		VirtualFreeEx(process, remoteLibPath, libPathLen, MEM_RELEASE);
 		return false;
 	}
 
 	const HMODULE kernel32dll = GetModuleHandle("Kernel32");
 	if (!kernel32dll) {
-		VirtualFreeEx(process, remoteLibPath, sizeof(remoteLibPath), MEM_RELEASE);
+		VirtualFreeEx(process, remoteLibPath, libPathLen, MEM_RELEASE);
 		return false;
 	}
 
 	const FARPROC pfnLoadLibraryA = GetProcAddress(kernel32dll, "LoadLibraryA");
 	if (!pfnLoadLibraryA) {
 		FreeModule(kernel32dll);
-		VirtualFreeEx(process, remoteLibPath, sizeof(remoteLibPath), MEM_RELEASE);
+		VirtualFreeEx(process, remoteLibPath, libPathLen, MEM_RELEASE);
 		return false;
 	}
 
 	const HANDLE hThread = CreateRemoteThread(process, NULL, 0, (LPTHREAD_START_ROUTINE)pfnLoadLibraryA, remoteLibPath, 0, NULL);
 	if (!hThread) {
 		FreeModule(kernel32dll);
-		VirtualFreeEx(process, remoteLibPath, sizeof(remoteLibPath), MEM_RELEASE);
+		VirtualFreeEx(process, remoteLibPath, libPathLen, MEM_RELEASE);
 		return false;
 	}
 
@@ -49,7 +49,7 @@ bool InjectDll(const HANDLE process, const char *const dllPath)
 	CloseHandle(hThread);
 
 	FreeModule(kernel32dll);
-	VirtualFreeEx(process, remoteLibPath, sizeof(remoteLibPath), MEM_RELEASE);
+	VirtualFreeEx(process, remoteLibPath, libPathLen, MEM_RELEASE);
 	return true;
 }
 
