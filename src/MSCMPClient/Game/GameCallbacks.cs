@@ -29,10 +29,12 @@ namespace MSCMP.Game {
 
 		public delegate void OnLocalPlayerCreated();
 
+#pragma warning disable CS0649 // Temporarily disable CS0649 warning as onLocalPlayerCreated is never used.
 		/// <summary>
 		/// Callback called when local player spawns.
 		/// </summary>
 		static public OnLocalPlayerCreated onLocalPlayerCreated;
+#pragma warning restore CS0649
 
 		public delegate void OnWorldLoad();
 
