@@ -1,5 +1,7 @@
 @echo off
 
+SET PROJECT_PATH=%~dp0
+
 REG ADD HKLM /F>nul 2>&1
 
 IF NOT %ERRORLEVEL%==0 goto :no_permissions
@@ -16,21 +18,21 @@ echo My Summer Car path has been written.
 
 echo Preparing build folder structure.
 
-if not exist bin mkdir bin
+if not exist %PROJECT_PATH%\bin mkdir %PROJECT_PATH%\bin
 
-if not exist bin\Release mkdir bin\Release
-copy 3rdparty\steamapi\steam_api64.dll bin\Release
-copy data\steam_appid.txt bin\Release
+if not exist %PROJECT_PATH%\bin\Release mkdir %PROJECT_PATH%\bin\Release
+copy %PROJECT_PATH%\3rdparty\steamapi\steam_api64.dll %PROJECT_PATH%\bin\Release
+copy %PROJECT_PATH%\data\steam_appid.txt %PROJECT_PATH%\bin\Release
 echo Release prepared.
 
-if not exist "bin\Public Release" mkdir "bin\Public Release"
-copy 3rdparty\steamapi\steam_api64.dll "bin\Public Release"
-copy data\steam_appid.txt "bin\Public Release"
+if not exist "%PROJECT_PATH%\bin\Public Release" mkdir "%PROJECT_PATH%\bin\Public Release"
+copy %PROJECT_PATH%\3rdparty\steamapi\steam_api64.dll "%PROJECT_PATH%\bin\Public Release"
+copy %PROJECT_PATH%\data\steam_appid.txt "%PROJECT_PATH%\bin\Public Release"
 echo Public release prepared.
 
-if not exist bin\Debug mkdir bin\Debug
-copy 3rdparty\steamapi\steam_api64.dll bin\Debug
-copy data\steam_appid.txt bin\Debug
+if not exist %PROJECT_PATH%\bin\Debug mkdir %PROJECT_PATH%\bin\Debug
+copy %PROJECT_PATH%\3rdparty\steamapi\steam_api64.dll %PROJECT_PATH%\bin\Debug
+copy %PROJECT_PATH%\data\steam_appid.txt %PROJECT_PATH%\bin\Debug
 echo Debug prepared.
 
 echo Workspace has been setup
@@ -45,3 +47,4 @@ goto msc_path
 
 :no_permissions
 echo Please run setup.bat as administrator.
+pause
