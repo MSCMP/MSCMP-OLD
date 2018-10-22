@@ -37,7 +37,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 Source: "..\..\bin\Release\MSCMP.exe"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\MSCMPClient.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\MSCMPInjector.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
-Source: "..\..\bin\Release\steam_api.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
+Source: "..\..\bin\Release\steam_api64.dll"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\bin\Release\steam_appid.txt"; DestDir: "{app}\bin\Release"; Flags: ignoreversion
 Source: "..\..\data\mpdata"; DestDir: "{app}\data"; Flags: ignoreversion
 
