@@ -2,6 +2,9 @@
 #include <process.h>
 
 #include "MonoLoader.h"
+#include "MemFunctions.h"
+
+#include <exception>
 
 Mono mono;
 
@@ -34,6 +37,8 @@ static void ShowMessageBox(MonoString *message, MonoString *title)
 		mono.g_free(titleText);
 	}
 }
+
+FILE *unityLog = nullptr;
 
 bool RunMP(const char *clientDllPath)
 {
@@ -78,78 +83,8 @@ bool RunMP(const char *clientDllPath)
 	return true;
 }
 
-char monoDllPath[MAX_PATH] = { 0 };
+char MonoDllPath[MAX_PATH] = { 0 };
 char ClientDllPath[MAX_PATH] = { 0 };
-
-void SetupMSCMP()
-{
-	if (!RunMP(ClientDllPath))
-	{
-		MessageBox(NULL, "Failed to run multiplayer mod!", "MSCMP", MB_ICONERROR);
-		ExitProcess(0);
-	}
-}
-
-typedef int (*sub_6596C0_t)();
-sub_6596C0_t sub_6596C0 = 0;
-
-int _stdcall InitHook()
-{
-	int result = sub_6596C0();
-	SetupMSCMP();
-	return result;
-}
-
-typedef void (*GiveChanceToAttachDebugger_t)();
-GiveChanceToAttachDebugger_t GiveChanceToAttachDebugger = nullptr;
-
-void _cdecl GiveChanceToAttachDebuggerHook()
-{
-	if (!getenv("UNITY_GIVE_CHANCE_TO_ATTACH_DEBUGGER"))
-	{
-		return;
-	}
-
-	// First of all attach logger so we will know what happens when mono does not like what we send to it.
-
-	mono.mono_unity_set_vprintf_func([](const char *message, va_list args) -> int
-	{
-		char full_message[2048] = { 0 };
-		vsprintf(full_message, message, args);
-		va_end(args);
-		MessageBox(NULL, full_message, "MSCMP", NULL);
-
-		return 1;
-	});
-
-	const char *argv[] = {
-		"--debugger-agent=transport=dt_socket,embedding=1,server=y,address=127.0.0.1:56000,defer=y"
-	};
-	mono.mono_jit_parse_options(1, const_cast<char **>(argv));
-	mono.mono_debug_init(MONO_DEBUG_FORMAT_MONO);
-}
-
-void Unprotect(ptrdiff_t where, size_t count)
-{
-	DWORD oldProtection = NULL;
-	VirtualProtect(reinterpret_cast<void *>(where), count, PAGE_EXECUTE_READWRITE, &oldProtection);
-}
-
-template <typename TYPE>
-void WriteValue(ptrdiff_t where, TYPE value)
-{
-	Unprotect(where, sizeof(value));
-	*reinterpret_cast<TYPE  *>(where) = value;
-}
-
-
-void InstallCallHook(ptrdiff_t where, ptrdiff_t func)
-{
-	WriteValue<unsigned char>(where, 0xE8);
-	WriteValue<ptrdiff_t>(where + 1, func - (where + 5));
-}
-
-FILE *unityLog = nullptr;
 
 /**
  * Custom unity log handler.
@@ -159,9 +94,74 @@ int _cdecl UnityLog(int a1, const char *message, va_list args)
 	fprintf(unityLog, "[%i] ", a1);
 	vfprintf(unityLog, message, args);
 	va_end(args);
+#ifdef _DEBUG
+	OutputDebugString(message);
+	fflush(unityLog);
+#endif
+
 	return 0;
 }
 
+void Injector_SetupLogAndTracing()
+{
+	mono.mono_unity_set_vprintf_func([](const char *message, va_list args) -> size_t
+	{
+		UnityLog(666, message, args);
+		return 1;
+	});
+	mono.mono_trace_set_level_string("debug");
+	mono.mono_trace_set_mask_string("all");
+
+}
+void Injector_SetupDebugger()
+{
+	if (!getenv("UNITY_GIVE_CHANCE_TO_ATTACH_DEBUGGER"))
+	{
+		return;
+	}
+
+	const char *argv[] = {
+		"--debugger-agent=transport=dt_socket,embedding=1,server=y,address=127.0.0.1:56000,defer=y"
+	};
+	mono.mono_jit_parse_options(1, const_cast<char **>(argv));
+	mono.mono_debug_init(MONO_DEBUG_FORMAT_MONO);
+}
+
+void Injector_RunMP()
+{
+	if (!RunMP(ClientDllPath))
+	{
+		MessageBox(NULL, "Failed to run multiplayer mod!", "MSCMP", MB_ICONERROR);
+		ExitProcess(0);
+	}
+}
+
+/** Memory address where unit custom log callback should be set. */
+extern ptrdiff_t CustomLogCallbackAddress = 0;
+
+/**
+ * Method used to install architecture dependent hooks.
+ *
+ * It's implementation can be found in HooksX86.cpp or HooksX64.cpp files.
+ */
+void InstallHooks(ptrdiff_t moduleAddress);
+
+
+/**
+ * Handles fatal error.
+ *
+ * @param[in] message The error message.
+ */
+static void FatalError(const char *const message)
+{
+	MessageBox(NULL, "Unable to create Unity Log!", "MSCMP", MB_ICONERROR);
+	ExitProcess(0);
+}
+
+
+/**
+ * The injector DLL entry point.
+ */
 BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 {
 	switch (Reason) {
@@ -178,20 +178,18 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 		unityLog = fopen(UnityLogPath, "w+");
 		if (!unityLog)
 		{
-			MessageBox(NULL, "Unable to create Unity Log!", "MSCMP", MB_ICONERROR);
-			ExitProcess(0);
+			FatalError("Unable to create Unity Log!");
 			return FALSE;
 		}
 
 		// Make sure we have mono dll to work with.
 
-		GetModulePath(GetModuleHandle(0), monoDllPath);
-		strcat(monoDllPath, "\\mysummercar_Data\\Mono\\mono.dll");
+		GetModulePath(GetModuleHandle(0), MonoDllPath);
+		strcat(MonoDllPath, "\\mysummercar_Data\\Mono\\mono.dll");
 
-		if (GetFileAttributes(monoDllPath) == INVALID_FILE_ATTRIBUTES)
+		if (GetFileAttributes(MonoDllPath) == INVALID_FILE_ATTRIBUTES)
 		{
-			MessageBox(NULL, "Unable to find mono.dll!", "MSCMP", MB_ICONERROR);
-			ExitProcess(0);
+			FatalError("Unable to find mono.dll!");
 			return FALSE;
 		}
 
@@ -202,34 +200,25 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 
 		if (GetFileAttributes(ClientDllPath) == INVALID_FILE_ATTRIBUTES)
 		{
-			MessageBox(NULL, "Unable to find MSC MP Client files!", "MSCMP", MB_ICONERROR);
-			ExitProcess(0);
+			FatalError("Unable to find mod client files!");
 			return FALSE;
 		}
 
-		if (!mono.Setup(monoDllPath))
+		if (!mono.Setup(MonoDllPath))
 		{
-			MessageBox(NULL, "Unable to setup mono loader!", "MSCMP", MB_ICONERROR);
-			ExitProcess(0);
+			FatalError("Unable to setup mono loader!");
 			return FALSE;
 		}
 
-		unsigned baseAddress = (unsigned)(GetModuleHandle(NULL)) - 0x400000;
-		sub_6596C0 = (sub_6596C0_t)(baseAddress + 0x006596C0);
+		const ptrdiff_t moduleAddress = reinterpret_cast<ptrdiff_t>(GetModuleHandle(NULL));
+		InstallHooks(moduleAddress);
 
-		// Install initialization hook.
-
-		InstallCallHook(baseAddress + 0x0065C2AE, (ptrdiff_t)InitHook);
-
-		// Install command line init hook used to install debugger.
-
-		GiveChanceToAttachDebugger = (GiveChanceToAttachDebugger_t) (baseAddress + 0x005BEB20);
-		InstallCallHook(baseAddress + 0x005493D3, (ptrdiff_t)GiveChanceToAttachDebuggerHook);
+		// Common memory operations:
 
 		// Set custom log callback.
 
-		WriteValue<unsigned>(baseAddress + 0x11E79C4, (ptrdiff_t)UnityLog);
-
+		UnprotectedMemoryScope unprotect(CustomLogCallbackAddress, sizeof(ptrdiff_t));
+		WriteValue<ptrdiff_t>(CustomLogCallbackAddress, reinterpret_cast<ptrdiff_t>(UnityLog));
 	}
 	break;
 
