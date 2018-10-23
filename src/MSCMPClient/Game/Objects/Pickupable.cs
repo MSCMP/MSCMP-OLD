@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using MSCMP.Game.Objects.PickupableTypes;
 using UnityEngine;
 
 namespace MSCMP.Game.Objects {
@@ -15,6 +16,27 @@ namespace MSCMP.Game.Objects {
 		public Pickupable(GameObject go) {
 			gameObject = go;
 			rigidbody = go.GetComponent<Rigidbody>();
+
+			// Determine pickupable subtype by GameObject name.
+			if (gameObject.name == "Sausage-Potatoes(Clone)") {
+				new PubFood(gameObject);
+				return;
+			}
+
+			// Determines pickupable subtype by FSM contents.
+			PlayMakerFSM[] fsms = go.GetComponents<PlayMakerFSM>();
+			foreach (PlayMakerFSM fsm in fsms) {
+				// Consumable.
+				if (fsm.Fsm.GetState("Eat") != null || fsm.Fsm.GetState("Eat 2") != null) {
+					new Consumable(gameObject);
+					break;
+				}
+				else if (fsm.Fsm.GetState("Initiate") != null && fsm.Fsm.Name == "Open") {
+					new ShoppingBag(gameObject);
+					break;
+				}
+				// Insert other stuff here, such as beercases.
+			}
 		}
 
 		/// <summary>
