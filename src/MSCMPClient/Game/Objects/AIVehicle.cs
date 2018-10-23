@@ -16,13 +16,17 @@ namespace MSCMP.Game.Objects {
 
 		PlayMakerFSM throttleFsm;
 		PlayMakerFSM navigationFsm;
+		PlayMakerFSM directionFsm;
 
 		CarDynamics dynamics;
+
+		float isClockwise = 0;
 
 		public enum VehicleTypes {
 			Bus,
 			Amis,
 			Traffic,
+			TrafficDirectional,
 			Fitan,
 		}
 
@@ -163,8 +167,11 @@ namespace MSCMP.Game.Objects {
 			else if (goName == "BUS") {
 				type = VehicleTypes.Bus;
 			}
-			else if (goName == "FITTAN") {
+			else if (goName == "FITTAN" && parentGameObject.transform.FindChild("Navigation") != null) {
 				type = VehicleTypes.Fitan;
+			}
+			else if (parentGameObject.transform.FindChild("NavigationCW") != null || parentGameObject.transform.FindChild("NavigationCCW") != null) {
+				type = VehicleTypes.TrafficDirectional;
 			}
 			else {
 				type = VehicleTypes.Traffic;
@@ -175,7 +182,21 @@ namespace MSCMP.Game.Objects {
 			dynamics = parentGameObject.GetComponent<CarDynamics>();
 
 			throttleFsm = Utils.GetPlaymakerScriptByName(parentGameObject, "Throttle");
-			navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("Navigation").gameObject, "Navigation");
+
+			if (type == VehicleTypes.TrafficDirectional) {
+				if (parentGameObject.transform.FindChild("NavigationCW") != null) {
+					navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCW").gameObject, "Navigation");
+					isClockwise = 1;
+				}
+				else {
+					navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCCW").gameObject, "Navigation");
+					isClockwise = 0;
+				}
+				directionFsm = Utils.GetPlaymakerScriptByName(parentGameObject, "Direction");
+			}
+			else {
+				navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("Navigation").gameObject, "Navigation");
+			}
 
 			EventHooks();
 		}
@@ -212,12 +233,20 @@ namespace MSCMP.Game.Objects {
 		}
 
 		/// <summary>
+		/// Called when a player enters range of an object.
+		/// </summary>
+		/// <returns>True if the player should tkae ownership of the object.</returns>
+		public bool ShouldTakeOwnership() {
+			return true;
+		}
+
+		/// <summary>
 		/// Returns variables to be sent to the remote client.
 		/// </summary>
 		/// <returns>Variables to be sent to the remote client.</returns>
 		public float[] ReturnSyncedVariables() {
 			if (isSyncing == true) {
-				float[] variables = { Steering, Throttle, Brake, TargetSpeed, Waypoint, Route, WaypointStart, WaypointEnd };
+				float[] variables = { Steering, Throttle, Brake, TargetSpeed, Waypoint, Route, WaypointStart, WaypointEnd, isClockwise };
 				return variables;
 			}
 			else {
@@ -237,6 +266,15 @@ namespace MSCMP.Game.Objects {
 				WaypointSet = TrafficManager.GetWaypoint(variables[4], variables[5]);
 				WaypointStart = Convert.ToInt32(variables[6]);
 				WaypointEnd = Convert.ToInt32(variables[7]);
+				if (isClockwise != variables[8]) {
+					isClockwise = variables[8];
+					if (isClockwise == 1) {
+						navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCW").gameObject, "Navigation");
+					}
+					else {
+						navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCCW").gameObject, "Navigation");
+					}
+				}
 			}
 		}
 
@@ -255,6 +293,13 @@ namespace MSCMP.Game.Objects {
 		}
 
 		/// <summary>
+		/// Called when owner is removed.
+		/// </summary>
+		public void OwnerRemoved() {
+
+		}
+
+		/// <summary>
 		/// Called when an object is constantly syncing. (Usually when a pickupable is picked up, or when a vehicle is being driven)
 		/// </summary>
 		/// <param name="newValue">If object is being constantly synced.</param>
@@ -265,10 +310,21 @@ namespace MSCMP.Game.Objects {
 		// Event hooks
 		public void EventHooks() {
 			// Generic vehicle FSMs.
+			throttleFsm = Utils.GetPlaymakerScriptByName(parentGameObject, "Throttle");
 			EventHook.SyncAllEvents(throttleFsm, new Func<bool>(() => {
 				if (syncComponent.Owner != steamID && syncComponent.Owner != 0 || syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
 					return true;
 				}
+				return false;
+			}));
+
+			// Traffic FSMs.
+			EventHook.AddWithSync(directionFsm, "CW", new Func<bool>(() => {
+				isClockwise = 1;
+				return false;
+			}));
+			EventHook.AddWithSync(directionFsm, "CCW", new Func<bool>(() => {
+				isClockwise = 0;
 				return false;
 			}));
 
@@ -306,7 +362,6 @@ namespace MSCMP.Game.Objects {
 
 			// Sync vehicle data with the host on spawn.
 			if (Network.NetManager.Instance.IsOnline && !Network.NetManager.Instance.IsHost) {
-				Logger.Log("Syncing vehicle data with host.");
 				syncComponent.RequestObjectSync();
 			}
 		}
