@@ -71,6 +71,10 @@ namespace MSCMP.Game.Components {
 				case ObjectSyncManager.ObjectTypes.AIVehicle:
 					syncedObject = new AIVehicle(this.gameObject, this);
 					break;
+				// Boat.
+				case ObjectSyncManager.ObjectTypes.Boat:
+					syncedObject = new Boat(this.gameObject);
+					break;
 			}
 			isSetup = true;
 		}

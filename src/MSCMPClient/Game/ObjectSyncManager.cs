@@ -1,5 +1,6 @@
-﻿using MSCMP.Game.Components;
+using MSCMP.Game.Components;
 using System.Collections.Concurrent;
+using UnityEngine;
 
 namespace MSCMP.Game {
 	/// <summary>
@@ -23,6 +24,7 @@ namespace MSCMP.Game {
 			Pickupable,
 			PlayerVehicle,
 			AIVehicle,
+			Boat,
 		}
 
 		/// <summary>

@@ -232,6 +232,10 @@ namespace MSCMP.Game {
 			else if (gameObject.name == "STORE") {
 				new Shop(gameObject);
 			}
+			else if (gameObject.name == "BOAT") {
+				ObjectSyncComponent osc = gameObject.transform.FindChild("GFX").FindChild("Colliders").FindChild("Collider").gameObject.AddComponent<ObjectSyncComponent>();
+				osc.Setup(ObjectSyncManager.ObjectTypes.Boat, ObjectSyncManager.AUTOMATIC_ID);
+			}
 
 		/// <summary>
 		/// Handle collected objects destroy.

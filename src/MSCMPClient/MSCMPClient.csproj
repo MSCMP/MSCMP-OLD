@@ -100,6 +100,7 @@
     <Compile Include="Game\Objects\AIVehicle.cs" />
     <Compile Include="Game\Objects\BeerCase.cs" />
     <Compile Include="Game\LightSwitchManager.cs" />
+    <Compile Include="Game\Objects\Boat.cs" />
     <Compile Include="Game\Objects\GameDoor.cs" />
     <Compile Include="Game\Objects\GamePlayer.cs" />
     <Compile Include="Game\Objects\GameVehicle.cs" />
