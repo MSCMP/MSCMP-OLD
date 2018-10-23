@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace MSCMP.Game.Objects {
@@ -47,18 +47,42 @@ namespace MSCMP.Game.Objects {
 		}
 
 		/// <summary>
+		/// Called when a player enters range of an object.
+		/// </summary>
+		/// <returns>True if the player should try to take ownership of the object.</returns>
+		public bool ShouldTakeOwnership() {
+			return true;
+		}
+
+		/// <summary>
 		/// Returns variables to be sent to the remote client.
 		/// </summary>
 		/// <returns>Variables to be sent to the remote client.</returns>
 		public float[] ReturnSyncedVariables() {
-			return null;
+			if (holdingObject) {
+				float[] variables = { 1 };
+				return variables;
+			}
+			else {
+				float[] variables = { 0 };
+				return variables;
+			}
 		}
 
 		/// <summary>
 		/// Handle variables sent from the remote client.
 		/// </summary>
 		public void HandleSyncedVariables(float[] variables) {
-
+			if (rigidbody != null) {
+				if (variables[0] == 1) {
+					// Object is being held.
+					rigidbody.useGravity = false;
+				}
+				else {
+					// Object is not being held.
+					rigidbody.useGravity = true;
+				}
+			}
 		}
 
 		/// <summary>
@@ -66,6 +90,13 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		public void OwnerSetToRemote() {
 
+		}
+
+		/// <summary>
+		/// Called when owner is removed.
+		/// </summary>
+		public void OwnerRemoved() {
+			rigidbody.useGravity = true;
 		}
 
 		/// <summary>
@@ -84,6 +115,9 @@ namespace MSCMP.Game.Objects {
 		/// <param name="newValue">If object is being constantly synced.</param>
 		public void ConstantSyncChanged(bool newValue) {
 			holdingObject = newValue;
+			if (!holdingObject) {
+				rigidbody.useGravity = true;
+			}
 		}
 	}
 }

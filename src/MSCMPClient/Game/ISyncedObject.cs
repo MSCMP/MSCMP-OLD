@@ -22,6 +22,12 @@ namespace MSCMP.Game {
 		bool CanSync();
 
 		/// <summary>
+		/// Called when a player enters range of an object.
+		/// </summary>
+		/// <returns>True if the player should tkae ownership of the object.</returns>
+		bool ShouldTakeOwnership();
+
+		/// <summary>
 		/// Called to return variables that need to be synced on the remote client.
 		/// </summary>
 		/// <returns>Variables to send to remote client.</returns>
@@ -37,6 +43,11 @@ namespace MSCMP.Game {
 		/// Called when owner is set to remote client.
 		/// </summary>
 		void OwnerSetToRemote();
+
+		/// <summary>
+		/// Called when owner is removed.
+		/// </summary>
+		void OwnerRemoved();
 
 		/// <summary>
 		/// Called when sync is forcefully taken from client.

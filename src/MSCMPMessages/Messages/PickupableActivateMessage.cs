@@ -1,7 +1,7 @@
 ﻿namespace MSCMPMessages.Messages {
 	[NetMessageDesc(MessageIds.PickupableActivate)]
 	class PickupableActivateMessage {
-		ushort id;
+		int id;
 		bool activate;
 	}
 }

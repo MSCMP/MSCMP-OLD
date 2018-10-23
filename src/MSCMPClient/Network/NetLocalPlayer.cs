@@ -53,23 +53,10 @@ namespace MSCMP.Network {
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
-			GameCallbacks.onObjectPickup = (GameObject gameObj) => {
-				Messages.PickupObjectMessage msg = new Messages.PickupObjectMessage();
-				msg.netId = netWorld.GetPickupableNetId(gameObj);
-				Client.Assert(msg.netId != NetPickupable.INVALID_ID, "Tried to pickup not network pickupable.");
-				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
-			};
-
-			GameCallbacks.onObjectRelease = (bool drop) => {
-				Messages.ReleaseObjectMessage msg = new Messages.ReleaseObjectMessage();
-				msg.drop = drop;
-				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
-			};
-
 			BeerCaseManager.Instance.onBottleConsumed = (GameObject bcase) => {
 				Messages.RemoveBottleMessage msg = new Messages.RemoveBottleMessage();
-				msg.netId = netWorld.GetPickupableNetId(bcase);
-				Client.Assert(msg.netId != NetPickupable.INVALID_ID, "Tried to drink from not network beercase.");
+				msg.objectId = netWorld.GetPickupableObjectId(bcase);
+				Client.Assert(msg.objectId != NetPickupable.INVALID_ID, "Tried to drink from not network beercase.");
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
@@ -295,17 +282,6 @@ namespace MSCMP.Network {
 			}
 
 			msg.pickedUpObject = NetPickupable.INVALID_ID;
-
-			GamePlayer player = GameWorld.Instance.Player;
-			if (player != null) {
-				// It is possible the local player is not spawned yet. If so we do not
-				// care about those values as those can be only set when player is actually spawned.
-
-				var pickedUpObject = player.PickedUpObject;
-				if (pickedUpObject != null) {
-					msg.pickedUpObject = netWorld.GetPickupableNetId(pickedUpObject);
-				}
-			}
 		}
 
 		/// <summary>

@@ -4,7 +4,7 @@
 		/// <summary>
 		/// Network id of the pickupable to spawn.
 		/// </summary>
-		ushort				id;
+		int				id;
 
 		/// <summary>
 		/// The prefab used to create given pickupable.

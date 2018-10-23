@@ -60,7 +60,6 @@
     <Compile Include="Generator.cs" />
     <Compile Include="Messages\AskForWorldStateMessage.cs" />
     <Compile Include="Messages\DisconnectMessage.cs" />
-    <Compile Include="Messages\DropObjectMessage.cs" />
     <Compile Include="Messages\EventHookSyncMessage.cs" />
     <Compile Include="Messages\FullWorldSyncMessage.cs" />
     <Compile Include="Messages\HandshakeMessage.cs" />
@@ -76,7 +75,6 @@
     <Compile Include="Messages\PickupableDestroyMessage.cs" />
     <Compile Include="Messages\PickupableSetPositionMessage.cs" />
     <Compile Include="Messages\PickupableSpawnMessage.cs" />
-    <Compile Include="Messages\PickupObjectMessage.cs" />
     <Compile Include="Messages\PlayerSyncMessage.cs" />
     <Compile Include="Messages\QuaternionMessage.cs" />
     <Compile Include="Messages\RemoveBottleMessage.cs" />

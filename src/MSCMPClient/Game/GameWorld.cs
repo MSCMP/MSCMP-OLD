@@ -413,8 +413,9 @@ namespace MSCMP.Game {
 		/// <param name="prefabId">Pickupable prefab id.</param>
 		/// <param name="position">The spawn position.</param>
 		/// <param name="rotation">The spawn rotation.</param>
+		/// <param name="objectID">The ObjectID of the object.</param>
 		/// <returns>Spawned pickupable game object.</returns>
-		public GameObject SpawnPickupable(int prefabId, Vector3 position, Quaternion rotation) {
+		public GameObject SpawnPickupable(int prefabId, Vector3 position, Quaternion rotation, int objectID) {
 			GamePickupableDatabase.PrefabDesc prefabDescriptor = gamePickupableDatabase.GetPickupablePrefab(prefabId);
 			Client.Assert(prefabDescriptor != null, $"Unable to find pickupable prefab {prefabId}");
 			return prefabDescriptor.Spawn(position, rotation);

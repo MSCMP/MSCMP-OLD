@@ -18,12 +18,12 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// All instances of gameobject pickupables.
 		/// </summary>
-		List<GameObject> pickupables = new List<GameObject>();
+		Dictionary<int, GameObject> pickupables = new Dictionary<int, GameObject>();
 
 		/// <summary>
 		/// Getter for pickupables.
 		/// </summary>
-		public List<GameObject> Pickupables {
+		public Dictionary<int, GameObject> Pickupables {
 			get { return pickupables; }
 		}
 
@@ -143,6 +143,15 @@ namespace MSCMP.Game {
 
 			SetupPrefabDescriptorType(desc);
 
+			// Add ObjectSyncComponent.
+			if (desc.gameObject.GetComponent<Components.ObjectSyncComponent>() == null) {
+				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, -1);
+			}
+			else {
+				GameObject.Destroy(desc.gameObject.GetComponent<Components.ObjectSyncComponent>());
+				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, -1);
+			}
+
 			// Deactivate game object back if needed.
 
 			if (!wasActive) {
@@ -234,22 +243,6 @@ namespace MSCMP.Game {
 				return false;
 			}
 			return true;
-		}
-
-		/// <summary>
-		/// Register pickupable into database.
-		/// </summary>
-		/// <param name="gameObject">The pickupable gameobject to register.</param>
-		public void RegisterPickupable(GameObject gameObject) {
-			pickupables.Add(gameObject);
-		}
-
-		/// <summary>
-		/// Unregister pickupable into database.
-		/// </summary>
-		/// <param name="gameObject">The pickupable gameobject to unregister.</param>
-		public void UnregisterPickupable(GameObject gameObject) {
-			pickupables.Remove(gameObject);
 		}
 	}
 }

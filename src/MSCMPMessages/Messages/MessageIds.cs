@@ -17,8 +17,6 @@ namespace MSCMPMessages.Messages {
 		AskForWorldState,
 		VehicleEnter,
 		VehicleLeave,
-		PickupObject,
-		ReleaseObject,
 		PickupableSpawn,
 		PickupableDestroy,
 		PickupableActivate,

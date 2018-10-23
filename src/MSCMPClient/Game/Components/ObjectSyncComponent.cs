@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using MSCMP.Network;
 using MSCMP.Game.Objects;
 
@@ -19,20 +19,48 @@ namespace MSCMP.Game.Components {
 
 		// True if sync should be sent continuously, ignore syncedObject.CanSync()
 		bool sendConstantSync = false;
-		// Transform of synced object.
-		Transform objectTransform;
 		// The synced object.
 		ISyncedObject syncedObject;
 
+		// Is object setup?
+		bool isSetup = false;
+
 		/// <summary>
-		/// Ran on script enable.
+		/// Setup object.
 		/// </summary>
-		void Start() {
+		public void Setup(ObjectSyncManager.ObjectTypes type, int objectID) {
+			if (!NetWorld.Instance.playerIsLoading) {
+				if (!NetManager.Instance.IsHost && objectID == ObjectSyncManager.AUTOMATIC_ID) {
+					Logger.Debug("Ignoring spawned object as client is not host!");
+					GameObject.Destroy(gameObject);
+					return;
+				}
+			}
 			Logger.Debug($"Sync component added to: {this.transform.name}");
+			ObjectType = type;
+			ObjectID = objectID;
 
 			// Assign object's ID.
 			ObjectID = ObjectSyncManager.Instance.AddNewObject(this, ObjectID);
 
+			if (!NetWorld.Instance.playerIsLoading && !isSetup) {
+				CreateObjectSubtype();
+			}
+		}
+
+		/// <summary>
+		/// Called on start.
+		/// </summary>
+		void Start() {
+			if (NetWorld.Instance.playerIsLoading && !isSetup) {
+				CreateObjectSubtype();
+			}
+		}
+
+		/// <summary>
+		/// Creates the object's subtype.
+		/// </summary>
+		void CreateObjectSubtype() {
 			// Set object type.
 			switch (ObjectType) {
 				// Pickupable.
@@ -44,30 +72,31 @@ namespace MSCMP.Game.Components {
 					syncedObject = new AIVehicle(this.gameObject, this);
 					break;
 			}
-
-			objectTransform = syncedObject.ObjectTransform();
+			isSetup = true;
 		}
 
 		/// <summary>
 		/// Called once per frame.
 		/// </summary>
 		void Update() {
-			if (SyncEnabled) {
-				// Updates object's position continuously.
-				// (Typically used when player is holding an pickupable, or driving a vehicle)
-				if (sendConstantSync) {
-					SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+			if (isSetup) {
+				if (SyncEnabled) {
+					// Updates object's position continuously.
+					// (Typically used when player is holding a pickupable, or driving a vehicle)
+					if (sendConstantSync) {
+						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+					}
+
+					// Check if object should be synced.
+					else if (syncedObject.CanSync()) {
+						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+					}
 				}
 
-				// Check if object should be synced.
-				else if (syncedObject.CanSync()) {
-					SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+				// Periodically update the object's position if periodic sync is enabled.
+				if (syncedObject.PeriodicSyncEnabled() && ObjectSyncManager.Instance.ShouldPeriodicSync(Owner, SyncEnabled)) {
+					SendObjectSync(ObjectSyncManager.SyncTypes.PeriodicSync, true);
 				}
-			}
-
-			// Periodically update the object's position if periodic sync is enabled.
-			if (syncedObject.PeriodicSyncEnabled() && ObjectSyncManager.Instance.ShouldPeriodicSync(Owner, SyncEnabled)) {
-				SendObjectSync(ObjectSyncManager.SyncTypes.PeriodicSync, true);
 			}
 		}
 
@@ -76,10 +105,10 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void SendObjectSync(ObjectSyncManager.SyncTypes type, bool sendVariables) {
 			if (sendVariables) {
-				NetLocalPlayer.Instance.SendObjectSync(ObjectID, objectTransform.position, objectTransform.rotation, type, syncedObject.ReturnSyncedVariables());
+				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, syncedObject.ReturnSyncedVariables());
 			}
 			else {
-				NetLocalPlayer.Instance.SendObjectSync(ObjectID, objectTransform.position, objectTransform.rotation, type, null);
+				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, null);
 			}
 		}
 
@@ -95,6 +124,7 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void SyncRequestAccepted() {
 			Owner = Steamworks.SteamUser.GetSteamID().m_SteamID;
+			Logger.Log("Sync request accepted, object: " + gameObject.name);
 			SyncEnabled = true;
 		}
 
@@ -102,7 +132,7 @@ namespace MSCMP.Game.Components {
 		/// Called when the player enter sync range of the object.
 		/// </summary>
 		public void SendEnterSync() {
-			if (Owner == ObjectSyncManager.NO_OWNER) {
+			if (Owner == ObjectSyncManager.NO_OWNER && syncedObject.ShouldTakeOwnership()) {
 				SendObjectSync(ObjectSyncManager.SyncTypes.SetOwner, true);
 			}
 		}
@@ -136,6 +166,14 @@ namespace MSCMP.Game.Components {
 		}
 
 		/// <summary>
+		/// Called when owner is removed.
+		/// </summary>
+		public void OwnerRemoved() {
+			Owner = ObjectSyncManager.NO_OWNER;
+			syncedObject.OwnerRemoved();
+		}
+
+		/// <summary>
 		/// Called when sync control of an object has been taken from local player.
 		/// </summary>
 		public void SyncTakenByForce() {
@@ -165,8 +203,8 @@ namespace MSCMP.Game.Components {
 		/// <param name="pos"></param>
 		/// <param name="rot"></param>
 		public void SetPositionAndRotation(Vector3 pos, Quaternion rot) {
-			objectTransform.position = pos;
-			objectTransform.rotation = rot;
+			syncedObject.ObjectTransform().position = pos;
+			syncedObject.ObjectTransform().rotation = rot;
 		}
 	}
 }

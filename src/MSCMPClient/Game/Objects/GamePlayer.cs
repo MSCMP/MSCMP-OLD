@@ -35,58 +35,6 @@ namespace MSCMP.Game.Objects {
 
 
 		/// <summary>
-		/// Action executed when player pickups some game object.
-		/// </summary>
-		private class OnPickupAction : FsmStateAction {
-
-			GamePlayer player = null;
-
-			public OnPickupAction(GamePlayer player) {
-				this.player = player;
-			}
-
-			public override void OnEnter() {
-				player.PickupObject();
-				Finish();
-			}
-		}
-
-		/// <summary>
-		/// Action executed when player throws some game object.
-		/// </summary>
-		private class OnThrowAction : FsmStateAction {
-
-			GamePlayer player = null;
-
-			public OnThrowAction(GamePlayer player) {
-				this.player = player;
-			}
-
-			public override void OnEnter() {
-				player.ThrowObject();
-				Finish();
-			}
-		}
-
-		/// <summary>
-		/// Action executed when player drops some game object.
-		/// </summary>
-		private class OnDropAction : FsmStateAction {
-
-			GamePlayer player = null;
-
-			public OnDropAction(GamePlayer player) {
-				this.player = player;
-			}
-
-			public override void OnEnter() {
-				player.DropObject();
-				Finish();
-			}
-		}
-
-
-		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="gameObject">The game object to pickup.</param>
@@ -96,17 +44,29 @@ namespace MSCMP.Game.Objects {
 			
 			pickupFsm = Utils.GetPlaymakerScriptByName(gameObject, "PickUp");
 
-			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Part picked"), new OnPickupAction(this));
-			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Item picked"), new OnPickupAction(this));
+			if (pickupFsm != null) {
+				// Pickup events
+				EventHook.Add(pickupFsm, "Part picked", new Func<bool>(() => {
+					this.PickupObject();
+					return false;
+				}));
+				EventHook.Add(pickupFsm, "Item picked", new Func<bool>(() => {
+					this.PickupObject();
+					return false;
+				}));
 
-			PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Throw part"), new OnThrowAction(this));
+				// Throw event
+				EventHook.Add(pickupFsm, "Throw part", new Func<bool>(() => {
+					this.ThrowObject();
+					return false;
+				}));
 
-			EventHook.Add(pickupFsm, "Drop part", new Func<bool>(() => {
-				this.DropObject();
-				return false;
-			}));
-
-			//PlayMakerUtils.AddNewAction(pickupFsm.Fsm.GetState("Drop part"), new OnDropAction(this));
+				// Drop event
+				EventHook.Add(pickupFsm, "Drop part", new Func<bool>(() => {
+					this.DropObject();
+					return false;
+				}));
+			}
 
 			GameObject trigger = GameObject.CreatePrimitive(PrimitiveType.Sphere);
 			trigger.transform.localScale = new Vector3(100, 100, 100);
@@ -128,14 +88,14 @@ namespace MSCMP.Game.Objects {
 			osc.TakeSyncControl();
 			osc.SendConstantSync(true);
 
-			Logger.Log("PickupObject " + pickedUpGameObject);
+			Logger.Log("Picked up object: " + pickedUpGameObject);
 		}
 
 		/// <summary>
 		/// Handle throw of the object.
 		/// </summary>
 		private void ThrowObject() {
-			Logger.Log("Throwed object " + pickedUpGameObject);
+			Logger.Log("Threw object: " + pickedUpGameObject);
 			pickedUpGameObject.GetComponent<ObjectSyncComponent>().SendConstantSync(false);
 			pickedUpGameObject = null;
 		}
@@ -144,7 +104,7 @@ namespace MSCMP.Game.Objects {
 		/// Handle drop of the object.
 		/// </summary>
 		private void DropObject() {
-			Logger.Log("Drop object " + pickedUpGameObject);
+			Logger.Log("Dropped object: " + pickedUpGameObject);
 			pickedUpGameObject.GetComponent<ObjectSyncComponent>().SendConstantSync(false);
 			pickedUpGameObject = null;
 		}

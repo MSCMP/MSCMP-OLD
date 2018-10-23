@@ -31,11 +31,6 @@ namespace MSCMP.Network {
 		NetManager netManager = null;
 
 		/// <summary>
-		/// Network pickupables pool.
-		/// </summary>
-		Dictionary<ushort, NetPickupable> netPickupables = new Dictionary<ushort, NetPickupable>();
-
-		/// <summary>
 		/// Interval between each periodical update in seconds.
 		/// </summary>
 		const float PERIODICAL_UPDATE_INTERVAL = 10.0f;
@@ -46,11 +41,22 @@ namespace MSCMP.Network {
 		float timeToSendPeriodicalUpdate = 0.0f;
 
 		/// <summary>
+		/// If the player is still handling FullWorldSync.
+		/// </summary>
+		public bool playerIsLoading = true;
+
+		/// <summary>
+		/// Instance.
+		/// </summary>
+		public static NetWorld Instance;
+
+		/// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="netManager">Network manager owning this network world.</param>
 		public NetWorld(NetManager netManager) {
 			this.netManager = netManager;
+			Instance = this;
 
 			// Register all network vehicles.
 
@@ -76,24 +82,43 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
+				var metaData = prefab.GetComponent<Game.Components.PickupableMetaDataComponent>();
 				Client.Assert(metaData != null, "Tried to spawn pickupable that has no meta data assigned.");
-
-				ushort freeId = FindFreePickpableId();
-				Client.Assert(freeId != NetPickupable.INVALID_ID, "Out of pickupables pool");
-				RegisterPickupable(freeId, instance);
+				RegisterPickupable(instance);
 
 				Messages.PickupableSpawnMessage msg = new Messages.PickupableSpawnMessage();
-				msg.id = freeId;
 				msg.prefabId = metaData.prefabId;
 				msg.transform.position = Utils.GameVec3ToNet(instance.transform.position);
 				msg.transform.rotation = Utils.GameQuatToNet(instance.transform.rotation);
 				msg.active = instance.activeSelf;
-				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+
+				// Check for multiple sync components from prefab
+				ObjectSyncComponent oscOld = prefab.GetComponent<ObjectSyncComponent>();
+				if (instance.GetComponents<ObjectSyncComponent>().Length > 1) {
+					foreach (ObjectSyncComponent osc in instance.GetComponents<ObjectSyncComponent>()) {
+						if (osc.ObjectID == oscOld.ObjectID) {
+							GameObject.Destroy(osc);
+						}
+						else {
+							msg.id = osc.ObjectID;
+						}
+					}
+				}
+				else {
+					msg.id = instance.GetComponent<ObjectSyncComponent>().ObjectID;
+				}
+
+				if (NetManager.Instance.IsHost) {
+					Logger.Debug("Sending new object data to client!");
+					netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+				}
 			};
 
+			GameCallbacks.onPlayMakerObjectActivate += (GameObject instance, bool activate) => {
+				if (playerIsLoading) {
+					return;
+				}
 
-			Game.GameCallbacks.onPlayMakerObjectActivate += (GameObject instance, bool activate) => {
 				if (activate == instance.activeSelf) {
 					return;
 				}
@@ -102,7 +127,7 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				NetPickupable pickupable = GetPickupableByGameObject(instance);
+				ObjectSyncComponent pickupable = GetPickupableByGameObject(instance);
 				if (pickupable == null) {
 					return;
 				}
@@ -111,7 +136,7 @@ namespace MSCMP.Network {
 					var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
 
 					Messages.PickupableSpawnMessage msg = new Messages.PickupableSpawnMessage();
-					msg.id = pickupable.NetId;
+					msg.id = pickupable.ObjectID;
 					msg.prefabId = metaData.prefabId;
 					msg.transform.position = Utils.GameVec3ToNet(instance.transform.position);
 					msg.transform.rotation = Utils.GameQuatToNet(instance.transform.rotation);
@@ -119,7 +144,7 @@ namespace MSCMP.Network {
 				}
 				else {
 					Messages.PickupableActivateMessage msg = new Messages.PickupableActivateMessage();
-					msg.id = pickupable.NetId;
+					msg.id = pickupable.ObjectID;
 					msg.activate = false;
 					netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 				}
@@ -130,7 +155,7 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				NetPickupable pickupable = GetPickupableByGameObject(instance);
+				ObjectSyncComponent pickupable = GetPickupableByGameObject(instance);
 				if (pickupable == null) {
 					Logger.Debug($"Pickupable {instance.name} has been destroyed however it is not registered, skipping removal.");
 					return;
@@ -144,7 +169,7 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				NetPickupable pickupable = GetPickupableByGameObject(gameObject);
+				ObjectSyncComponent pickupable = GetPickupableByGameObject(gameObject);
 				if (pickupable == null) {
 					return;
 				}
@@ -155,7 +180,7 @@ namespace MSCMP.Network {
 				}
 
 				Messages.PickupableSetPositionMessage msg = new Messages.PickupableSetPositionMessage();
-				msg.id = pickupable.NetId;
+				msg.id = pickupable.ObjectID;
 				msg.position = Utils.GameVec3ToNet(position);
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
@@ -169,19 +194,19 @@ namespace MSCMP.Network {
 		/// <param name="netMessageHandler">The network message handler to register messages to.</param>
 		void RegisterNetworkMessagesHandlers(NetMessageHandler netMessageHandler) {
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableSetPositionMessage msg) => {
-				Client.Assert(netPickupables.ContainsKey(msg.id), $"Tried to move pickupable that is not spawned {msg.id}.");
-				GameObject gameObject = netPickupables[msg.id].gameObject;
+				Client.Assert(ObjectSyncManager.Instance.ObjectIDs.ContainsKey(msg.id), $"Tried to move pickupable that is not spawned {msg.id}.");
+				GameObject gameObject = ObjectSyncManager.Instance.ObjectIDs[msg.id].gameObject;
 				gameObject.transform.position = Utils.NetVec3ToGame(msg.position);
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableActivateMessage msg) => {
 				GameObject gameObject = null;
-				if (netPickupables.ContainsKey(msg.id)) {
-					gameObject = netPickupables[msg.id].gameObject;
+				if (ObjectSyncManager.Instance.ObjectIDs.ContainsKey(msg.id)) {
+					gameObject = ObjectSyncManager.Instance.ObjectIDs[msg.id].gameObject;
 				}
+				Client.Assert(gameObject != null, "Tried to activate pickupable but its not spawned!");
 
 				if (msg.activate) {
-					Client.Assert(gameObject != null, "Tried to activate pickupable but its not spawned!");
 					gameObject.SetActive(true);
 				}
 				else {
@@ -196,13 +221,20 @@ namespace MSCMP.Network {
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupableDestroyMessage msg) => {
-				if (!netPickupables.ContainsKey(msg.id)) {
+				if (!ObjectSyncManager.Instance.ObjectIDs.ContainsKey(msg.id)) {
 					return;
 				}
 
-				NetPickupable pickupable = netPickupables[msg.id];
-				GameObject.Destroy(pickupable.gameObject);
-				netPickupables.Remove(msg.id);
+				GameObject go;
+				try {
+					go = ObjectSyncManager.Instance.ObjectIDs[msg.id].gameObject;
+				}
+				catch {
+					Logger.Error("Failed to remove object: OSC found but can't get GameObject.");
+					return;
+				}
+
+				GameObject.Destroy(ObjectSyncManager.Instance.ObjectIDs[msg.id].gameObject);
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.WorldPeriodicalUpdateMessage msg) => {
@@ -213,7 +245,7 @@ namespace MSCMP.Network {
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.RemoveBottleMessage msg) => {
-				GameObject beerGO = GetPickupableGameObject(msg.netId);
+				GameObject beerGO = GetPickupableGameObject(msg.objectId);
 				Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(beerGO);
 				if (beer == null) {
 					Logger.Log($"Player tried to drink beer, however, the beercase cannot be found.");
@@ -332,25 +364,6 @@ namespace MSCMP.Network {
 				player.HandleVehicleSync(msg);
 			});
 
-
-			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PickupObjectMessage msg) => {
-				NetPlayer player = netManager.GetPlayer(sender);
-				if (player == null) {
-					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
-					return;
-				}
-				player.PickupObject(msg.netId);
-			});
-
-			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ReleaseObjectMessage msg) => {
-				NetPlayer player = netManager.GetPlayer(sender);
-				if (player == null) {
-					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
-					return;
-				}
-				player.ReleaseObject(msg.drop);
-			});
-
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
 				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
 				light.TurnOn(msg.toggle);
@@ -401,19 +414,19 @@ namespace MSCMP.Network {
 				if (osc != null) {
 					// Set owner.
 					if (type == ObjectSyncManager.SyncTypes.SetOwner) {
-						if (osc.Owner == ObjectSyncManager.NO_OWNER) {
+						if (osc.Owner == ObjectSyncManager.NO_OWNER || osc.Owner == sender.m_SteamID) {
 							osc.OwnerSetToRemote(sender.m_SteamID);
 							netManager.GetLocalPlayer().SendObjectSyncResponse(osc.ObjectID, true);
 							Logger.Log($"Owner set for object: {osc.transform.name} New owner: {sender.m_SteamID}");
 						}
 						else {
-							Logger.Debug($"Set owner request rejected for object: {osc.transform.name} (Owner: {osc.Owner})");
+							Logger.Debug($"Set owner request rejected for object: {osc.transform.name} (Owner: {osc.Owner} Sender: {sender.m_SteamID})");
 						}
 					}
 					// Remove owner.
 					else if (type == ObjectSyncManager.SyncTypes.RemoveOwner) {
 						if (osc.Owner == sender.m_SteamID) {
-							osc.Owner = 0;
+							osc.OwnerRemoved();
 						}
 					}
 					// Force set owner.
@@ -421,6 +434,7 @@ namespace MSCMP.Network {
 						osc.Owner = sender.m_SteamID;
 						netManager.GetLocalPlayer().SendObjectSyncResponse(osc.ObjectID, true);
 						osc.SyncTakenByForce();
+						osc.SyncEnabled = false;
 					}
 
 					// Set object's position and variables
@@ -527,42 +541,10 @@ namespace MSCMP.Network {
 		/// Called when game world gets loaded.
 		/// </summary>
 		public void OnGameWorldLoad() {
-			RegisterPickupables();
-
 			// Update vehicles.
 
 			foreach (var vehicle in vehicles) {
 				vehicle.OnGameWorldLoad();
-			}
-		}
-
-		/// <summary>
-		/// Find free pickupable id.
-		/// </summary>
-		/// <returns>Pickupable id or NetPickupable.INVALID_ID when no free ID was found.</returns>
-		private ushort FindFreePickpableId() {
-			for (ushort i = 0; i < MAX_PICKUPABLES; ++i) {
-				if (!netPickupables.ContainsKey(i)) {
-					return i;
-				}
-			}
-			return NetPickupable.INVALID_ID;
-		}
-
-
-		/// <summary>
-		/// Register all pickupables that are in the game world.
-		/// </summary>
-		public void RegisterPickupables() {
-			netPickupables.Clear();
-
-			var pickupables = Game.GamePickupableDatabase.Instance.Pickupables;
-			foreach (var pickupable in pickupables) {
-				if (netPickupables.Count == MAX_PICKUPABLES) {
-					throw new Exception("Out of pickupables pool!");
-				}
-
-				RegisterPickupable((ushort)netPickupables.Count, pickupable);
 			}
 		}
 
@@ -571,7 +553,7 @@ namespace MSCMP.Network {
 		/// Called when game world gets unloaded.
 		/// </summary>
 		private void OnGameWorldUnload() {
-			netPickupables.Clear();
+			ObjectSyncManager.Instance.ObjectIDs.Clear();
 		}
 
 		/// <summary>
@@ -579,9 +561,11 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="msg">The message to write to.</param>
 		public void WriteFullWorldSync(Messages.FullWorldSyncMessage msg) {
-
 			Logger.Debug("Writing full world synchronization message.");
 			var watch = System.Diagnostics.Stopwatch.StartNew();
+			
+			// 'Player is loading' is only applicable for remote client.
+			playerIsLoading = false;
 
 			// Write time
 
@@ -646,38 +630,51 @@ namespace MSCMP.Network {
 			// Write pickupables.
 
 			var pickupableMessages = new List<Messages.PickupableSpawnMessage>();
-			Logger.Debug($"Writing state of {netPickupables.Count} pickupables");
-			foreach (var kv in netPickupables) {
-				NetPickupable pickupable = kv.Value;
-				if (pickupable.gameObject == null) {
-					Logger.Debug($"Null ptr of the pickupable game object {pickupable.NetId}");
+			Logger.Debug($"Writing state of {ObjectSyncManager.Instance.ObjectIDs.Count} pickupables");
+			foreach (var kv in ObjectSyncManager.Instance.ObjectIDs) {
+				ObjectSyncComponent osc = kv.Value;
+				if (osc == null) {
 					continue;
 				}
+				if (osc.ObjectType != ObjectSyncManager.ObjectTypes.Pickupable) {
+					continue;
+				}
+				bool wasActive = true;
+				if (!osc.gameObject.activeSelf) {
+					wasActive = false;
+					osc.gameObject.SetActive(true);
+				}
+				Logger.Log($"Writing pickupable: {osc.gameObject.name}");
 
 				var pickupableMsg = new Messages.PickupableSpawnMessage();
-				pickupableMsg.id = pickupable.NetId;
 
-				var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
-				Client.Assert(metaData != null && metaData.PrefabDescriptor != null, $"Pickupable with broken meta data -- {pickupable.gameObject.name}.");
+				var metaData = osc.gameObject.GetComponent<PickupableMetaDataComponent>();
+				Client.Assert(metaData != null && metaData.PrefabDescriptor != null, $"Pickupable with broken meta data -- {osc.gameObject.name}.");
 
 				pickupableMsg.prefabId = metaData.prefabId;
 
-				Transform transform = pickupable.gameObject.transform;
+				Transform transform = osc.gameObject.transform;
 				pickupableMsg.transform.position = Utils.GameVec3ToNet(transform.position);
 				pickupableMsg.transform.rotation = Utils.GameQuatToNet(transform.rotation);
 
-				pickupableMsg.active = pickupable.gameObject.activeSelf;
+				pickupableMsg.active = osc.gameObject.activeSelf;
+
+				// ObjectID
+				pickupableMsg.id = osc.gameObject.GetComponent<ObjectSyncComponent>().ObjectID;
 
 				List<float> data = new List<float>();
 
 				// Beercases
 				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
-					Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(pickupable.gameObject);
+					Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(osc.gameObject);
 					data.Add(Game.BeerCaseManager.Instance.FullCaseBottles - beer.UsedBottles);
 				}
 
 				if (data.Count != 0) {
 					pickupableMsg.Data = data.ToArray();
+				}
+				if (!wasActive) {
+					osc.gameObject.SetActive(false);
 				}
 				pickupableMessages.Add(pickupableMsg);
 			}
@@ -697,7 +694,6 @@ namespace MSCMP.Network {
 		/// <param name="msg">The message to handle.</param>
 
 		public void HandleFullWorldSync(Messages.FullWorldSyncMessage msg) {
-
 			Logger.Debug("Handling full world synchronization message.");
 			var watch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -751,27 +747,21 @@ namespace MSCMP.Network {
 
 			// Pickupables
 
-			List<ushort> pickupablesIds = new List<ushort>();
-			foreach (var kv in netPickupables) {
-				pickupablesIds.Add(kv.Key);
-			}
-
 			foreach (Messages.PickupableSpawnMessage pickupableMsg in msg.pickupables) {
 				SpawnPickupable(pickupableMsg);
-				pickupablesIds.Remove(pickupableMsg.id);
 			}
 
 			// Remove spawned (and active) pickupables that we did not get info about.
 
-			foreach (ushort id in pickupablesIds) {
-				GameObject gameObject = netPickupables[id].gameObject;
-				if (gameObject && !gameObject.activeSelf) {
-					continue;
+			foreach (var kv in GamePickupableDatabase.Instance.Pickupables) {
+				if (kv.Value.GetComponent<ObjectSyncComponent>() == null) {
+					GameObject.Destroy(kv.Value);
 				}
-
-				DestroyPickupableLocal(id);
 			}
-
+			
+			GamePickupableDatabase.Instance.Pickupables.Clear();
+			playerIsLoading = false;
+			
 			watch.Stop();
 			Logger.Debug("Full world synchronization message has been handled. Took " + watch.ElapsedMilliseconds + "ms");
 		}
@@ -794,40 +784,47 @@ namespace MSCMP.Network {
 #endif
 
 		/// <summary>
-		/// Get pickupable game object from network id.
+		/// Get pickupable game object from object id.
 		/// </summary>
-		/// <param name="netId">Network id of the pickupable.</param>
+		/// <param name="objectID">Object id of the pickupable.</param>
 		/// <returns>Game object representing the given pickupable or null if there is no pickupable matching this network id.</returns>
-		public GameObject GetPickupableGameObject(ushort netId) {
-			if (netPickupables.ContainsKey(netId)) {
-				return netPickupables[netId].gameObject;
+		public GameObject GetPickupableGameObject(int objectID) {
+			if (ObjectSyncManager.Instance.ObjectIDs.ContainsKey(objectID)) {
+				return ObjectSyncManager.Instance.ObjectIDs[objectID].gameObject;
 			}
 			return null;
 		}
 
 		/// <summary>
-		/// Get pickupable network id from game object.
+		/// Get pickupable object id from game object.
 		/// </summary>
-		/// <param name="go">Game object to get pickupable it for.</param>
-		/// <returns>The network id of pickupable or invalid id of the pickupable if not pickupable is found for given game object.</returns>
-		public NetPickupable GetPickupableByGameObject(GameObject go) {
-			foreach (var pickupable in netPickupables) {
-				if (pickupable.Value.gameObject == go) {
-					return pickupable.Value;
+		/// <param name="go">Game object to get object id for.</param>
+		/// <returns>The object id of pickupable or invalid id of the pickupable if no object ID is found for given game object.</returns>
+		public ObjectSyncComponent GetPickupableByGameObject(GameObject go) {
+			foreach (var osc in ObjectSyncManager.Instance.ObjectIDs) {
+				try {
+					if (osc.Value.gameObject == go) {
+						return osc.Value;
+					}
+				}
+				catch {
+
 				}
 			}
+			Logger.Error("GwtPickupableByGameObject: Couldn't find GameObject!");
 			return null;
 		}
 
 		/// <summary>
-		/// Get pickupable network id from game object.
+		/// Get pickupable object ID from game object.
 		/// </summary>
-		/// <param name="go">Game object to get pickupable it for.</param>
-		/// <returns>The network id of pickupable or invalid id of the pickupable if not pickupable is found for given game object.</returns>
-		public ushort GetPickupableNetId(GameObject go) {
-			var pickupable = GetPickupableByGameObject(go);
-			if (pickupable != null) {
-				return pickupable.NetId;
+		/// <param name="go">Game object to get object ID for.</param>
+		/// <returns>The object ID of pickupable or invalid ID of the pickupable if no object ID is found for given game object.</returns>
+		public int GetPickupableObjectId(GameObject go) {
+			foreach (var osc in ObjectSyncManager.Instance.ObjectIDs) {
+				if (osc.Value.gameObject == go) {
+					return osc.Value.ObjectID;
+				}
 			}
 			return NetPickupable.INVALID_ID;
 		}
@@ -837,14 +834,13 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="pickupable">The destroyed pickupable.</param>
 		public void HandlePickupableDestroy(GameObject pickupable) {
-			var netPickupable = GetPickupableByGameObject(pickupable);
-			if (netPickupable != null) {
+			ObjectSyncComponent osc = GetPickupableByGameObject(pickupable);
+			if (osc != null) {
 				Messages.PickupableDestroyMessage msg = new Messages.PickupableDestroyMessage();
-				msg.id = netPickupable.NetId;
+				msg.id = osc.ObjectID;
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 
-				Logger.Debug($"Handle pickupable destroy {pickupable.name}");
-				netPickupables.Remove(netPickupable.NetId);
+				Logger.Debug($"Handle pickupable destroy {pickupable.name}, Object ID: {osc.ObjectID}");
 			}
 			else {
 				Logger.Debug($"Unhandled pickupable has been destroyed {pickupable.name}");
@@ -860,63 +856,83 @@ namespace MSCMP.Network {
 			Vector3 position = Utils.NetVec3ToGame(msg.transform.position);
 			Quaternion rotation = Utils.NetQuatToGame(msg.transform.rotation);
 
-			if (netPickupables.ContainsKey(msg.id)) {
-				NetPickupable netPickupable = netPickupables[msg.id];
-				GameObject gameObject = netPickupable.gameObject;
-				Game.GamePickupableDatabase.PrefabDesc desc = Game.GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
+			if (ObjectSyncManager.Instance.ObjectIDs.ContainsKey(msg.id)) {
+				ObjectSyncComponent osc = ObjectSyncManager.Instance.ObjectIDs[msg.id];
+				if (osc.ObjectID == msg.id) {
+					Logger.Debug("Ignoring duplicate pickupable spawn request.");
+					return;
+				}
+				GameObject gameObject = osc.gameObject;
+				GamePickupableDatabase.PrefabDesc desc = GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
 				if (gameObject != null) {
-					var metaData = gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
-					if (msg.prefabId == metaData.prefabId) {
-						gameObject.SetActive(msg.active);
-						gameObject.transform.position = position;
-						gameObject.transform.rotation = rotation;
-						if (msg.HasData) {
-							HandlePickupablesSpawnData(gameObject, desc.type, msg.Data);
+					var metaData = gameObject.GetComponent<PickupableMetaDataComponent>();
+					// Incorrect prefab found.
+					if (msg.prefabId != metaData.prefabId) {
+						bool resolved = false;
+						foreach (var go in ObjectSyncManager.Instance.ObjectIDs) {
+							if (go.Value.gameObject.GetComponent<PickupableMetaDataComponent>().prefabId == msg.prefabId) {
+								gameObject = go.Value.gameObject;
+								Logger.Log("Prefab mismatch was resolved.");
+								resolved = true;
+								break;
+							}
 						}
-						return;
+						if (!resolved) {
+							Client.Assert(true, "Prefab ID mismatch couldn't be resolved!");
+						}
 					}
+					gameObject.SetActive(msg.active);
+					gameObject.transform.position = position;
+					gameObject.transform.rotation = rotation;
+					if (msg.HasData) {
+						HandlePickupablesSpawnData(gameObject, desc.type, msg.Data);
+					}
+					if (gameObject.GetComponent<ObjectSyncComponent>() != null) {
+						GameObject.Destroy(gameObject.GetComponent<ObjectSyncComponent>());
+					}
+					gameObject.AddComponent<ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, msg.id);
+					return;
 				}
 
 				DestroyPickupableLocal(msg.id);
 			}
 
-			GameObject pickupable = Game.GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation);
+			GameObject pickupable = Game.GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation, msg.id);
 			if (msg.HasData) {
 				Game.GamePickupableDatabase.PrefabDesc desc = Game.GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
 				HandlePickupablesSpawnData(pickupable, desc.type, msg.Data);
 			}
-			RegisterPickupable(msg.id, pickupable, true);
+			RegisterPickupable(pickupable, true);
+			if (pickupable.GetComponent<ObjectSyncComponent>() != null) {
+				GameObject.Destroy(pickupable.GetComponent<ObjectSyncComponent>());
+			}
+			pickupable.AddComponent<ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, msg.id);
 		}
 
 		/// <summary>
 		/// Destroy given pickupable from the game without sending destroy message to players.
 		/// </summary>
-		/// <param name="id">The network id of the pickupable to destroy.</param>
-		private void DestroyPickupableLocal(ushort id) {
-			if (!netPickupables.ContainsKey(id)) {
+		/// <param name="id">The object ID of the pickupable to destroy.</param>
+		private void DestroyPickupableLocal(int id) {
+			if (!ObjectSyncManager.Instance.ObjectIDs.ContainsKey(id)) {
 				return;
 			}
-			var gameObject = netPickupables[id].gameObject;
+			var gameObject = ObjectSyncManager.Instance.ObjectIDs[id].gameObject;
 			if (gameObject != null) {
 				GameObject.Destroy(gameObject);
 			}
-			netPickupables.Remove(id);
 		}
 
 		/// <summary>
-		/// Register pickupable into the network world.
+		/// Register pickupable into the network world. (Deprecated)
 		/// </summary>
-		/// <param name="netId">The network id of the pickupable.</param>
 		/// <param name="pickupable">The game object representing pickupable.</param>
 		/// <param name="remote">Is this remote pickupable?</param>
-		public void RegisterPickupable(ushort netId, GameObject pickupable, bool remote = false) {
-			Client.Assert(!netPickupables.ContainsKey(netId), $"Duplicate net id {netId}");
+		public void RegisterPickupable(GameObject pickupable, bool remote = false) {
 			var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
 			Client.Assert(metaData != null, $"Failed to register pickupable. No meta data found. {pickupable.name} ({pickupable.GetInstanceID()})");
 
-			Logger.Debug($"Registering pickupable {pickupable.name} (net id: {netId}, instance id: {pickupable.GetInstanceID()})");
-
-			netPickupables.Add(netId, new NetPickupable(netId, pickupable));
+			Logger.Debug($"Registering pickupable {pickupable.name} (instance id: {pickupable.GetInstanceID()})");
 
 			if (remote) {
 				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
