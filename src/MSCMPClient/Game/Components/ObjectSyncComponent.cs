@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using MSCMP.Network;
 using MSCMP.Game.Objects;
 
@@ -74,6 +74,10 @@ namespace MSCMP.Game.Components {
 				// Boat.
 				case ObjectSyncManager.ObjectTypes.Boat:
 					syncedObject = new Boat(this.gameObject);
+					break;
+				// Garage door.
+				case ObjectSyncManager.ObjectTypes.GarageDoor:
+					syncedObject = new GarageDoor(this.gameObject);
 					break;
 			}
 			isSetup = true;

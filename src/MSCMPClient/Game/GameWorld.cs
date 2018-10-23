@@ -236,6 +236,13 @@ namespace MSCMP.Game {
 				ObjectSyncComponent osc = gameObject.transform.FindChild("GFX").FindChild("Colliders").FindChild("Collider").gameObject.AddComponent<ObjectSyncComponent>();
 				osc.Setup(ObjectSyncManager.ObjectTypes.Boat, ObjectSyncManager.AUTOMATIC_ID);
 			}
+			else if (gameObject.name == "GarageDoors") {
+				ObjectSyncComponent oscLeft = gameObject.transform.FindChild("DoorLeft").FindChild("Coll").gameObject.AddComponent<ObjectSyncComponent>();
+				oscLeft.Setup(ObjectSyncManager.ObjectTypes.GarageDoor, ObjectSyncManager.AUTOMATIC_ID);
+				ObjectSyncComponent oscRight = gameObject.transform.FindChild("DoorRight").FindChild("Coll").gameObject.AddComponent<ObjectSyncComponent>();
+				oscRight.Setup(ObjectSyncManager.ObjectTypes.GarageDoor, ObjectSyncManager.AUTOMATIC_ID);
+			}
+		}
 
 		/// <summary>
 		/// Handle collected objects destroy.
