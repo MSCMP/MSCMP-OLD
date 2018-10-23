@@ -69,15 +69,15 @@ namespace MSCMP.Network {
 			RegisterVehicle("FERNDALE(1630kg)");
 			RegisterVehicle("GIFU(750/450psi)");
 
-			Game.GameCallbacks.onWorldUnload += () => {
+			GameCallbacks.onWorldUnload += () => {
 				OnGameWorldUnload();
 			};
 
-			Game.GameCallbacks.onWorldLoad += () => {
+			GameCallbacks.onWorldLoad += () => {
 				OnGameWorldLoad();
 			};
 
-			Game.GameCallbacks.onPlayMakerObjectCreate += (GameObject instance, GameObject pickupable) => {
+			GameCallbacks.onPlayMakerObjectCreate += (GameObject instance, GameObject prefab) => {
 				if (!Game.GamePickupableDatabase.IsPickupable(instance)) {
 					return;
 				}
@@ -123,7 +123,7 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				if (!Game.GamePickupableDatabase.IsPickupable(instance)) {
+				if (!GamePickupableDatabase.IsPickupable(instance)) {
 					return;
 				}
 
@@ -133,7 +133,7 @@ namespace MSCMP.Network {
 				}
 
 				if (activate) {
-					var metaData = pickupable.gameObject.GetComponent<Game.Components.PickupableMetaDataComponent>();
+					var metaData = pickupable.gameObject.GetComponent<PickupableMetaDataComponent>();
 
 					Messages.PickupableSpawnMessage msg = new Messages.PickupableSpawnMessage();
 					msg.id = pickupable.ObjectID;
@@ -150,7 +150,7 @@ namespace MSCMP.Network {
 				}
 			};
 
-			Game.GameCallbacks.onPlayMakerObjectDestroy += (GameObject instance) => {
+			GameCallbacks.onPlayMakerObjectDestroy += (GameObject instance) => {
 				if (!Game.GamePickupableDatabase.IsPickupable(instance)) {
 					return;
 				}
@@ -164,7 +164,7 @@ namespace MSCMP.Network {
 				HandlePickupableDestroy(instance);
 			};
 
-			Game.GameCallbacks.onPlayMakerSetPosition += (GameObject gameObject, Vector3 position, Space space) => {
+			GameCallbacks.onPlayMakerSetPosition += (GameObject gameObject, Vector3 position, Space space) => {
 				if (!Game.GamePickupableDatabase.IsPickupable(gameObject)) {
 					return;
 				}
