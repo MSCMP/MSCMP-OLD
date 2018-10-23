@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using MSCMP.Game.Places;
 using MSCMP.Game.Objects;
 using MSCMP.Game.Components;
 using HutongGames.PlayMaker;
@@ -228,7 +229,9 @@ namespace MSCMP.Game {
 			else if (gameObject.name == "TRAFFIC") {
 				new TrafficManager(gameObject);
 			}
-		}
+			else if (gameObject.name == "STORE") {
+				new Shop(gameObject);
+			}
 
 		/// <summary>
 		/// Handle collected objects destroy.

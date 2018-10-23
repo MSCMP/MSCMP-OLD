@@ -109,6 +109,7 @@
     <Compile Include="Game\Objects\PickupableTypes\PubFood.cs" />
     <Compile Include="Game\Objects\PickupableTypes\ShoppingBag.cs" />
     <Compile Include="Game\Objects\PickupableTypes\Consumable.cs" />
+    <Compile Include="Game\Places\Shop.cs" />
     <Compile Include="Game\TrafficManager.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MessagesList.cs" />
@@ -142,6 +143,7 @@
       <Name>MSCMPNetwork</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>..\..\scripts\PostClientBuild.bat $(TargetPath)</PostBuildEvent>
