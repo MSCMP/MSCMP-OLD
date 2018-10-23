@@ -211,6 +211,12 @@ namespace MSCMP.Game.Components {
 		/// <param name="pos"></param>
 		/// <param name="rot"></param>
 		public void SetPositionAndRotation(Vector3 pos, Quaternion rot) {
+			if (syncedObject == null) {
+				// Can be caused by moving an object whilst the remote client is still loading.
+				// Object should become synced after the client has finished loading anyway.
+				Logger.Debug($"Tried to set position of object '{gameObject.name}' but object isn't setup. (This is usually fine)");
+				return;
+			}
 			syncedObject.ObjectTransform().position = pos;
 			syncedObject.ObjectTransform().rotation = rot;
 		}
