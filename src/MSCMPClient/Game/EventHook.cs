@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using HutongGames.PlayMaker;
 
@@ -28,7 +28,7 @@ namespace MSCMP.Game {
 		/// <param name="actionOnExit">Should action be put ran on exitting instead of entering event?</param>
 		public static void Add(PlayMakerFSM fsm, string eventName, Func<bool> action, bool actionOnExit = false) {
 			if (fsm == null) {
-				Client.Assert(true, "Failed to hook event. (FSM is null)");
+				Client.Assert(true, "EventHook Add: Failed to hook event. (FSM is null)");
 			}
 			else {
 				FsmState state = fsm.Fsm.GetState(eventName);
@@ -48,7 +48,7 @@ namespace MSCMP.Game {
 		/// <param name="action">Optional action to run. (Action runs before duplicate check!)</param>
 		public static void AddWithSync(PlayMakerFSM fsm, string eventName, Func<bool> action = null) {
 			if (fsm == null) {
-				Logger.Debug("EventHook: AddWithSync failed. (FSM is null!)");
+				Client.Assert(true, "EventHook AddWithSync: Failed to hook event. (FSM is null)");
 			}
 			else {
 				FsmState state = fsm.Fsm.GetState(eventName);
@@ -123,6 +123,10 @@ namespace MSCMP.Game {
 		/// <param name="fsm">FSM to sync Events of.</param>
 		/// <param name="action">Optional action, default will only run events for the sync owner, or host is no one owns the object.</param>
 		public static void SyncAllEvents(PlayMakerFSM fsm, Func<bool> action = null) {
+			if (fsm == null) {
+				Client.Assert(true, "EventHook SyncAllEvents: Failed to hook event. (FSM is null)");
+				return;
+			}
 			FsmState[] states = fsm.FsmStates;
 
 			int i = 0;
