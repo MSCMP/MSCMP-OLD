@@ -282,7 +282,7 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				Game.Objects.GameDoor doors = Game.GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.position));
+				GameDoor doors = GameDoorsManager.Instance.FindGameDoors(Utils.NetVec3ToGame(msg.position));
 				if (doors == null) {
 					Logger.Log($"Player tried to open door, however, the door could not be found!");
 					return;
@@ -579,14 +579,14 @@ namespace MSCMP.Network {
 
 			// Write doors
 
-			List<Game.Objects.GameDoor> doors = Game.GameDoorsManager.Instance.doors;
+			List<GameDoor> doors = GameDoorsManager.Instance.doors;
 			int doorsCount = doors.Count;
 			msg.doors = new Messages.DoorsInitMessage[doorsCount];
 
 			Logger.Debug($"Writing state of {doorsCount} doors.");
 			for (int i = 0; i < doorsCount; ++i) {
 				var doorMsg = new Messages.DoorsInitMessage();
-				Game.Objects.GameDoor door = doors[i];
+				GameDoor door = doors[i];
 				doorMsg.position = Utils.GameVec3ToNet(door.Position);
 				doorMsg.open = door.IsOpen;
 				msg.doors[i] = doorMsg;
@@ -595,14 +595,14 @@ namespace MSCMP.Network {
 			// Write light switches.
 
 
-			List<Game.Objects.LightSwitch> lights = Game.LightSwitchManager.Instance.lightSwitches;
+			List<LightSwitch> lights = Game.LightSwitchManager.Instance.lightSwitches;
 			int lightCount = lights.Count;
 			msg.lights = new Messages.LightSwitchMessage[lightCount];
 
 			Logger.Debug($"Writing light switches state of {lightCount}");
 			for (int i = 0; i < lightCount; i++) {
 				var lightMsg = new Messages.LightSwitchMessage();
-				Game.Objects.LightSwitch light = lights[i];
+				LightSwitch light = lights[i];
 				lightMsg.pos = Utils.GameVec3ToNet(light.Position);
 				lightMsg.toggle = light.SwitchStatus;
 				msg.lights[i] = lightMsg;
@@ -665,9 +665,9 @@ namespace MSCMP.Network {
 				List<float> data = new List<float>();
 
 				// Beercases
-				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
-					Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(osc.gameObject);
-					data.Add(Game.BeerCaseManager.Instance.FullCaseBottles - beer.UsedBottles);
+				if (metaData.PrefabDescriptor.type == GamePickupableDatabase.PrefabType.BeerCase) {
+					BeerCase beer = BeerCaseManager.Instance.FindBeerCase(osc.gameObject);
+					data.Add(BeerCaseManager.Instance.FullCaseBottles - beer.UsedBottles);
 				}
 
 				if (data.Count != 0) {
