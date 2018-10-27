@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <process.h>
+#include <ShlObj.h>
 
 #include "MonoLoader.h"
 #include "MemFunctions.h"
@@ -91,14 +92,14 @@ char ClientDllPath[MAX_PATH] = { 0 };
  */
 int _cdecl UnityLog(int a1, const char *message, va_list args)
 {
-	fprintf(unityLog, "[%i] ", a1);
-	vfprintf(unityLog, message, args);
-	va_end(args);
+	if (unityLog) {
+		fprintf(unityLog, "[%i] ", a1);
+		vfprintf(unityLog, message, args);
+		va_end(args);
 #ifdef _DEBUG
-	OutputDebugString(message);
-	fflush(unityLog);
+		fflush(unityLog);
 #endif
-
+	}
 	return 0;
 }
 
@@ -160,6 +161,58 @@ static void FatalError(const char *const message)
 
 
 /**
+ * Try opening unity log file.
+ *
+ * If file does not exists it is being created.
+ *
+ * @param[in] path The path where to open file.
+ */
+static bool OpenUnityLog(const char *const path)
+{
+	unityLog = fopen(path, "w+");
+	return unityLog != nullptr;
+}
+
+const char UNITY_LOG_FILE[] = "\\unityLog.txt";
+
+/**
+ * Setups unity log.
+ */
+static bool SetupUnityLog()
+{
+	// First try to create unit log in app data.
+
+	char appData[MAX_PATH] = { 0 };
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, appData))) {
+		strcat(appData, "\\MSCMP");
+
+		bool directoryExists = (GetFileAttributes(appData) & FILE_ATTRIBUTE_DIRECTORY) != 0;
+		if (!directoryExists)
+		{
+			directoryExists = CreateDirectory(appData, NULL) == TRUE;
+		}
+
+		if (directoryExists)
+		{
+			strcat(appData, UNITY_LOG_FILE);
+			if (OpenUnityLog(appData))
+			{
+				return true;
+			}
+		}
+	}
+
+	// Fallback, try to create unityLog in MSCMP installation directory.
+
+	char unityLogPath[MAX_PATH] = { 0 };
+	GetModulePath(GetModuleHandle("MSCMPInjector.dll"), unityLogPath);
+	strcat(unityLogPath, UNITY_LOG_FILE);
+
+	return OpenUnityLog(unityLogPath);
+}
+
+
+/**
  * The injector DLL entry point.
  */
 BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
@@ -169,16 +222,9 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 	{
 		DisableThreadLibraryCalls(hModule);
 
-		// Setup unity log hook.
-
-		char UnityLogPath[MAX_PATH] = { 0 };
-		GetModulePath(GetModuleHandle("MSCMPInjector.dll"), UnityLogPath);
-		strcat(UnityLogPath, "\\unityLog.txt");
-
-		unityLog = fopen(UnityLogPath, "w+");
-		if (!unityLog)
+		if (!SetupUnityLog())
 		{
-			FatalError("Unable to create Unity Log!");
+			FatalError("Unable to create unity Log!");
 			return FALSE;
 		}
 
