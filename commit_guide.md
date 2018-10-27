@@ -37,4 +37,4 @@ You can take a look at commit messages from different developers [here](https://
 
 Questions?
 ===
-Feel free to join [official projects discord](https://discordapp.com/invite/aDhQDv) and chat with us.
+Feel free to join [official projects discord](https://discordapp.com/invite/79B8gKC) and chat with us.

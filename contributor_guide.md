@@ -12,4 +12,4 @@ what we do and how (sometimes also why!).
 * [How to debug mod using Visual Studio.](howtodebug.md)
 * [How to make commits and prevent frustration because your pull request was rejected.](commit_guide.md)
 
-If you have some questions feel free to join [official projects discord](https://discordapp.com/invite/aDhQDv) and chat with us.
+If you have some questions feel free to join [official projects discord](https://discordapp.com/invite/79B8gKC) and chat with us.

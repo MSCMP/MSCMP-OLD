@@ -63,4 +63,4 @@ SendMessage("My super number " + variable);
 
 ### Have any question about code style?
 
-If you have any question. First of all check existing code - if you still don't find answer to your question here you can always ask on the [discord](https://discordapp.com/invite/aDhQDv) of the project.
+If you have any question. First of all check existing code - if you still don't find answer to your question here you can always ask on the [discord](https://discordapp.com/invite/79B8gKC) of the project.
