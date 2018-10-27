@@ -59,5 +59,9 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 Filename: "{app}\bin\{#MyConfiguration}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-Type: files; Name: "{app}\bin\Release\path.txt"
-Type: files; Name: "{app}\bin\Release\clientLog.txt"
+Type: files; Name: "{app}\bin\{#MyConfiguration}\path.txt"
+Type: files; Name: "{app}\bin\{#MyConfiguration}\clientLog.txt"
+Type: files; Name: "{app}\bin\{#MyConfiguration}\unityLog.txt"
+Type: files; Name: "{localappdata}\{#MyAppName}\clientLog.txt"
+Type: files; Name: "{localappdata}\{#MyAppName}\unityLog.txt"
+Type: dirifempty; Name: "{localappdata}\{#MyAppName}"
