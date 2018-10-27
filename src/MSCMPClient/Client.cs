@@ -26,9 +26,7 @@ namespace MSCMP
 		/// Starts the mod. Called from Injector.
 		/// </summary>
 		public static void Start() {
-			string logPath = GetPath("clientLog.txt");
-			if (!Logger.SetupLogger(logPath)) {
-				FatalError($"Cannot setup logger. Log file path: {logPath}");
+			if (!SetupLogger()) {
 				return;
 			}
 
@@ -140,5 +138,45 @@ namespace MSCMP
 				UI.Console.Instance.AddMessage(message);
 			}
 		}
+
+		/// <summary>
+		/// Initializes logger.
+		/// </summary>
+		/// <returns>true if logger initialization has succeeded, false otherwise</returns>
+		static private bool SetupLogger() {
+			string logPath;
+
+			// First try create clientLog in app data.
+
+			string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+			string mscmpData = appData + "/MSCMP";
+			bool mscmpDataExists = Directory.Exists(mscmpData);
+			if (! mscmpDataExists) {
+				try {
+					mscmpDataExists = Directory.CreateDirectory(mscmpData).Exists;
+				}
+				catch {
+					// Nothing.. let us fallback below.
+				}
+			}
+
+			if (mscmpDataExists) {
+				logPath = mscmpData + "/clientLog.txt";
+				if (Logger.SetupLogger(logPath)) {
+					return true;
+				}
+			}
+
+			// The last chance, setup logger next to the .exe.
+
+			logPath = GetPath("clientLog.txt");
+			if (!Logger.SetupLogger(logPath)) {
+				FatalError($"Cannot create log file. Log file path: {logPath}\n\nTry running game as administrator.");
+				return false;
+			}
+
+			return true;
+		}
+
 	}
 }
