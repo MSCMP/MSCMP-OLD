@@ -218,6 +218,7 @@ namespace MSCMP.Network {
 
 			for (byte i = 0; i < DrinkObjectNames.Length; i++) {
 				GameObject DrinkObject = HandHandleObject.transform.FindChild(DrinkObjectNames[i]).gameObject;
+				Client.Assert(DrinkObject, "Unable to find drink object - " + DrinkObjectNames[i]);
 				Drinks.Add(DrinkObject);
 			}
 		}
