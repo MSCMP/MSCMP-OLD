@@ -224,7 +224,7 @@ BOOL WINAPI DllMain(HMODULE hModule, unsigned Reason, void *Reserved)
 
 		if (!SetupUnityLog())
 		{
-			FatalError("Unable to create unity Log!");
+			FatalError("Unable to create unity log!\nTry restarting mod as administrator.");
 			return FALSE;
 		}
 
