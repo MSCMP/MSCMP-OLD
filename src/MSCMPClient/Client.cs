@@ -148,7 +148,7 @@ namespace MSCMP
 
 			// First try create clientLog in app data.
 
-			string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+			string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 			string mscmpData = appData + "/MSCMP";
 			bool mscmpDataExists = Directory.Exists(mscmpData);
 			if (! mscmpDataExists) {

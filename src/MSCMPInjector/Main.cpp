@@ -183,7 +183,7 @@ static bool SetupUnityLog()
 	// First try to create unit log in app data.
 
 	char appData[MAX_PATH] = { 0 };
-	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, appData))) {
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, appData))) {
 		strcat(appData, "\\MSCMP");
 
 		bool directoryExists = (GetFileAttributes(appData) & FILE_ATTRIBUTE_DIRECTORY) != 0;
