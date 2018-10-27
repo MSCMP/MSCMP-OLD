@@ -254,7 +254,7 @@ namespace MSCMP {
 			const float invitePanelHeight = 400.0f;
 			const float invitePanelWidth = 300.0f;
 			const float rowHeight = 20.0f;
-			Rect invitePanelRect = new Rect(10, Screen.height / 2 - invitePanelHeight / 2, invitePanelWidth, 20.0f);
+			Rect invitePanelRect = new Rect(Screen.width - invitePanelWidth - 10.0f, Screen.height / 2 - invitePanelHeight / 2, invitePanelWidth, 20.0f);
 
 			// Draw header
 
