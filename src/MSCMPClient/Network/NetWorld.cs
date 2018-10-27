@@ -473,6 +473,7 @@ namespace MSCMP.Network {
 		public void WriteFullWorldSync(Messages.FullWorldSyncMessage msg) {
 
 			Logger.Debug("Writing full world synchronization message.");
+			var watch = System.Diagnostics.Stopwatch.StartNew();
 
 			// Write time
 
@@ -577,7 +578,8 @@ namespace MSCMP.Network {
 
 			netManager.GetLocalPlayer().WriteSpawnState(msg);
 
-			Logger.Debug("World state has been written.");
+			watch.Stop();
+			Logger.Debug("World state has been written. Took " + watch.ElapsedMilliseconds + "ms");
 		}
 
 
@@ -587,6 +589,10 @@ namespace MSCMP.Network {
 		/// <param name="msg">The message to handle.</param>
 
 		public void HandleFullWorldSync(Messages.FullWorldSyncMessage msg) {
+
+			Logger.Debug("Handling full world synchronization message.");
+			var watch = System.Diagnostics.Stopwatch.StartNew();
+
 			// Read time
 
 			Game.GameWorld gameWorld = Game.GameWorld.Instance;
@@ -657,6 +663,9 @@ namespace MSCMP.Network {
 
 				DestroyPickupableLocal(id);
 			}
+
+			watch.Stop();
+			Logger.Debug("Full world synchronization message has been handled. Took " + watch.ElapsedMilliseconds + "ms");
 		}
 
 		/// <summary>
