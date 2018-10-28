@@ -1,7 +1,7 @@
 ; My Summer Car Multiplayer Installation script.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#define MyAppVersion 		"0.2.5-64bit" 	; the version of the mod - update with new releases.
+#define MyAppVersion 		"0.3.0-64bit" 	; the version of the mod - update with new releases.
 #define MyConfiguration 	"Release" 		; if you want to build installer from different configuration change that variable possible configurations "Debug", "Release" or "Public Release"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
