@@ -119,7 +119,12 @@
     <Compile Include="Utilities\IMGUIUtils.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\MSCMPNetwork\MSCMPNetwork.csproj">
+      <Project>{81b56f15-3d49-42cf-adf5-d2039ac334e9}</Project>
+      <Name>MSCMPNetwork</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>..\..\scripts\PostClientBuild.bat $(TargetPath)</PostBuildEvent>
