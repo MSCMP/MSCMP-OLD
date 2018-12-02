@@ -161,6 +161,23 @@ namespace MSCMP.Development {
 
 				writer.WriteValue($"<b>Active state:</b> {fsm.ActiveStateName}<br/>");
 
+
+				writer.WriteValue("<b>Global transitions:</b>");
+				if (fsm.GlobalTransitions.Length > 0) {
+					writer.WriteValue("<br/>");
+					writer.StartTag("ol");
+					foreach (var globalTransition in fsm.GlobalTransitions) {
+						writer.StartTag("li");
+							writer.WriteValue($"{globalTransition.EventName} > ");
+							writer.Link($"#{globalTransition.ToState}", globalTransition.ToState);
+						writer.EndTag();
+					}
+					writer.EndTag();
+				}
+				else {
+					writer.WriteValue(" None");
+				}
+
 				foreach (var state in fsm.States) {
 					writer.StartTag("div", "class=\"fsm_state " + ((fsm.ActiveState == state) ? "fsm_active_state" : "") + $"\" id=\"{state.Name}\"");
 					{
