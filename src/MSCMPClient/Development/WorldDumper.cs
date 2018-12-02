@@ -22,6 +22,15 @@ namespace MSCMP.Development {
 			return $"{santitizedName}-{obj.GetInstanceID()}.html";
 		}
 
+		private static string DumpOwnerDefault(FsmOwnerDefault ownerDefault) {
+			string ownerObjectName = "(null)";
+			if ((ownerDefault.GameObject != null) && (ownerDefault.GameObject.Value != null)) {
+				ownerObjectName = ownerDefault.GameObject.Value.ToString();
+			}
+
+			return $" Owner - {ownerDefault.OwnerOption} - {ownerObjectName}";
+		}
+
 
 		private static void PrintValue(object obj, object value, HTMLWriter writer) {
 			if (value == null) {
@@ -68,15 +77,36 @@ namespace MSCMP.Development {
 
 			if (value is FsmOwnerDefault) {
 				var val = (FsmOwnerDefault)value;
-
-				string ownerObjectName = "(null)";
-				if ((val.GameObject != null) && (val.GameObject.Value != null)) {
-					ownerObjectName = val.GameObject.Value.ToString();
-				}
-
-				writer.WriteValue($" Owner - {val.OwnerOption} - {ownerObjectName}");
+				writer.WriteValue(DumpOwnerDefault(val));
 			}
 
+			if (value is FsmEventTarget) {
+				var val = (FsmEventTarget)value;
+
+				string eventTargetInfo = val.target.ToString() + " ";
+
+				if (val.excludeSelf.Value) {
+					eventTargetInfo += "(excludeSelf) ";
+				}
+
+				if (val.fsmComponent != null) {
+					eventTargetInfo += $"(fsmComponent: {val.fsmComponent.name}) ";
+				}
+
+				if (val.fsmName != null) {
+					eventTargetInfo += $"(fsmName: {val.fsmName.Value}) ";
+				}
+
+				if (val.gameObject != null) {
+					eventTargetInfo += "(" + DumpOwnerDefault(val.gameObject) + ") ";
+				}
+
+				if (val.sendToChildren.Value) {
+					eventTargetInfo += "(sendToChildren) ";
+				}
+
+				writer.WriteValue(eventTargetInfo);
+			}
 		}
 
 		private static void PrintObjectFields(object obj, HTMLWriter writer) {
