@@ -1,9 +1,10 @@
+using System;
 using System.Collections;
 using System.IO;
 
 
 namespace MSCMP.Utilities {
-	class HTMLWriter {
+	class HTMLWriter : IDisposable {
 
 		StreamWriter streamWriter = null;
 
@@ -16,10 +17,16 @@ namespace MSCMP.Utilities {
 		public HTMLWriter(string fileName) {
 			this.fileName = fileName;
 			streamWriter = new StreamWriter(fileName, false, System.Text.Encoding.UTF8);
-			streamWriter.AutoFlush = true;
 			if (streamWriter == null) {
 				Logger.Log($"Failed to write document - {fileName}!");
 			}
+			else {
+				streamWriter.AutoFlush = false;
+			}
+		}
+
+		public void Dispose() {
+			streamWriter.Close();
 		}
 
 		public void WriteString(string str) {
@@ -72,16 +79,28 @@ namespace MSCMP.Utilities {
 		}
 		public delegate void WriteContents(HTMLWriter writer);
 
-		public static bool WriteDocument(string fileName, string title, WriteContents writeDelegate) {
-			HTMLWriter writer = new HTMLWriter(fileName);
-			writer.StartTag("head");
-				writer.StartTag("title");
-					writer.WriteValue(title);
+		public static bool WriteDocument(string fileName, string title, string cssStyleFile, WriteContents writeDelegate) {
+			using (HTMLWriter writer = new HTMLWriter(fileName)) {
+				writer.StartTag("head");
+				{
+					writer.StartTag("title");
+					{
+						writer.WriteValue(title);
+					}
+					writer.EndTag();
+
+					if (cssStyleFile.Length > 0) {
+						writer.ShortTag("link", "rel=\"stylesheet\" type=\"text/css\" href=\"" + cssStyleFile + "\"");
+					}
+				}
 				writer.EndTag();
-			writer.EndTag();
-			writer.StartTag("body");
-				writeDelegate(writer);
-			writer.EndTag();
+
+				writer.StartTag("body");
+				{
+					writeDelegate(writer);
+				}
+				writer.EndTag();
+			}
 			return true;
 		}
 

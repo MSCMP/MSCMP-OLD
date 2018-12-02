@@ -122,6 +122,8 @@ namespace MSCMP.Development {
 			return component.name;
 		}
 
+		static string cssStylePath = "";
+
 
 		public WorldDumper() {
 			RegisterNewDumper<TextAsset>((UnityEngine.Object obj, HTMLWriter writer, WorldDumper dumper, string folder) => {
@@ -286,7 +288,10 @@ namespace MSCMP.Development {
 		public void Dump(string folder) {
 			UnityEngine.Object[] objects = Resources.FindObjectsOfTypeAll<UnityEngine.Object>();
 
-			HTMLWriter.WriteDocument($"{folder}/index.html", "INDEX", (HTMLWriter writer) => {
+			cssStylePath = $"{folder}/style.css";
+			WriteStyles();
+
+			HTMLWriter.WriteDocument($"{folder}/index.html", "INDEX", cssStylePath, (HTMLWriter writer) => {
 
 				writer.StartTag("table");
 				writer.StartTag("tr");
@@ -327,43 +332,39 @@ namespace MSCMP.Development {
 					System.GC.Collect();
 				}
 				writer.EndTag();
-
-				WriteStyles(writer);
 			});
 		}
 
-		private void WriteStyles(HTMLWriter writer) {
-			writer.StartTag("style", "type=\"text/css\"");
-			{
-				writer.WriteValue("body { background: #202020; color: #b3b3b3;  font-family: sans-serif; }");
-				writer.WriteValue("a { color: #9e9e9e; }");
-				writer.WriteValue(".field_type { background: #418dff; color: #000; text-align: center; border: 1px solid #203e6b; padding: 3px; }");
-				writer.WriteValue(".field_value { background: #000; color: #fff; border: 1px solid black; padding: 3px;  }");
-				writer.WriteValue(".fields_table { font-size: 10px; margin: 5px; }");
+		static void WriteStyles() {
+			using (var streamWriter = new StreamWriter(cssStylePath, false, System.Text.Encoding.UTF8)) {
+				streamWriter.WriteLine("body { background: #202020; color: #b3b3b3;  font-family: sans-serif; }");
+				streamWriter.WriteLine("a { color: #9e9e9e; }");
+				streamWriter.WriteLine(".field_type { background: #418dff; color: #000; text-align: center; border: 1px solid #203e6b; padding: 3px; }");
+				streamWriter.WriteLine(".field_value { background: #000; color: #fff; border: 1px solid black; padding: 3px;  }");
+				streamWriter.WriteLine(".fields_table { font-size: 10px; margin: 5px; }");
 
-				writer.WriteValue(".fsm_state { background: #252525; color: #a9a9a9; border: 1px solid #cecece; margin: 10px; width: 600px; }");
-				writer.WriteValue(".fsm_active_state { border: 2px solid gold; }");
-				writer.WriteValue(".fsm_state_name { background: #101010; padding: 10px; }");
-				writer.WriteValue(".error { background: #a90000; }");
-				writer.WriteValue(".fsm_action { background: #383838; border: 1px solid #000000; margin: 5px; border-radius: 5px; }");
-				writer.WriteValue(".fsm_action_name { padding: 10px; font-size: 14px; font-weight: bold; border-bottom: 1px solid black; }");
+				streamWriter.WriteLine(".fsm_state { background: #252525; color: #a9a9a9; border: 1px solid #cecece; margin: 10px; width: 600px; }");
+				streamWriter.WriteLine(".fsm_active_state { border: 2px solid gold; }");
+				streamWriter.WriteLine(".fsm_state_name { background: #101010; padding: 10px; }");
+				streamWriter.WriteLine(".error { background: #a90000; }");
+				streamWriter.WriteLine(".fsm_action { background: #383838; border: 1px solid #000000; margin: 5px; border-radius: 5px; }");
+				streamWriter.WriteLine(".fsm_action_name { padding: 10px; font-size: 14px; font-weight: bold; border-bottom: 1px solid black; }");
 
-				writer.WriteValue(".variable_ref { background: #ffb441; color: #000; font-size: 9px; display: inline-block; border-radius: 3px; border: 1px solid #6b4b1a; }");
+				streamWriter.WriteLine(".variable_ref { background: #ffb441; color: #000; font-size: 9px; display: inline-block; border-radius: 3px; border: 1px solid #6b4b1a; }");
 
-				writer.WriteValue(".transition_table { margin: 2px; font-size: 12px; }");
+				streamWriter.WriteLine(".transition_table { margin: 2px; font-size: 12px; }");
 
-				writer.WriteValue(".state_phase { background: #383838; border: 1px solid #000000; margin: 5px; border-radius: 5px; font-size: 18px; text-align: center; }");
+				streamWriter.WriteLine(".state_phase { background: #383838; border: 1px solid #000000; margin: 5px; border-radius: 5px; font-size: 18px; text-align: center; }");
 
-				writer.WriteValue(".arrow { border: solid #909090; border-width: 0 2px 2px 0; display: inline-block; padding: 10px; width: 1px; }");
+				streamWriter.WriteLine(".arrow { border: solid #909090; border-width: 0 2px 2px 0; display: inline-block; padding: 10px; width: 1px; }");
 
-				writer.WriteValue(".right { transform: rotate(-45deg); -webkit-transform: rotate(-45deg); }");
-				writer.WriteValue(".left { transform: rotate(135deg); -webkit-transform: rotate(135deg); }");
-				writer.WriteValue(".up { transform: rotate(-135deg); -webkit-transform: rotate(-135deg); }");
-				writer.WriteValue(".down { transform: rotate(45deg); -webkit-transform: rotate(45deg); }");
+				streamWriter.WriteLine(".right { transform: rotate(-45deg); -webkit-transform: rotate(-45deg); }");
+				streamWriter.WriteLine(".left { transform: rotate(135deg); -webkit-transform: rotate(135deg); }");
+				streamWriter.WriteLine(".up { transform: rotate(-135deg); -webkit-transform: rotate(-135deg); }");
+				streamWriter.WriteLine(".down { transform: rotate(45deg); -webkit-transform: rotate(45deg); }");
 
-				writer.WriteValue(".center_arrow { margin-left: 289px; margin-top: -10px; margin-bottom: 2px; }");
+				streamWriter.WriteLine(".center_arrow { margin-left: 289px; margin-top: -10px; margin-bottom: 2px; }");
 			}
-			writer.EndTag();
 		}
 
 
@@ -404,7 +405,7 @@ namespace MSCMP.Development {
 			try {
 				if (bestDumpDelegate != null) {
 					string fileName = $"{folder}/{BuildFileName(obj)}";
-					HTMLWriter.WriteDocument(fileName, $"{obj.name} - {obj.GetType().FullName}", (HTMLWriter writer) => {
+					HTMLWriter.WriteDocument(fileName, $"{obj.name} - {obj.GetType().FullName}", cssStylePath, (HTMLWriter writer) => {
 						writer.Link(previousFile, "< GO BACK");
 						writer.NewLine();
 						writer.OneLiner("h1", obj.name);
@@ -412,8 +413,6 @@ namespace MSCMP.Development {
 						writer.ShortTag("hr");
 
 						bestDumpDelegate.Invoke(obj, writer, this, folder);
-
-						WriteStyles(writer);
 					});
 					return fileName;
 				}
