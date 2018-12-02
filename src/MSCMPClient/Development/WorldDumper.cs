@@ -59,6 +59,12 @@ namespace MSCMP.Development {
 					writer.WriteValue($" <div class=\"variable_ref\">{variableName}</div>");
 				}
 			}
+			if (value is FsmProperty) {
+				string propertyName = ((FsmProperty)value).PropertyName;
+				if (propertyName.Length > 0) {
+					writer.WriteValue($" <div class=\"variable_ref\">{propertyName}</div>");
+				}
+			}
 		}
 
 		private static void PrintObjectFields(object obj, HTMLWriter writer) {
