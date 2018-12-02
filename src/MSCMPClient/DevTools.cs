@@ -298,7 +298,10 @@ namespace MSCMP {
 			Utils.CallSafe("DUmpWorld", ()=> {
 				Development.WorldDumper worldDumper = new Development.WorldDumper();
 				string dumpFolder = Client.GetPath($"HTMLWorldDump\\{levelName}");
-				Directory.Delete(dumpFolder, true);
+				if (Directory.Exists(dumpFolder)) {
+					Directory.Delete(dumpFolder, true);
+				}
+
 				Directory.CreateDirectory(dumpFolder);
 
 				var watch = Stopwatch.StartNew();
