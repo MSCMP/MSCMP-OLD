@@ -116,10 +116,14 @@ void Injector_SetupLogAndTracing()
 }
 void Injector_SetupDebugger()
 {
+	// If MSCMP is not build in debug configuration require explicit
+	// unity debugging to be active. Otherwise always setup debugger.
+#ifndef _DEBUG
 	if (!getenv("UNITY_GIVE_CHANCE_TO_ATTACH_DEBUGGER"))
 	{
 		return;
 	}
+#endif
 
 	const char *argv[] = {
 		"--debugger-agent=transport=dt_socket,embedding=1,server=y,address=127.0.0.1:56000,defer=y"
