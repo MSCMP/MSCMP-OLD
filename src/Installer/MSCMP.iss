@@ -43,6 +43,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 [Files]
 Source: "..\..\bin\{#MyConfiguration}\{#MyAppExeName}"; DestDir: "{app}\bin\{#MyConfiguration}"; Flags: ignoreversion
 Source: "..\..\bin\{#MyConfiguration}\MSCMPClient.dll"; DestDir: "{app}\bin\{#MyConfiguration}"; Flags: ignoreversion
+Source: "..\..\bin\{#MyConfiguration}\MSCMPNetwork.dll"; DestDir: "{app}\bin\{#MyConfiguration}"; Flags: ignoreversion
 Source: "..\..\bin\{#MyConfiguration}\MSCMPInjector.dll"; DestDir: "{app}\bin\{#MyConfiguration}"; Flags: ignoreversion
 Source: "..\..\bin\{#MyConfiguration}\steam_api64.dll"; DestDir: "{app}\bin\{#MyConfiguration}"; Flags: ignoreversion
 Source: "..\..\bin\{#MyConfiguration}\steam_appid.txt"; DestDir: "{app}\bin\{#MyConfiguration}"; Flags: ignoreversion
