@@ -65,6 +65,18 @@ namespace MSCMP.Development {
 					writer.WriteValue($" <div class=\"variable_ref\">{propertyName}</div>");
 				}
 			}
+
+			if (value is FsmOwnerDefault) {
+				var val = (FsmOwnerDefault)value;
+
+				string ownerObjectName = "(null)";
+				if ((val.GameObject != null) && (val.GameObject.Value != null)) {
+					ownerObjectName = val.GameObject.Value.ToString();
+				}
+
+				writer.WriteValue($" Owner - {val.OwnerOption} - {ownerObjectName}");
+			}
+
 		}
 
 		private static void PrintObjectFields(object obj, HTMLWriter writer) {
