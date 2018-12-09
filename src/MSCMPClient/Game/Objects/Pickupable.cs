@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using MSCMP.Game.Objects.PickupableTypes;
 using UnityEngine;
 
@@ -9,6 +10,17 @@ namespace MSCMP.Game.Objects {
 		Rigidbody rigidbody;
 
 		bool holdingObject = false;
+
+		public enum SubType {
+			Consumable,
+			ShoppingBag,
+			BeerCase,
+		}
+
+		SubType objectType;
+
+		BeerCase beerCaseSubType;
+		int usedBottlesLast;
 
 		/// <summary>
 		/// Constructor.
@@ -29,13 +41,21 @@ namespace MSCMP.Game.Objects {
 				// Consumable.
 				if (fsm.Fsm.GetState("Eat") != null || fsm.Fsm.GetState("Eat 2") != null) {
 					new Consumable(gameObject);
+					objectType = SubType.Consumable;
 					break;
 				}
+				// Shopping bag.
 				else if (fsm.Fsm.GetState("Initiate") != null && fsm.Fsm.Name == "Open") {
 					new ShoppingBag(gameObject);
+					objectType = SubType.ShoppingBag;
 					break;
 				}
-				// Insert other stuff here, such as beercases.
+				// Beer case.
+				else if (fsm.Fsm.GetState("Remove bottle") != null) {
+					beerCaseSubType = new BeerCase(gameObject);
+					objectType = SubType.BeerCase;
+					break;
+				}
 			}
 		}
 
@@ -80,15 +100,24 @@ namespace MSCMP.Game.Objects {
 		/// Returns variables to be sent to the remote client.
 		/// </summary>
 		/// <returns>Variables to be sent to the remote client.</returns>
-		public float[] ReturnSyncedVariables() {
+		public float[] ReturnSyncedVariables(bool sendAllVariables) {
+			List<float> variables = new List<float>();
 			if (holdingObject) {
-				float[] variables = { 1 };
-				return variables;
+				variables.Add(1);
 			}
 			else {
-				float[] variables = { 0 };
-				return variables;
+				variables.Add(0);
 			}
+
+			// Beer case.
+			if (objectType == SubType.BeerCase) {
+				if (usedBottlesLast != beerCaseSubType.UsedBottles || sendAllVariables) {
+					usedBottlesLast = beerCaseSubType.UsedBottles;
+					variables.Add(beerCaseSubType.UsedBottles);
+				}
+			}
+
+			return variables.ToArray();
 		}
 
 		/// <summary>
@@ -103,6 +132,15 @@ namespace MSCMP.Game.Objects {
 				else {
 					// Object is not being held.
 					rigidbody.useGravity = true;
+				}
+
+				if (variables.Length > 1) {
+					// Beer case
+					if (objectType == SubType.BeerCase) {
+						if (variables[1] != beerCaseSubType.UsedBottles) {
+							beerCaseSubType.RemoveBottles((int)variables[1]);
+						}
+					}
 				}
 			}
 		}

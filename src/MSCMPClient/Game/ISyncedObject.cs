@@ -31,7 +31,8 @@ namespace MSCMP.Game {
 		/// Called to return variables that need to be synced on the remote client.
 		/// </summary>
 		/// <returns>Variables to send to remote client.</returns>
-		float[] ReturnSyncedVariables();
+		/// <param name="sendFullSync">Send all variables regardless of conditions.</param>
+		float[] ReturnSyncedVariables(bool sendFullSync);
 
 		/// <summary>
 		/// Handle synced variables sent from the remote client.

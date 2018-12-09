@@ -45,15 +45,6 @@ namespace MSCMP.Game {
 		}
 
 		/// <summary>
-		/// Prefab type enum used for identification of the prefabs.
-		/// </summary>
-		public enum PrefabType {
-			Generic,
-			BeerCase,
-		}
-
-
-		/// <summary>
 		/// Pickupable prefab descriptor.
 		/// </summary>
 		public class PrefabDesc {
@@ -66,11 +57,6 @@ namespace MSCMP.Game {
 			/// Prefab game object.
 			/// </summary>
 			public GameObject gameObject;
-
-			/// <summary>
-			/// Type of this prefab.
-			/// </summary>
-			public PrefabType type = PrefabType.Generic;
 
 			/// <summary>
 			/// Spawn new instance of the given pickupable at given world position.
@@ -141,8 +127,6 @@ namespace MSCMP.Game {
 				desc.gameObject.SetActive(true);
 			}
 
-			SetupPrefabDescriptorType(desc);
-
 			// Add ObjectSyncComponent.
 			if (desc.gameObject.GetComponent<Components.ObjectSyncComponent>() == null) {
 				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, -1);
@@ -185,21 +169,6 @@ namespace MSCMP.Game {
 
 				// Cannot use Remove() because GetPickupablePrefab() depends on indices to stay untouched.
 				prefabs[prefab.id] = null;
-			}
-		}
-
-		/// <summary>
-		/// Setup prefab type of the given prefab descriptor.
-		/// </summary>
-		/// <param name="desc">The descriptor to setup type for.</param>
-		private void SetupPrefabDescriptorType(PrefabDesc desc) {
-			PlayMakerFSM fsm = null;
-			fsm = Utils.GetPlaymakerScriptByName(desc.gameObject, "Use");
-			if (fsm != null) {
-				if (fsm.FsmVariables.FindFsmInt("DestroyedBottles") != null && fsm.Fsm.GetState("Remove bottle") != null) {
-					// Found BeerCase
-					desc.type = PrefabType.BeerCase;
-				}
 			}
 		}
 

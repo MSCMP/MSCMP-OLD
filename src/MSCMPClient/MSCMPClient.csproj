@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -82,7 +82,6 @@
     <Compile Include="Client.cs" />
     <Compile Include="Development\WorldDumper.cs" />
     <Compile Include="DevTools.cs" />
-    <Compile Include="Game\BeerCaseManager.cs" />
     <Compile Include="Game\Components\ObjectSyncComponent.cs" />
     <Compile Include="Game\Components\ObjectSyncPlayerComponent.cs" />
     <Compile Include="Game\Components\PickupableMetaDataComponent.cs" />
@@ -98,7 +97,6 @@
     <Compile Include="Game\ISyncedObject.cs" />
     <Compile Include="Game\ObjectSyncManager.cs" />
     <Compile Include="Game\Objects\AIVehicle.cs" />
-    <Compile Include="Game\Objects\BeerCase.cs" />
     <Compile Include="Game\LightSwitchManager.cs" />
     <Compile Include="Game\Objects\Boat.cs" />
     <Compile Include="Game\Objects\GarageDoor.cs" />
@@ -108,6 +106,7 @@
     <Compile Include="Game\Objects\LightSwitch.cs" />
     <Compile Include="Game\Objects\PassengerSeat.cs" />
     <Compile Include="Game\Objects\Pickupable.cs" />
+    <Compile Include="Game\Objects\PickupableTypes\BeerCase.cs" />
     <Compile Include="Game\Objects\PickupableTypes\PubFood.cs" />
     <Compile Include="Game\Objects\PickupableTypes\ShoppingBag.cs" />
     <Compile Include="Game\Objects\PickupableTypes\Consumable.cs" />

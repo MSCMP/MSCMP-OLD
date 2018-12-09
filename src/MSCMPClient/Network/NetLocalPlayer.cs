@@ -53,13 +53,6 @@ namespace MSCMP.Network {
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
-			BeerCaseManager.Instance.onBottleConsumed = (GameObject bcase) => {
-				Messages.RemoveBottleMessage msg = new Messages.RemoveBottleMessage();
-				msg.objectId = netWorld.GetPickupableObjectId(bcase);
-				Client.Assert(msg.objectId != NetPickupable.INVALID_ID, "Tried to drink from not network beercase.");
-				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
-			};
-
 			LightSwitchManager.Instance.onLightSwitchUsed = (GameObject lswitch, bool turnedOn) => {
 				Messages.LightSwitchMessage msg = new Messages.LightSwitchMessage();
 				msg.pos = Utils.GameVec3ToNet(lswitch.transform.position);

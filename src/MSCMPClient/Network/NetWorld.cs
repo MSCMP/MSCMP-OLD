@@ -108,9 +108,22 @@ namespace MSCMP.Network {
 					msg.id = instance.GetComponent<ObjectSyncComponent>().ObjectID;
 				}
 
+				// Determine if object should be spawned on remote client.
+				// (Helps to avoid duplicate objects spawning)
+				bool sendToRemote = false;
 				if (NetManager.Instance.IsHost) {
 					Logger.Debug("Sending new object data to client!");
+					sendToRemote = true;
+				}
+				else {
+					if (instance.name.StartsWith("BottleBeerFly")) {
+						sendToRemote = true;
+					}
+				}
+
+				if (sendToRemote) {
 					netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+					Logger.Debug("Sending new object data to client!");
 				}
 			};
 
@@ -239,19 +252,9 @@ namespace MSCMP.Network {
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.WorldPeriodicalUpdateMessage msg) => {
 				// Game reports 'next hour' - we want to have transition so correct it.
-				Game.GameWorld.Instance.WorldTime = (float)msg.sunClock - 2.0f;
-				Game.GameWorld.Instance.WorldDay = (int)msg.worldDay;
-				Game.GameWeatherManager.Instance.SetWeather(msg.currentWeather);
-			});
-
-			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.RemoveBottleMessage msg) => {
-				GameObject beerGO = GetPickupableGameObject(msg.objectId);
-				Game.Objects.BeerCase beer = Game.BeerCaseManager.Instance.FindBeerCase(beerGO);
-				if (beer == null) {
-					Logger.Log($"Player tried to drink beer, however, the beercase cannot be found.");
-					return;
-				}
-				beer.RemoveBottles(1);
+				GameWorld.Instance.WorldTime = (float)msg.sunClock - 2.0f;
+				GameWorld.Instance.WorldDay = (int)msg.worldDay;
+				GameWeatherManager.Instance.SetWeather(msg.currentWeather);
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.PlayerSyncMessage msg) => {
@@ -610,9 +613,9 @@ namespace MSCMP.Network {
 
 			// Write weather
 
-			Game.GameWeatherManager.Instance.WriteWeather(msg.currentWeather);
+			GameWeatherManager.Instance.WriteWeather(msg.currentWeather);
 
-			// Write vehicles.
+			// Write objects. (Pickupables, Player vehicles, AI vehicles)
 
 			int vehiclesCount = vehicles.Count;
 			msg.vehicles = new Messages.VehicleInitMessage[vehiclesCount];
@@ -630,7 +633,7 @@ namespace MSCMP.Network {
 			// Write pickupables.
 
 			var pickupableMessages = new List<Messages.PickupableSpawnMessage>();
-			Logger.Debug($"Writing state of {ObjectSyncManager.Instance.ObjectIDs.Count} pickupables");
+			Logger.Debug($"Writing state of {ObjectSyncManager.Instance.ObjectIDs.Count} objects");
 			foreach (var kv in ObjectSyncManager.Instance.ObjectIDs) {
 				ObjectSyncComponent osc = kv.Value;
 				if (osc == null) {
@@ -644,12 +647,12 @@ namespace MSCMP.Network {
 					wasActive = false;
 					osc.gameObject.SetActive(true);
 				}
-				Logger.Log($"Writing pickupable: {osc.gameObject.name}");
+				Logger.Log($"Writing object: {osc.gameObject.name}");
 
 				var pickupableMsg = new Messages.PickupableSpawnMessage();
 
 				var metaData = osc.gameObject.GetComponent<PickupableMetaDataComponent>();
-				Client.Assert(metaData != null && metaData.PrefabDescriptor != null, $"Pickupable with broken meta data -- {osc.gameObject.name}.");
+				Client.Assert(metaData != null && metaData.PrefabDescriptor != null, $"Object with broken meta data -- {osc.gameObject.name}.");
 
 				pickupableMsg.prefabId = metaData.prefabId;
 
@@ -663,12 +666,6 @@ namespace MSCMP.Network {
 				pickupableMsg.id = osc.gameObject.GetComponent<ObjectSyncComponent>().ObjectID;
 
 				List<float> data = new List<float>();
-
-				// Beercases
-				if (metaData.PrefabDescriptor.type == GamePickupableDatabase.PrefabType.BeerCase) {
-					BeerCase beer = BeerCaseManager.Instance.FindBeerCase(osc.gameObject);
-					data.Add(BeerCaseManager.Instance.FullCaseBottles - beer.UsedBottles);
-				}
 
 				if (data.Count != 0) {
 					pickupableMsg.Data = data.ToArray();
@@ -731,8 +728,7 @@ namespace MSCMP.Network {
 
 			// Weather.
 
-			Game.GameWeatherManager.Instance.SetWeather(msg.currentWeather);
-
+			GameWeatherManager.Instance.SetWeather(msg.currentWeather);
 			// Vehicles.
 
 			foreach (Messages.VehicleInitMessage vehicleMsg in msg.vehicles) {
@@ -884,9 +880,7 @@ namespace MSCMP.Network {
 					gameObject.SetActive(msg.active);
 					gameObject.transform.position = position;
 					gameObject.transform.rotation = rotation;
-					if (msg.HasData) {
-						HandlePickupablesSpawnData(gameObject, desc.type, msg.Data);
-					}
+
 					if (gameObject.GetComponent<ObjectSyncComponent>() != null) {
 						GameObject.Destroy(gameObject.GetComponent<ObjectSyncComponent>());
 					}
@@ -897,11 +891,7 @@ namespace MSCMP.Network {
 				DestroyPickupableLocal(msg.id);
 			}
 
-			GameObject pickupable = Game.GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation, msg.id);
-			if (msg.HasData) {
-				Game.GamePickupableDatabase.PrefabDesc desc = Game.GamePickupableDatabase.Instance.GetPickupablePrefab(msg.prefabId);
-				HandlePickupablesSpawnData(pickupable, desc.type, msg.Data);
-			}
+			GameObject pickupable = GameWorld.Instance.SpawnPickupable(msg.prefabId, position, rotation, msg.id);
 			RegisterPickupable(pickupable, true);
 			if (pickupable.GetComponent<ObjectSyncComponent>() != null) {
 				GameObject.Destroy(pickupable.GetComponent<ObjectSyncComponent>());
@@ -929,29 +919,10 @@ namespace MSCMP.Network {
 		/// <param name="pickupable">The game object representing pickupable.</param>
 		/// <param name="remote">Is this remote pickupable?</param>
 		public void RegisterPickupable(GameObject pickupable, bool remote = false) {
-			var metaData = pickupable.GetComponent<Game.Components.PickupableMetaDataComponent>();
+			var metaData = pickupable.GetComponent<PickupableMetaDataComponent>();
 			Client.Assert(metaData != null, $"Failed to register pickupable. No meta data found. {pickupable.name} ({pickupable.GetInstanceID()})");
 
 			Logger.Debug($"Registering pickupable {pickupable.name} (instance id: {pickupable.GetInstanceID()})");
-
-			if (remote) {
-				if (metaData.PrefabDescriptor.type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
-					Game.BeerCaseManager.Instance.AddBeerCase(pickupable);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Set data of pickupables.
-		/// </summary>
-		/// <param name="pickupable">Pickupable GameObject</param>
-		/// <param name="prefabId">Pickupable PrefabID</param>
-		/// <param name="data">Pickupable Data</param>
-		private void HandlePickupablesSpawnData(GameObject pickupable, Game.GamePickupableDatabase.PrefabType type, float[] data) {
-			//Beercase
-			if (type == Game.GamePickupableDatabase.PrefabType.BeerCase) {
-				Game.BeerCaseManager.Instance.SetBottleCount(pickupable, (int)data[0]);
-			}
 		}
 	}
 }

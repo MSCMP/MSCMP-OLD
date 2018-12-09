@@ -244,7 +244,7 @@ namespace MSCMP.Game.Objects {
 		/// Returns variables to be sent to the remote client.
 		/// </summary>
 		/// <returns>Variables to be sent to the remote client.</returns>
-		public float[] ReturnSyncedVariables() {
+		public float[] ReturnSyncedVariables(bool sendAllVariables) {
 			if (isSyncing == true) {
 				float[] variables = { Steering, Throttle, Brake, TargetSpeed, Waypoint, Route, WaypointStart, WaypointEnd, isClockwise };
 				return variables;

@@ -35,11 +35,6 @@ namespace MSCMP.Game {
 		PlayMakerFSM worldTimeFsm = null;
 
 		/// <summary>
-		/// Beer case manager.
-		/// </summary>
-		BeerCaseManager beerCaseManager = new BeerCaseManager();
-
-		/// <summary>
 		/// Light switch manager.
 		/// </summary>
 		LightSwitchManager lightSwitchManager = new LightSwitchManager();
@@ -171,7 +166,6 @@ namespace MSCMP.Game {
 			gameObjectUsers.Add(this);
 			gameObjectUsers.Add(doorsManager);
 			gameObjectUsers.Add(gamePickupableDatabase);
-			gameObjectUsers.Add(beerCaseManager);
 			gameObjectUsers.Add(lightSwitchManager);
 			gameObjectUsers.Add(gameWeatherManager);
 			gameObjectUsers.Add(gameVehicleDatabase);

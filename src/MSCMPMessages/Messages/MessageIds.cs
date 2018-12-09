@@ -22,7 +22,6 @@ namespace MSCMPMessages.Messages {
 		PickupableActivate,
 		PickupableSetPosition,
 		WorldPeriodicalUpdate,
-		RemoveBottle,
 		LightSwitch,
 		WeatherSync,
 		AnimSync,
@@ -31,6 +30,6 @@ namespace MSCMPMessages.Messages {
 		ObjectSync,
 		ObjectSyncResponse,
 		EventHookSync,
-		RequestObjectSync
+		RequestObjectSync,
 	}
 }
