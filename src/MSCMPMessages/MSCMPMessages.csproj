@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -59,6 +59,7 @@
     <Compile Include="Messages\AnimSyncMessage.cs" />
     <Compile Include="Generator.cs" />
     <Compile Include="Messages\AskForWorldStateMessage.cs" />
+    <Compile Include="Messages\VehicleStateMessage.cs" />
     <Compile Include="Messages\DisconnectMessage.cs" />
     <Compile Include="Messages\EventHookSyncMessage.cs" />
     <Compile Include="Messages\FullWorldSyncMessage.cs" />
@@ -79,11 +80,9 @@
     <Compile Include="Messages\QuaternionMessage.cs" />
     <Compile Include="Messages\TransformMessage.cs" />
     <Compile Include="Messages\Vector3Message.cs" />
+    <Compile Include="Messages\VehicleSwitchMessage.cs" />
     <Compile Include="Messages\VehicleEnterMessage.cs" />
     <Compile Include="Messages\VehicleLeaveMessage.cs" />
-    <Compile Include="Messages\VehicleStateMessage.cs" />
-    <Compile Include="Messages\VehicleSwitchMessage.cs" />
-    <Compile Include="Messages\VehicleSyncMessage.cs" />
     <Compile Include="Messages\WeatherUpdateMessage.cs" />
     <Compile Include="Messages\WorldPeriodicalUpdateMessage.cs" />
     <Compile Include="NetMessageDesc.cs" />

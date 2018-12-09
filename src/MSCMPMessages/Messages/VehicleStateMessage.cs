@@ -1,7 +1,7 @@
 ﻿namespace MSCMPMessages.Messages {
 	[NetMessageDesc(MessageIds.VehicleState)]
 	class VehicleStateMessage {
-		byte vehicleId;
+		int objectID;
 		int state;
 		int dashstate;
 

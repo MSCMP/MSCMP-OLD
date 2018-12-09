@@ -85,34 +85,11 @@ namespace MSCMP.Network {
 				}
 
 				switch (state) {
-					case State.DrivingVehicle:
-						SendInVehicleSync();
-						break;
-
 					case State.OnFoot:
 						SendOnFootSync();
 						break;
 				}
 			}
-		}
-
-		/// <summary>
-		/// Send in vehicle synchronization.
-		/// </summary>
-		/// <returns>true if sync was set, false otherwise</returns>
-		private bool SendInVehicleSync() {
-			Client.Assert(currentVehicle != null, "Tried to send in vehicle sync packet but no current vehicle is set.");
-
-			Messages.VehicleSyncMessage message = new Messages.VehicleSyncMessage();
-			if (!currentVehicle.WriteSyncMessage(message)) {
-				return false;
-			}
-			if (!netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
-				return false;
-			}
-
-			timeToUpdate = (float)NetVehicle.SYNC_DELAY / 1000;
-			return true;
 		}
 
 		/// <summary>
@@ -208,13 +185,14 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="vehicle">The vehicle to enter.</param>
 		/// <param name="passenger">Is player entering vehicle as passenger?</param>
-		public override void EnterVehicle(NetVehicle vehicle, bool passenger) {
+		public override void EnterVehicle(Game.Components.ObjectSyncComponent vehicle, bool passenger) {
 			base.EnterVehicle(vehicle, passenger);
 
 			Messages.VehicleEnterMessage msg = new Messages.VehicleEnterMessage();
-			msg.vehicleId = vehicle.NetId;
+			msg.objectID = vehicle.ObjectID;
 			msg.passenger = passenger;
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+			vehicle.TakeSyncControl();
 		}
 
 		/// <summary>
@@ -230,10 +208,10 @@ namespace MSCMP.Network {
 		/// Write vehicle engine state into state message.
 		/// </summary>
 		/// <param name="state">The engine state to write.</param>
-		public void WriteVehicleStateMessage(NetVehicle vehicle, GameVehicle.EngineStates state, GameVehicle.DashboardStates dashstate, float startTime) {
+		public void WriteVehicleStateMessage(Game.Components.ObjectSyncComponent vehicle, PlayerVehicle.EngineStates state, PlayerVehicle.DashboardStates dashstate, float startTime) {
 			Logger.Debug($"Writing state message! State: {state.ToString()}, Dashboard state: {dashstate.ToString()}");
 			Messages.VehicleStateMessage msg = new Messages.VehicleStateMessage();
-			msg.vehicleId = vehicle.NetId;
+			msg.objectID = vehicle.ObjectID;
 			msg.state = (int)state;
 			msg.dashstate = (int)dashstate;
 			if (startTime != -1) {
@@ -246,10 +224,10 @@ namespace MSCMP.Network {
 		/// Write vehicle switch changes into vehicle switch message.
 		/// </summary>
 		/// <param name="state">The engine state to write.</param>
-		public void WriteVehicleSwitchMessage(NetVehicle vehicle, GameVehicle.SwitchIDs switchID, bool newValue, float newValueFloat) {
+		public void WriteVehicleSwitchMessage(Game.Components.ObjectSyncComponent vehicle, PlayerVehicle.SwitchIDs switchID, bool newValue, float newValueFloat) {
 			Logger.Debug($"Writing vehicle switch message! Switch: {switchID.ToString()}, Value: {newValue}, ValueFloat: {newValueFloat}");
 			Messages.VehicleSwitchMessage msg = new Messages.VehicleSwitchMessage();
-			msg.vehicleId = vehicle.NetId;
+			msg.objectID = vehicle.ObjectID;
 			msg.switchID = (int)switchID;
 			msg.switchValue = newValue;
 			if (newValueFloat != -1) {
@@ -265,14 +243,6 @@ namespace MSCMP.Network {
 		public void WriteSpawnState(Messages.FullWorldSyncMessage msg) {
 			msg.spawnPosition = Utils.GameVec3ToNet(GetPosition());
 			msg.spawnRotation = Utils.GameQuatToNet(GetRotation());
-
-			if (state == State.OnFoot) {
-				msg.occupiedVehicleId = NetVehicle.INVALID_ID;
-			}
-			else {
-				msg.occupiedVehicleId = currentVehicle.NetId;
-				msg.passenger = state == State.Passenger;
-			}
 
 			msg.pickedUpObject = NetPickupable.INVALID_ID;
 		}

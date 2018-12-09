@@ -19,6 +19,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		public Dictionary<int, GameObject> vehiclesAI = new Dictionary<int, GameObject>();
 
+		/// <summary>
+		/// List of Player vehicles and an ID to reference them by.
+		/// </summary>
+		public Dictionary<int, GameObject> vehiclesPlayer = new Dictionary<int, GameObject>();
+
 		public GameVehicleDatabase() {
 			Instance = this;
 		}
@@ -47,9 +52,17 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="gameObject">The game object to check and eventually register.</param>
 		public void CollectGameObject(GameObject gameObject) {
-
-			if (gameObject.name == "Colliders") {
-				return;
+			if (gameObject.name == "Colliders" && gameObject.transform.FindChild("CarCollider") != null) {
+				if (vehiclesPlayer.ContainsValue(gameObject)) {
+					Logger.Debug($"Duplicate Player vehicle prefab '{gameObject.name}' rejected");
+				}
+				else {
+					vehiclesPlayer.Add(vehiclesPlayer.Count + 1, gameObject);
+					Logger.Debug($"Registered Player vehicle prefab '{gameObject.transform.parent.name}' (Player Vehicle ID: {vehiclesPlayer.Count})");
+					
+					GameObject carCollider = gameObject.transform.FindChild("CarCollider").gameObject;
+					carCollider.gameObject.AddComponent<ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.PlayerVehicle, ObjectSyncManager.AUTOMATIC_ID);
+				}
 			}
 
 			if (gameObject.transform.FindChild("CarColliderAI") != null) {

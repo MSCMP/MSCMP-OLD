@@ -146,7 +146,7 @@ namespace MSCMP.Game.Objects {
 		/// Returns variables to be sent to the remote client.
 		/// </summary>
 		/// <returns>Variables to be sent to the remote client.</returns>
-		public float[] ReturnSyncedVariables() {
+		public float[] ReturnSyncedVariables(bool sendAllVariables) {
 			if (!engineGO.activeSelf) {
 				engineGO.SetActive(true);
 			}

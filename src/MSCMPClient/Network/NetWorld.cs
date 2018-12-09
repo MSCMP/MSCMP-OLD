@@ -20,12 +20,6 @@ namespace MSCMP.Network {
 		public const int MAX_PICKUPABLES = UInt16.MaxValue;
 
 		/// <summary>
-		/// Network vehicles pool.
-		/// </summary>
-
-		List<NetVehicle> vehicles = new List<NetVehicle>();
-
-		/// <summary>
 		/// Net manager owning this world.
 		/// </summary>
 		NetManager netManager = null;
@@ -57,17 +51,6 @@ namespace MSCMP.Network {
 		public NetWorld(NetManager netManager) {
 			this.netManager = netManager;
 			Instance = this;
-
-			// Register all network vehicles.
-
-			RegisterVehicle("JONNEZ ES(Clone)");
-			RegisterVehicle("HAYOSIKO(1500kg, 250)");
-			RegisterVehicle("SATSUMA(557kg, 248)");
-			RegisterVehicle("RCO_RUSCKO12(270)");
-			RegisterVehicle("KEKMET(350-400psi)");
-			RegisterVehicle("FLATBED");
-			RegisterVehicle("FERNDALE(1630kg)");
-			RegisterVehicle("GIFU(750/450psi)");
 
 			GameCallbacks.onWorldUnload += () => {
 				OnGameWorldUnload();
@@ -311,12 +294,6 @@ namespace MSCMP.Network {
 
 				player.Teleport(Utils.NetVec3ToGame(msg.spawnPosition), Utils.NetQuatToGame(msg.spawnRotation));
 
-				if (msg.occupiedVehicleId != NetVehicle.INVALID_ID) {
-					var vehicle = GetVehicle(msg.occupiedVehicleId);
-					Client.Assert(vehicle != null, $"Player {player.GetName()} ({player.SteamId}) you tried to join reported that he drives car that does not exists in your game. Vehicle id: {msg.occupiedVehicleId}, passenger: {msg.passenger}");
-					player.EnterVehicle(vehicle, msg.passenger);
-				}
-
 				if (msg.pickedUpObject != NetPickupable.INVALID_ID) {
 					player.PickupObject(msg.pickedUpObject);
 				}
@@ -339,9 +316,9 @@ namespace MSCMP.Network {
 					return;
 				}
 
-				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				ObjectSyncComponent vehicle = ObjectSyncManager.Instance.ObjectIDs[msg.objectID];
 				if (vehicle == null) {
-					Logger.Error("Player " + player.SteamId + " tried to enter vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					Logger.Error("Player " + player.SteamId + " tried to enter vehicle with Object ID " + msg.objectID + " but there is no vehicle with such id.");
 					return;
 				}
 
@@ -357,27 +334,12 @@ namespace MSCMP.Network {
 				player.LeaveVehicle();
 			});
 
-
-			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSyncMessage msg) => {
-				NetPlayer player = netManager.GetPlayer(sender);
-				if (player == null) {
-					Logger.Error($"Steam user of id {sender} send message however there is no active player matching this id.");
-					return;
-				}
-				player.HandleVehicleSync(msg);
-			});
-
-			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
-				Game.Objects.LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
-				light.TurnOn(msg.toggle);
-			});
-
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleStateMessage msg) => {
 				float startTime = -1;
 
-				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				ObjectSyncComponent vehicle = ObjectSyncManager.Instance.ObjectIDs[msg.objectID];
 				if (vehicle == null) {
-					Logger.Log("Remote player tried to set state of vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					Logger.Log("Remote player tried to set state of vehicle " + msg.objectID + " but there is no vehicle with such id.");
 					return;
 				}
 
@@ -385,15 +347,16 @@ namespace MSCMP.Network {
 					startTime = msg.StartTime;
 				}
 
-				vehicle.SetEngineState(msg.state, msg.dashstate, startTime);
+				PlayerVehicle subType = vehicle.GetObjectSubtype() as PlayerVehicle;
+				subType.SetEngineState((PlayerVehicle.EngineStates)msg.state, (PlayerVehicle.DashboardStates)msg.dashstate, startTime);
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.VehicleSwitchMessage msg) => {
 				float newValueFloat = -1;
 
-				NetVehicle vehicle = GetVehicle(msg.vehicleId);
+				PlayerVehicle vehicle = ObjectSyncManager.Instance.ObjectIDs[msg.objectID].GetObjectSubtype() as PlayerVehicle;
 				if (vehicle == null) {
-					Logger.Log("Remote player tried to change a switch in vehicle " + msg.vehicleId + " but there is no vehicle with such id.");
+					Logger.Log("Remote player tried to change a switch in vehicle " + msg.objectID + " but there is no vehicle with such id.");
 					return;
 				}
 
@@ -401,7 +364,12 @@ namespace MSCMP.Network {
 					newValueFloat = msg.SwitchValueFloat;
 				}
 
-				vehicle.SetVehicleSwitch(msg.switchID, msg.switchValue, newValueFloat);
+				vehicle.SetVehicleSwitch((PlayerVehicle.SwitchIDs)msg.switchID, msg.switchValue, newValueFloat);
+			});
+
+			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.LightSwitchMessage msg) => {
+				LightSwitch light = Game.LightSwitchManager.Instance.FindLightSwitch(Utils.NetVec3ToGame(msg.pos));
+				light.TurnOn(msg.toggle);
 			});
 
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ObjectSyncMessage msg) => {
@@ -461,7 +429,7 @@ namespace MSCMP.Network {
 			netMessageHandler.BindMessageHandler((Steamworks.CSteamID sender, Messages.ObjectSyncRequestMessage msg) => {
 				try {
 					ObjectSyncComponent osc = ObjectSyncManager.Instance.ObjectIDs[msg.objectID];
-					osc.SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+					osc.SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true, true);
 				}
 				catch {
 					Logger.Error($"Remote client tried to request object sync of an unknown object, Object ID: {msg.objectID}");
@@ -481,30 +449,6 @@ namespace MSCMP.Network {
 					}
 				}
 			});
-		}
-
-		/// <summary>
-		/// Register vehicle into network vehicles pool.
-		/// </summary>
-		/// <param name="gameObjectName"></param>
-		private void RegisterVehicle(string gameObjectName) {
-			if (vehicles.Count == MAX_VEHICLES) {
-				throw new Exception("Out of vehicle pool!");
-			}
-
-			byte netId = (byte) vehicles.Count;
-			vehicles.Add(new NetVehicle(netManager, gameObjectName, netId));
-
-			Logger.Debug($"Registering vehicle {gameObjectName} (Net ID: {netId})");
-		}
-
-		/// <summary>
-		/// Get vehicle by it's network id.
-		/// </summary>
-		/// <param name="netId">Network id of the vehicle.</param>
-		/// <returns>Network vehicle object.</returns>
-		public NetVehicle GetVehicle(byte netId) {
-			return vehicles[netId];
 		}
 
 		/// <summary>
@@ -535,20 +479,17 @@ namespace MSCMP.Network {
 		/// FixedUpdate net world.
 		/// </summary>
 		public void FixedUpdate() {
-			foreach (var v in vehicles) {
-				v.FixedUpdate();
-			}
+			//foreach (var v in vehicles) {
+			//	v.FixedUpdate();
+			//}
+			// May need this later.
 		}
 
 		/// <summary>
 		/// Called when game world gets loaded.
 		/// </summary>
 		public void OnGameWorldLoad() {
-			// Update vehicles.
 
-			foreach (var vehicle in vehicles) {
-				vehicle.OnGameWorldLoad();
-			}
 		}
 
 
@@ -616,21 +557,6 @@ namespace MSCMP.Network {
 			GameWeatherManager.Instance.WriteWeather(msg.currentWeather);
 
 			// Write objects. (Pickupables, Player vehicles, AI vehicles)
-
-			int vehiclesCount = vehicles.Count;
-			msg.vehicles = new Messages.VehicleInitMessage[vehiclesCount];
-
-			Logger.Debug($"Writing state of {vehiclesCount} vehicles");
-			for (int i = 0; i < vehiclesCount; ++i) {
-				var vehicleMsg = new Messages.VehicleInitMessage();
-				NetVehicle vehicle = vehicles[i];
-				vehicleMsg.id = vehicle.NetId;
-				vehicleMsg.transform.position = Utils.GameVec3ToNet(vehicle.GetPosition());
-				vehicleMsg.transform.rotation = Utils.GameQuatToNet(vehicle.GetRotation());
-				msg.vehicles[i] = vehicleMsg;
-			}
-
-			// Write pickupables.
 
 			var pickupableMessages = new List<Messages.PickupableSpawnMessage>();
 			Logger.Debug($"Writing state of {ObjectSyncManager.Instance.ObjectIDs.Count} objects");
@@ -729,17 +655,6 @@ namespace MSCMP.Network {
 			// Weather.
 
 			GameWeatherManager.Instance.SetWeather(msg.currentWeather);
-			// Vehicles.
-
-			foreach (Messages.VehicleInitMessage vehicleMsg in msg.vehicles) {
-				Vector3 pos = Utils.NetVec3ToGame(vehicleMsg.transform.position);
-				Quaternion rot = Utils.NetQuatToGame(vehicleMsg.transform.rotation);
-
-				NetVehicle vehicle = GetVehicle(vehicleMsg.id);
-				Client.Assert(vehicle != null, $"Received info about non existing vehicle {vehicleMsg.id} in full world sync. (pos: {pos}, rot: {rot})");
-
-				vehicle.Teleport(pos, rot);
-			}
 
 			// Pickupables
 

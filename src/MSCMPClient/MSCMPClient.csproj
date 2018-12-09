@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -99,10 +99,10 @@
     <Compile Include="Game\Objects\AIVehicle.cs" />
     <Compile Include="Game\LightSwitchManager.cs" />
     <Compile Include="Game\Objects\Boat.cs" />
+    <Compile Include="Game\Objects\PlayerVehicle.cs" />
     <Compile Include="Game\Objects\GarageDoor.cs" />
     <Compile Include="Game\Objects\GameDoor.cs" />
     <Compile Include="Game\Objects\GamePlayer.cs" />
-    <Compile Include="Game\Objects\GameVehicle.cs" />
     <Compile Include="Game\Objects\LightSwitch.cs" />
     <Compile Include="Game\Objects\PassengerSeat.cs" />
     <Compile Include="Game\Objects\Pickupable.cs" />
@@ -130,7 +130,6 @@
     <Compile Include="Network\NetManager.cs" />
     <Compile Include="Network\NetMessages.generated.cs" />
     <Compile Include="Network\NetPlayer.cs" />
-    <Compile Include="Network\NetVehicle.cs" />
     <Compile Include="Network\NetWorld.cs" />
     <Compile Include="PlayMakerUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

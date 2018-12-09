@@ -84,7 +84,7 @@ namespace MSCMP.Network {
 		/// <summary>
 		/// The current vehicle player is inside.
 		/// </summary>
-		protected NetVehicle currentVehicle = null;
+		protected Game.Components.ObjectSyncComponent currentVehicle = null;
 
 		/// <summary>
 		/// Network world this player is spawned in.
@@ -272,19 +272,6 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
-		/// Handle received vehicle synchronization message.
-		/// </summary>
-		/// <param name="msg">The received synchronization message.</param>
-		public void HandleVehicleSync(Messages.VehicleSyncMessage msg) {
-			if (!IsSpawned) {
-				return;
-			}
-
-			Client.Assert(state == State.DrivingVehicle, "Received driving vehicle update but player is not driving any vehicle.");
-			currentVehicle.HandleSynchronization(msg);
-		}
-
-		/// <summary>
 		/// Sit in current vehicle.
 		/// </summary>
 		private void SitInCurrentVehicle() {
@@ -293,7 +280,7 @@ namespace MSCMP.Network {
 				// Make sure player character is attached as we will not update it's position until he leaves vehicle.
 
 				if (IsSpawned) {
-					Game.Objects.GameVehicle vehicleGameObject = currentVehicle.GameObject;
+					Game.Objects.PlayerVehicle vehicleGameObject = currentVehicle.GetObjectSubtype() as Game.Objects.PlayerVehicle;
 					if (state == State.DrivingVehicle) {
 						Transform seatTransform = vehicleGameObject.SeatTransform;
 						Teleport(seatTransform.position, seatTransform.rotation);
@@ -303,7 +290,7 @@ namespace MSCMP.Network {
 						Teleport(passangerSeatTransform.position, passangerSeatTransform.rotation);
 					}
 
-					characterGameObject.transform.SetParent(vehicleGameObject.VehicleTransform, false);
+					characterGameObject.transform.SetParent(vehicleGameObject.ParentGameObject.transform, false);
 				}
 			}
 		}
@@ -313,19 +300,24 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="vehicle">The vehicle to enter.</param>
 		/// <param name="passenger">Is player entering vehicle as passenger?</param>
-		public virtual void EnterVehicle(NetVehicle vehicle, bool passenger) {
+		public virtual void EnterVehicle(Game.Components.ObjectSyncComponent vehicle, bool passenger) {
 			Client.Assert(currentVehicle == null, "Entered vehicle but player is already in vehicle.");
 			Client.Assert(state == State.OnFoot, "Entered vehicle but player is not on foot.");
 
-			// Set vehicle and put player inside it.
-
 			currentVehicle = vehicle;
-			currentVehicle.SetPlayer(this, passenger);
+
+			Game.Objects.PlayerVehicle vehicleSubtype = currentVehicle.GetObjectSubtype() as Game.Objects.PlayerVehicle;
+			if (!passenger) {
+				// Remote player is now driver.
+				vehicleSubtype.CurrentDrivingState = Game.Objects.PlayerVehicle.DrivingStates.Driver;
+			}
+			else {
+				vehicleSubtype.CurrentDrivingState = Game.Objects.PlayerVehicle.DrivingStates.Passenger;
+			}
 
 			SitInCurrentVehicle();
 
 			// Set state of the player.
-
 			SwitchState(passenger ? State.Passenger : State.DrivingVehicle);
 		}
 
@@ -340,18 +332,17 @@ namespace MSCMP.Network {
 			if (IsSpawned) {
 				characterGameObject.transform.SetParent(null);
 
-				Game.Objects.GameVehicle vehicleGameObject = currentVehicle.GameObject;
+				Game.Objects.PlayerVehicle vehicleGameObject = currentVehicle.GetObjectSubtype() as Game.Objects.PlayerVehicle;
 				Transform seatTransform = vehicleGameObject.SeatTransform;
 				Teleport(seatTransform.position, seatTransform.rotation);
+
+				// Notify vehicle that the player left.
+				vehicleGameObject.CurrentDrivingState = Game.Objects.PlayerVehicle.DrivingStates.None;
 			}
 
-			// Notify vehicle that the player left.
-
-			currentVehicle.ClearPlayer(state == State.Passenger);
 			currentVehicle = null;
 
 			// Set state of the player.
-
 			SwitchState(State.OnFoot);
 		}
 

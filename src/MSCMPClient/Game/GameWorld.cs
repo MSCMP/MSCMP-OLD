@@ -20,11 +20,6 @@ namespace MSCMP.Game {
 		private GameDoorsManager doorsManager = new GameDoorsManager();
 
 		/// <summary>
-		/// List containing game vehicles.
-		/// </summary>
-		private List<GameVehicle> vehicles = new List<GameVehicle>();
-
-		/// <summary>
 		/// Game pickupables database.
 		/// </summary>
 		GamePickupableDatabase gamePickupableDatabase = new GamePickupableDatabase();
@@ -217,9 +212,6 @@ namespace MSCMP.Game {
 			else if (Utils.IsGameObjectHierarchyMatching(gameObject, "mailbox_bottom_player/Name")) {
 				SetupMailbox(gameObject);
 			}
-			else if (IsVehicleGameObject(gameObject)) {
-				vehicles.Add(new GameVehicle(gameObject));
-			}
 			else if (gameObject.name == "TRAFFIC") {
 				new TrafficManager(gameObject);
 			}
@@ -245,7 +237,6 @@ namespace MSCMP.Game {
 			worldTimeFsm = null;
 			lastnameTextMesh = null;
 			lastnameFSM = null;
-			vehicles.Clear();
 		}
 
 		/// <summary>
@@ -259,12 +250,6 @@ namespace MSCMP.Game {
 			else if (lastnameFSM != null && lastnameFSM.gameObject == gameObject) {
 				lastnameFSM = null;
 				lastnameTextMesh = null;
-			}
-			else if (IsVehicleGameObject(gameObject)) {
-				var vehicle = GetVehicleByGameObject(gameObject);
-				if (vehicle != null) {
-					vehicles.Remove(vehicle);
-				}
 			}
 		}
 
@@ -367,49 +352,6 @@ namespace MSCMP.Game {
 			"JONNEZ ES(Clone)", "HAYOSIKO(1500kg, 250)", "SATSUMA(557kg, 248)",
 			"RCO_RUSCKO12(270)", "KEKMET(350-400psi)", "FLATBED", "FERNDALE(1630kg)", "GIFU(750/450psi)"
 		};
-
-
-		/// <summary>
-		/// Check if given game object is vehicle.
-		/// </summary>
-		/// <param name="gameObject">The game object to check.</param>
-		/// <returns>true if given game object is a vehicle, false otherwise</returns>
-		bool IsVehicleGameObject(GameObject gameObject) {
-			foreach (var name in vehicleGoNames) {
-				if (gameObject.name == name) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Get game vehicle object by game object name.
-		/// </summary>
-		/// <param name="name">The name of the vehicle game object to look for game vehicle for.</param>
-		/// <returns>The game vehicle object or null if there is no game vehicle matching this name.</returns>
-		public GameVehicle FindVehicleByName(string name) {
-			foreach (var veh in vehicles) {
-				if (veh.Name == name) {
-					return veh;
-				}
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Get game vehicle object by game object.
-		/// </summary>
-		/// <param name="gameObject">The game object to find vehicle wrapper for.</param>
-		/// <returns>The game vehicle object or null if there is no game vehicle matching this game object.</returns>
-		public GameVehicle GetVehicleByGameObject(GameObject gameObject) {
-			foreach (var veh in vehicles) {
-				if (veh.GameObject == gameObject) {
-					return veh;
-				}
-			}
-			return null;
-		}
 
 		public void UpdateIMGUI() {
 			// noop

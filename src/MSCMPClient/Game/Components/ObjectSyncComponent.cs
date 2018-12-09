@@ -79,6 +79,10 @@ namespace MSCMP.Game.Components {
 				case ObjectSyncManager.ObjectTypes.GarageDoor:
 					syncedObject = new GarageDoor(this.gameObject);
 					break;
+				// Player vehicle.
+				case ObjectSyncManager.ObjectTypes.PlayerVehicle:
+					syncedObject = new PlayerVehicle(this.gameObject, this);
+					break;
 			}
 			isSetup = true;
 		}
@@ -92,18 +96,18 @@ namespace MSCMP.Game.Components {
 					// Updates object's position continuously.
 					// (Typically used when player is holding a pickupable, or driving a vehicle)
 					if (sendConstantSync) {
-						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true, false);
 					}
 
 					// Check if object should be synced.
 					else if (syncedObject.CanSync()) {
-						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true);
+						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true, false);
 					}
 				}
 
 				// Periodically update the object's position if periodic sync is enabled.
 				if (syncedObject.PeriodicSyncEnabled() && ObjectSyncManager.Instance.ShouldPeriodicSync(Owner, SyncEnabled)) {
-					SendObjectSync(ObjectSyncManager.SyncTypes.PeriodicSync, true);
+					SendObjectSync(ObjectSyncManager.SyncTypes.PeriodicSync, true, false);
 				}
 			}
 		}
@@ -111,9 +115,9 @@ namespace MSCMP.Game.Components {
 		/// <summary>
 		/// Sends a sync update of the object.
 		/// </summary>
-		public void SendObjectSync(ObjectSyncManager.SyncTypes type, bool sendVariables) {
+		public void SendObjectSync(ObjectSyncManager.SyncTypes type, bool sendVariables, bool syncWasRequested) {
 			if (sendVariables) {
-				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, syncedObject.ReturnSyncedVariables());
+				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, syncedObject.ReturnSyncedVariables(true));
 			}
 			else {
 				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, null);
@@ -141,7 +145,7 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void SendEnterSync() {
 			if (Owner == ObjectSyncManager.NO_OWNER && syncedObject.ShouldTakeOwnership()) {
-				SendObjectSync(ObjectSyncManager.SyncTypes.SetOwner, true);
+				SendObjectSync(ObjectSyncManager.SyncTypes.SetOwner, true, false);
 			}
 		}
 
@@ -152,7 +156,7 @@ namespace MSCMP.Game.Components {
 			if (Owner == ObjectSyncManager.Instance.steamID.m_SteamID) {
 				Owner = ObjectSyncManager.NO_OWNER;
 				SyncEnabled = false;
-				SendObjectSync(ObjectSyncManager.SyncTypes.RemoveOwner, false);
+				SendObjectSync(ObjectSyncManager.SyncTypes.RemoveOwner, false, false);
 			}
 		}
 
@@ -161,7 +165,7 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void TakeSyncControl() {
 			if (Owner != Steamworks.SteamUser.GetSteamID().m_SteamID) {
-				SendObjectSync(ObjectSyncManager.SyncTypes.ForceSetOwner, true);
+				SendObjectSync(ObjectSyncManager.SyncTypes.ForceSetOwner, true, false);
 			}
 		}
 
@@ -170,7 +174,9 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void OwnerSetToRemote(ulong newOwner) {
 			Owner = newOwner;
-			syncedObject.OwnerSetToRemote();
+			if (syncedObject != null) {
+				syncedObject.OwnerSetToRemote();
+			}
 		}
 
 		/// <summary>
@@ -178,14 +184,18 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void OwnerRemoved() {
 			Owner = ObjectSyncManager.NO_OWNER;
-			syncedObject.OwnerRemoved();
+			if (syncedObject != null) {
+				syncedObject.OwnerRemoved();
+			}
 		}
 
 		/// <summary>
 		/// Called when sync control of an object has been taken from local player.
 		/// </summary>
 		public void SyncTakenByForce() {
-			syncedObject.SyncTakenByForce();
+			if (syncedObject != null) {
+				syncedObject.SyncTakenByForce();
+			}
 		}
 
 		/// <summary>
@@ -194,7 +204,9 @@ namespace MSCMP.Game.Components {
 		/// <param name="newValue">If object should be constantly synced.</param>
 		public void SendConstantSync(bool newValue) {
 			sendConstantSync = newValue;
-			syncedObject.ConstantSyncChanged(newValue);
+			if (syncedObject != null) {
+				syncedObject.ConstantSyncChanged(newValue);
+			}
 		}
 
 		/// <summary>
@@ -202,7 +214,22 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		/// <param name="syncedVariables">Synced variables</param>
 		public void HandleSyncedVariables(float[] syncedVariables) {
-			syncedObject.HandleSyncedVariables(syncedVariables);
+			if (syncedObject != null) {
+				syncedObject.HandleSyncedVariables(syncedVariables);
+			}
+		}
+
+		/// <summary>
+		/// Check if object owner is self.
+		/// </summary>
+		/// <returns>True is object owner is self.</returns>
+		public bool IsOwnerSelf() {
+			if (Owner != Steamworks.SteamUser.GetSteamID().m_SteamID) {
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 
 		/// <summary>
@@ -217,8 +244,18 @@ namespace MSCMP.Game.Components {
 				Logger.Debug($"Tried to set position of object '{gameObject.name}' but object isn't setup. (This is usually fine)");
 				return;
 			}
-			syncedObject.ObjectTransform().position = pos;
-			syncedObject.ObjectTransform().rotation = rot;
+			if (syncedObject != null) {
+				syncedObject.ObjectTransform().position = pos;
+				syncedObject.ObjectTransform().rotation = rot;
+			}
+		}
+
+		/// <summary>
+		/// Return the object subtype componennt.
+		/// </summary>
+		/// <returns>Synced object component.</returns>
+		public ISyncedObject GetObjectSubtype() {
+			return syncedObject;
 		}
 	}
 }

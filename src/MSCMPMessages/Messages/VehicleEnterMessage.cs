@@ -2,9 +2,9 @@ namespace MSCMPMessages.Messages {
 	[NetMessageDesc(MessageIds.VehicleEnter)]
 	class VehicleEnterMessage {
 		/// <summary>
-		/// Network vehicle of the vehicle player is entering to.
+		/// Object ID of the vehicle player is entering.
 		/// </summary>
-		byte vehicleId;
+		int objectID;
 
 		/// <summary>
 		/// Is player entering passenger seat?
