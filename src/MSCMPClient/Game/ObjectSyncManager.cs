@@ -1,4 +1,4 @@
-﻿using MSCMP.Game.Components;
+using MSCMP.Game.Components;
 using System.Collections.Concurrent;
 using UnityEngine;
 

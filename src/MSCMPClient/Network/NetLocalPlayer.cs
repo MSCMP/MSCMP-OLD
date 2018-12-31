@@ -255,9 +255,7 @@ namespace MSCMP.Network {
 			msg.objectID = objectID;
 			msg.position = Utils.GameVec3ToNet(pos);
 			msg.rotation = Utils.GameQuatToNet(rot);
-			if ((int)syncType != 0) {
-				msg.SyncType = (int)syncType;
-			}
+			msg.SyncType = (int)syncType;
 			if (syncedVariables != null) {
 				msg.SyncedVariables = syncedVariables;
 			}
