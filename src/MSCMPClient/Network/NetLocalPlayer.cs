@@ -209,7 +209,6 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="state">The engine state to write.</param>
 		public void WriteVehicleStateMessage(Game.Components.ObjectSyncComponent vehicle, PlayerVehicle.EngineStates state, PlayerVehicle.DashboardStates dashstate, float startTime) {
-			Logger.Debug($"Writing state message! State: {state.ToString()}, Dashboard state: {dashstate.ToString()}");
 			Messages.VehicleStateMessage msg = new Messages.VehicleStateMessage();
 			msg.objectID = vehicle.ObjectID;
 			msg.state = (int)state;
@@ -225,7 +224,6 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="state">The engine state to write.</param>
 		public void WriteVehicleSwitchMessage(Game.Components.ObjectSyncComponent vehicle, PlayerVehicle.SwitchIDs switchID, bool newValue, float newValueFloat) {
-			Logger.Debug($"Writing vehicle switch message! Switch: {switchID.ToString()}, Value: {newValue}, ValueFloat: {newValueFloat}");
 			Messages.VehicleSwitchMessage msg = new Messages.VehicleSwitchMessage();
 			msg.objectID = vehicle.ObjectID;
 			msg.switchID = (int)switchID;

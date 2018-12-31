@@ -388,7 +388,6 @@ namespace MSCMP.Network {
 						if (osc.Owner == ObjectSyncManager.NO_OWNER || osc.Owner == sender.m_SteamID) {
 							osc.OwnerSetToRemote(sender.m_SteamID);
 							netManager.GetLocalPlayer().SendObjectSyncResponse(osc.ObjectID, true);
-							Logger.Log($"Owner set for object: {osc.transform.name} New owner: {sender.m_SteamID}");
 						}
 						else {
 							Logger.Debug($"Set owner request rejected for object: {osc.transform.name} (Owner: {osc.Owner} Sender: {sender.m_SteamID})");
@@ -722,7 +721,7 @@ namespace MSCMP.Network {
 
 				}
 			}
-			Logger.Error("GwtPickupableByGameObject: Couldn't find GameObject!");
+			Logger.Error("GetPickupableByGameObject: Couldn't find GameObject!");
 			return null;
 		}
 
@@ -769,8 +768,8 @@ namespace MSCMP.Network {
 
 			if (ObjectSyncManager.Instance.ObjectIDs.ContainsKey(msg.id)) {
 				ObjectSyncComponent osc = ObjectSyncManager.Instance.ObjectIDs[msg.id];
+				// Ignore spawn requests for items that are already spawned.
 				if (osc.ObjectID == msg.id) {
-					Logger.Debug("Ignoring duplicate pickupable spawn request.");
 					return;
 				}
 				GameObject gameObject = osc.gameObject;

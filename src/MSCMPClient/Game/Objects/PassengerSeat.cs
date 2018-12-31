@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace MSCMP.Game.Objects {
 	/// <summary>
@@ -29,10 +29,10 @@ namespace MSCMP.Game.Objects {
 		public delegate void OnEnter();
 		public delegate void OnLeave();
 		public OnEnter onEnter = () => {
-			Logger.Log("On enter passenger seat");
+			
 		};
 		public OnLeave onLeave = () => {
-			Logger.Log("On leave passenger seat");
+		
 		};
 
 		Vector3 currentPosition;
