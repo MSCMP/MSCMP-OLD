@@ -52,15 +52,22 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="gameObject">The game object to check and eventually register.</param>
 		public void CollectGameObject(GameObject gameObject) {
-			if (gameObject.name == "Colliders" && gameObject.transform.FindChild("CarCollider") != null) {
+			// Player vehicles
+			if (gameObject.name == "Colliders" && gameObject.transform.FindChild("CarCollider") != null || gameObject.name == "Colliders" && gameObject.transform.FindChild("Coll") != null) {
 				if (vehiclesPlayer.ContainsValue(gameObject)) {
 					Logger.Debug($"Duplicate Player vehicle prefab '{gameObject.name}' rejected");
 				}
 				else {
 					vehiclesPlayer.Add(vehiclesPlayer.Count + 1, gameObject);
 					Logger.Debug($"Registered Player vehicle prefab '{gameObject.transform.parent.name}' (Player Vehicle ID: {vehiclesPlayer.Count})");
-					
-					GameObject carCollider = gameObject.transform.FindChild("CarCollider").gameObject;
+
+					GameObject carCollider;
+					if (gameObject.transform.FindChild("CarCollider") == null) {
+						carCollider = gameObject.transform.FindChild("Coll").gameObject;
+					}
+					else {
+						carCollider = gameObject.transform.FindChild("CarCollider").gameObject;
+					}
 					carCollider.gameObject.AddComponent<ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.PlayerVehicle, ObjectSyncManager.AUTOMATIC_ID);
 				}
 			}
