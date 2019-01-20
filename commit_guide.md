@@ -8,7 +8,7 @@ If you would not follow them your pull request will be rejected.
 
 ### 1. Do not make big commits - split all changes into smaller chunks.
 
-In general it's very good practice to do that - always. Version control systems are made so you can track all changes done to the code or data hosted on it. Why would you choose to use it and make big batch commits? You can also use dropbox to host your files.
+In general it's very good practice to do that - always. Version control systems are made so you can track all changes done to the code or data hosted on it. Why would you choose to use it and make big batch commits? If you want to do that you could use dropbox to host your project files instead.
 
 ### 2. Describe what you did in your commit message.
 
@@ -30,6 +30,10 @@ Brief summary of the commit (72 characters or less).
 Optional more detailed description. Notice the space between this and the brief summary message.
 This one can be as long as you want - there is no strict limits set by us.
 ```
+
+### 4. Keep git history flat.
+
+We use rebase strategy for git history, if your git history is not flat and contains various merge commits it will be rejected. Please rebase before sending pull requests.
 
 Need some examples?
 ====
