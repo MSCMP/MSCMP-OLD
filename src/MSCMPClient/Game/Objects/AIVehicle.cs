@@ -263,7 +263,7 @@ namespace MSCMP.Game.Objects {
 				Throttle = variables[1];
 				Brake = variables[2];
 				TargetSpeed = variables[3];
-				WaypointSet = TrafficManager.GetWaypoint(variables[4], variables[5]);
+				WaypointSet = TrafficManager.GetWaypoint(variables[4], (int)variables[5]);
 				WaypointStart = Convert.ToInt32(variables[6]);
 				WaypointEnd = Convert.ToInt32(variables[7]);
 				if (isClockwise != variables[8]) {

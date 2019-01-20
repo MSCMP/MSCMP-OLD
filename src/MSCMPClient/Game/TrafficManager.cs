@@ -31,7 +31,7 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="waypoint">Waypoint's name, as an int.</param>
 		/// <returns>Waypoint GameObject.</returns>
-		public static GameObject GetWaypoint(float waypoint, float route) {
+		public static GameObject GetWaypoint(float waypoint, int route) {
 			GameObject waypointGo = null;
 
 			switch (route) {
