@@ -159,7 +159,7 @@ void InstallHooks(ptrdiff_t moduleAddress);
  */
 static void FatalError(const char *const message)
 {
-	MessageBox(NULL, "Unable to create Unity Log!", "MSCMP", MB_ICONERROR);
+	MessageBox(NULL, message, "MSCMP", MB_ICONERROR);
 	ExitProcess(0);
 }
 
