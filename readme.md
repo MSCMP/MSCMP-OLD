@@ -15,7 +15,7 @@ First of all you have to clone repository.
 
 Before you start working on the mod make sure you properly setup your workspace. To do that run `setup.bat` file it will setup everything for you.
 
-### 3. Launch Visual Studio 2015 solution.
+### 3. Launch Visual Studio 2019 solution.
 
 Launch the mod solution placed in `src` folder.
 
