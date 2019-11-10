@@ -1,4 +1,6 @@
-# My Summer Car Multiplayer Mod
+# My Summer Car Multiplayer Mod - unsupported version
+
+**WARNING!** This source code is no longer supported.
 
 ## How to work on the mod?
 
