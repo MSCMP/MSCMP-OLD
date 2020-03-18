@@ -42,7 +42,7 @@ That's all. Now you can go to the `bin\Debug` folder and launch mod via `MSCMP.e
 
 ## License
 
-The project source code has been published under GPL v3 license. Check `LICENSE` file for details.
+For the project license check `LICENSE` file.
 
 ### Using
 
