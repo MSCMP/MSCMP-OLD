@@ -306,3 +306,5 @@ OpenCover/
 
 # Generated network messages.
 NetMessages.generated.cs
+
+.vscode/c_cpp_properties.json
