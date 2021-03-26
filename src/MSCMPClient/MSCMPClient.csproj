@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,9 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MSCMP</RootNamespace>
     <AssemblyName>MSCMPClient</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
+    <TargetFrameworkProfile>&#xD;
     </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -20,6 +20,7 @@
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -28,6 +29,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\Release\</OutputPath>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -60,16 +62,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(MSCMP_GAME_PATH)\mysummercar_Data\Managed\PlayMaker.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Threading">
-      <HintPath>..\packages\TaskParallelLibrary.1.0.2856.0\lib\Net35\System.Threading.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System"/>
+    <Reference Include="System.Core"/>
+    <Reference Include="System.Xml.Linq"/>
+    <Reference Include="System.Data.DataSetExtensions"/>
+    <Reference Include="System.Data"/>
+    <Reference Include="System.Collections.Concurrent" Version="4.3.0"/>
+    <Reference Include="System.Threading.Tasks" Version="4.3.0"/>
+    <Reference Include="System.Threading" Version="4.3.0"/>
+    <Reference Include="System.Xml"/>
     <Reference Include="UnityEngine">
       <HintPath>$(MSCMP_GAME_PATH)\mysummercar_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
@@ -79,75 +80,64 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client.cs" />
-    <Compile Include="Development\WorldDumper.cs" />
-    <Compile Include="DevTools.cs" />
-    <Compile Include="Game\Components\ObjectSyncComponent.cs" />
-    <Compile Include="Game\Components\ObjectSyncPlayerComponent.cs" />
-    <Compile Include="Game\Components\PickupableMetaDataComponent.cs" />
-    <Compile Include="Game\EventHook.cs" />
-    <Compile Include="Game\GameCallbacks.cs" />
-    <Compile Include="Game\GameDoorsManager.cs" />
-    <Compile Include="Game\GameVehicleDatabase.cs" />
-    <Compile Include="Game\IGameObjectCollector.cs" />
-    <Compile Include="Game\GamePickupableDatabase.cs" />
-    <Compile Include="Game\GameWeatherManager.cs" />
-    <Compile Include="Game\GameWorld.cs" />
-    <Compile Include="Game\Hooks\PlayMakerActionHooks.cs" />
-    <Compile Include="Game\IObjectSubtype.cs" />
-    <Compile Include="Game\ISyncedObject.cs" />
-    <Compile Include="Game\ObjectSyncManager.cs" />
-    <Compile Include="Game\Objects\AIVehicle.cs" />
-    <Compile Include="Game\LightSwitchManager.cs" />
-    <Compile Include="Game\Objects\Boat.cs" />
-    <Compile Include="Game\Objects\PlayerVehicle.cs" />
-    <Compile Include="Game\Objects\GarageDoor.cs" />
-    <Compile Include="Game\Objects\GameDoor.cs" />
-    <Compile Include="Game\Objects\GamePlayer.cs" />
-    <Compile Include="Game\Objects\LightSwitch.cs" />
-    <Compile Include="Game\Objects\PassengerSeat.cs" />
-    <Compile Include="Game\Objects\Pickupable.cs" />
-    <Compile Include="Game\Objects\PickupableTypes\BeerCase.cs" />
-    <Compile Include="Game\Objects\PickupableTypes\PubFood.cs" />
-    <Compile Include="Game\Objects\PickupableTypes\ShoppingBag.cs" />
-    <Compile Include="Game\Objects\PickupableTypes\Consumable.cs" />
-    <Compile Include="Game\Places\Shop.cs" />
-    <Compile Include="Game\TrafficManager.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="MessagesList.cs" />
-    <Compile Include="Network\NetMessageHandler.cs" />
-    <Compile Include="Network\NetPickupable.cs" />
-    <Compile Include="Network\NetStatistics.cs" />
-    <Compile Include="Network\PlayerAnimManager.cs" />
-    <Compile Include="UI\Console.cs" />
-    <Compile Include="UI\Handlers\MessageBoxHandler.cs" />
-    <Compile Include="UI\MPGUI.cs" />
-    <Compile Include="Math\QuaternionInterpolator.cs" />
-    <Compile Include="Math\TransformInterpolator.cs" />
-    <Compile Include="Math\Vector3Interpolator.cs" />
-    <Compile Include="MPController.cs" />
-    <Compile Include="Network\INetMessage.cs" />
-    <Compile Include="Network\NetLocalPlayer.cs" />
-    <Compile Include="Network\NetManager.cs" />
-    <Compile Include="Network\NetMessages.generated.cs" />
-    <Compile Include="Network\NetPlayer.cs" />
-    <Compile Include="Network\NetWorld.cs" />
-    <Compile Include="PlayMakerUtils.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\HTMLWriter.cs" />
-    <Compile Include="Utilities\IMGUIUtils.cs" />
-    <Compile Include="Utils.cs" />
+    <Compile Include="Client.cs"/>
+    <Compile Include="Development\WorldDumper.cs"/>
+    <Compile Include="DevTools.cs"/>
+    <Compile Include="Game\Components\ObjectSyncComponent.cs"/>
+    <Compile Include="Game\Components\ObjectSyncPlayerComponent.cs"/>
+    <Compile Include="Game\Components\PickupableMetaDataComponent.cs"/>
+    <Compile Include="Game\EventHook.cs"/>
+    <Compile Include="Game\GameCallbacks.cs"/>
+    <Compile Include="Game\GameDoorsManager.cs"/>
+    <Compile Include="Game\GameVehicleDatabase.cs"/>
+    <Compile Include="Game\IGameObjectCollector.cs"/>
+    <Compile Include="Game\GamePickupableDatabase.cs"/>
+    <Compile Include="Game\GameWeatherManager.cs"/>
+    <Compile Include="Game\GameWorld.cs"/>
+    <Compile Include="Game\Hooks\PlayMakerActionHooks.cs"/>
+    <Compile Include="Game\IObjectSubtype.cs"/>
+    <Compile Include="Game\ISyncedObject.cs"/>
+    <Compile Include="Game\ObjectSyncManager.cs"/>
+    <Compile Include="Game\Objects\AIVehicle.cs"/>
+    <Compile Include="Game\LightSwitchManager.cs"/>
+    <Compile Include="Game\Objects\Boat.cs"/>
+    <Compile Include="Game\Objects\PlayerVehicle.cs"/>
+    <Compile Include="Game\Objects\GarageDoor.cs"/>
+    <Compile Include="Game\Objects\GameDoor.cs"/>
+    <Compile Include="Game\Objects\GamePlayer.cs"/>
+    <Compile Include="Game\Objects\LightSwitch.cs"/>
+    <Compile Include="Game\Objects\PassengerSeat.cs"/>
+    <Compile Include="Game\Objects\Pickupable.cs"/>
+    <Compile Include="Game\Objects\PickupableTypes\BeerCase.cs"/>
+    <Compile Include="Game\Objects\PickupableTypes\PubFood.cs"/>
+    <Compile Include="Game\Objects\PickupableTypes\ShoppingBag.cs"/>
+    <Compile Include="Game\Objects\PickupableTypes\Consumable.cs"/>
+    <Compile Include="Game\Places\Shop.cs"/>
+    <Compile Include="Game\TrafficManager.cs"/>
+    <Compile Include="Logger.cs"/>
+    <Compile Include="MessagesList.cs"/>
+    <Compile Include="Network\NetMessageHandler.cs"/>
+    <Compile Include="Network\NetPickupable.cs"/>
+    <Compile Include="Network\NetStatistics.cs"/>
+    <Compile Include="Network\PlayerAnimManager.cs"/>
+    <Compile Include="UI\Console.cs"/>
+    <Compile Include="UI\Handlers\MessageBoxHandler.cs"/>
+    <Compile Include="UI\MPGUI.cs"/>
+    <Compile Include="Math\QuaternionInterpolator.cs"/>
+    <Compile Include="Math\TransformInterpolator.cs"/>
+    <Compile Include="Math\Vector3Interpolator.cs"/>
+    <Compile Include="MPController.cs"/>
+    <Compile Include="Network\INetMessage.cs"/>
+    <Compile Include="Network\NetLocalPlayer.cs"/>
+    <Compile Include="Network\NetManager.cs"/>
+    <Compile Include="Network\NetMessages.generated.cs"/>
+    <Compile Include="Network\NetPlayer.cs"/>
+    <Compile Include="Network\NetWorld.cs"/>
+    <Compile Include="PlayMakerUtils.cs"/>
+    <Compile Include="Properties\AssemblyInfo.cs"/>
+    <Compile Include="Utilities\HTMLWriter.cs"/>
+    <Compile Include="Utilities\IMGUIUtils.cs"/>
+    <Compile Include="Utils.cs"/>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>..\..\scripts\PostClientBuild.bat $(TargetPath)</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
 </Project>
