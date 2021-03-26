@@ -140,4 +140,8 @@
     <Compile Include="Utils.cs"/>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <PropertyGroup >
+    <PostBuildEvent>c:\windows\system32\xcopy.exe "$(SolutionDir)..\data\steam_appid.txt" "$(TargetDir)"</PostBuildEvent>
+    <PostBuildEvent>c:\windows\system32\xcopy.exe "$(SolutionDir)..\3rdparty\steamapi\steam_api64.dll" "$(TargetDir)"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
