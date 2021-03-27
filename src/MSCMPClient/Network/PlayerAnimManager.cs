@@ -151,16 +151,16 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="gameObject">The object to get it from.</param>
 		/// <returns>The ID of the active state or else 255 if none.</returns>
-		public byte GetActiveHandState(GameObject gameObject) {
-			GameObject HandHandleObject = gameObject.transform.FindChild("Pivot/Camera/FPSCamera/FPSCamera").gameObject;
 
-			for (byte i = 0; i < HandStateNames.Length; i++) {
-				string HandStateName = HandStateNames[i];
-				GameObject HandStateObject = HandHandleObject.transform.FindChild(HandStateName).gameObject;
+		public byte GetActiveHandState(GameObject gameObject) {
+
+			Transform HandHandleObject = gameObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera/FPSCamera");
+			for (byte i = 0; i < HandStateNames.Length; i++)
+			{
+				GameObject HandStateObject = HandHandleObject.FindChild(HandStateNames[i]).gameObject;
 
 				if (HandStateObject.activeInHierarchy) return i;
 			}
-
 			return 255;
 		}
 		#endregion
@@ -214,9 +214,11 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="character">The player object to get the drink objects from</param>
 		public void PreloadDrinkObjects(GameObject character) {
-			GameObject HandHandleObject = character.transform.FindChild("Pivot/Camera/FPSCamera/FPSCamera/Drink/Hand").gameObject;
+			Transform hand = character.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera/FPSCamera/Drink/Hand").transform;
+			GameObject HandHandleObject = hand?.gameObject;
 
-			for (byte i = 0; i < DrinkObjectNames.Length; i++) {
+			for (byte i = 0; i < DrinkObjectNames.Length; i++)
+			{
 				GameObject DrinkObject = HandHandleObject.transform.FindChild(DrinkObjectNames[i]).gameObject;
 				Client.Assert(DrinkObject, "Unable to find drink object - " + DrinkObjectNames[i]);
 				Drinks.Add(DrinkObject);
@@ -229,9 +231,10 @@ namespace MSCMP.Network {
 		/// <param name="character">The player object to get the drink object from</param>
 		/// <returns>255 if player is not drinking, or else its ID</returns>
 		public byte GetDrinkingObject(GameObject character) {
-			GameObject HandHandleObject = character.transform.FindChild("Pivot/Camera/FPSCamera/FPSCamera/Drink/Hand").gameObject;
+			GameObject HandHandleObject = character.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera/FPSCamera/Drink/Hand").gameObject;
 
-			for (byte i = 0; i < DrinkObjectNames.Length; i++) {
+			for (byte i = 0; i < DrinkObjectNames.Length; i++)
+			{
 				GameObject DrinkObject = HandHandleObject.transform.FindChild(DrinkObjectNames[i]).gameObject;
 				if (DrinkObject.activeInHierarchy) return i;
 			}

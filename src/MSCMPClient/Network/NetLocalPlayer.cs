@@ -162,10 +162,10 @@ namespace MSCMP.Network {
 			else if (speechFsm.ActiveStateName == "Drunk speech") message.swearId = animManager.DrunkSpeaking_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
 			else if (speechFsm.ActiveStateName == "Yes gestures") message.swearId = animManager.Agreeing_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
 
-			message.aimRot = playerObject.transform.FindChild("Pivot/Camera/FPSCamera").transform.rotation.eulerAngles.x;
+			message.aimRot = playerObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera").transform.rotation.eulerAngles.x;
 			message.crouchPosition = Utils.GetPlaymakerScriptByName(playerObject, "Crouch").Fsm.GetFsmFloat("Position").Value;
 
-			GameObject DrunkObject = playerObject.transform.FindChild("Pivot/Camera/FPSCamera/FPSCamera").gameObject;
+			GameObject DrunkObject = playerObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera").gameObject;
 			float DrunkValue = Utils.GetPlaymakerScriptByName(DrunkObject, "Drunk Mode").Fsm.GetFsmFloat("DrunkYmax").Value;
 			if (DrunkValue >= 4.5f) message.isDrunk = true;
 			else message.isDrunk = false;

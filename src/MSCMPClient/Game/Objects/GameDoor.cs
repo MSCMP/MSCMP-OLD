@@ -39,7 +39,7 @@ namespace MSCMP.Game.Objects {
 		public bool IsOpen
 		{
 			get {
-				return fsm.FsmVariables.FindFsmBool("DoorOpen").Value;
+				return fsm.Fsm.HasEvent("MPOPEN");
 			}
 		}
 
