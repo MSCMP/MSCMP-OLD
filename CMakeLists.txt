@@ -20,3 +20,29 @@ add_subdirectory(src/MSCMPInjector)
 
 add_subdirectory(src/MSCMPMessages)
 add_subdirectory(src/MSCMPClient)
+
+install(
+	TARGETS MSCMP MSCMPInjector MSCMPClient
+	DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
+
+get_target_property(STEAMAPI_DLL steamapi IMPORTED_LOCATION)
+set(STEAM_APPID ${CMAKE_SOURCE_DIR}/data/steam_appid.txt)
+
+install(
+	FILES 
+		${STEAMAPI_DLL}
+		${STEAM_APPID}
+	DESTINATION
+		${CMAKE_INSTALL_PREFIX}
+)
+
+install(
+	FILES
+		${CMAKE_SOURCE_DIR}/data/data
+		${CMAKE_SOURCE_DIR}/data/data.manifest
+		${CMAKE_SOURCE_DIR}/data/mpdata
+		${CMAKE_SOURCE_DIR}/data/mpdata.manifest
+	DESTINATION
+		${CMAKE_INSTALL_PREFIX}/data
+)

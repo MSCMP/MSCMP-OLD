@@ -5,6 +5,7 @@
 
 #CMake build folder
 /build
+/dist
 
 # User-specific files
 *.suo

@@ -34,7 +34,7 @@ namespace MSCMP
 
 			Game.Hooks.PlayMakerActionHooks.Install();
 
-			string assetBundlePath = GetPath("../../data/mpdata");
+			string assetBundlePath = GetPath("data/mpdata");
 			if (!File.Exists(assetBundlePath)) {
 				FatalError("Cannot find mpdata asset bundle.");
 				return;
