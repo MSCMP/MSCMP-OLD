@@ -11,7 +11,6 @@ add_custom_target(
 
 add_dependencies(MSCMPClient GenerateNetworkMessages)
 
-
 target_sources(MSCMPClient
 	PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/Client.cs
@@ -74,7 +73,7 @@ target_sources(MSCMPClient
 	${CMAKE_CURRENT_SOURCE_DIR}/Utils.cs
 )
 
-set_property(TARGET MSCMPClient PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2")
+set_property(TARGET MSCMPClient PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v3.5")
 set_property(TARGET MSCMPClient PROPERTY WIN32_EXECUTABLE TRUE)
 
 set(ASSEMBLY_REFS 
@@ -98,6 +97,7 @@ file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-UnityScript-firstpas
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/PlayMaker.dll" Assembly_PlayMaker_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/UnityEngine.dll" Assembly_UnityEngine_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/UnityEngine.UI.dll" Assembly_UnityEngine_UI_PATH )
+file(TO_NATIVE_PATH "${CMAKE_CURRNET_SOURCE_DIR}/TaskParallelLibrary.1.0.2856.0/lib/Net35/System.Threading.dll" TaskParallelLibrary_PATH)
 
 set_target_properties(MSCMPClient
 	PROPERTIES
@@ -109,4 +109,5 @@ set_target_properties(MSCMPClient
 	VS_DOTNET_REFERENCE_Assembly_PlayMaker ${Assembly_PlayMaker_PATH}
 	VS_DOTNET_REFERENCE_Assembly_UnityEngine ${Assembly_UnityEngine_PATH}
 	VS_DOTNET_REFERENCE_Assembly_UnityEngine_UI ${Assembly_UnityEngine_UI_PATH}
+	VS_DOTNET_REFERENCE_TaskParralelLibrary ${TaskParallelLibrary_PATH}
 )

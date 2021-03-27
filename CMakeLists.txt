@@ -18,6 +18,8 @@ add_subdirectory(3rdparty)
 add_subdirectory(src/MSCMP)
 add_subdirectory(src/MSCMPInjector)
 
+set(CMAKE_CSharp_FLAGS "/langversion:latest /platform:anycpu")
+
 add_subdirectory(src/MSCMPMessages)
 add_subdirectory(src/MSCMPClient)
 
