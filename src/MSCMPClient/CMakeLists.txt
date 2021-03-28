@@ -97,7 +97,7 @@ file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-UnityScript-firstpas
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/PlayMaker.dll" Assembly_PlayMaker_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/UnityEngine.dll" Assembly_UnityEngine_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/UnityEngine.UI.dll" Assembly_UnityEngine_UI_PATH )
-file(TO_NATIVE_PATH "${CMAKE_CURRNET_SOURCE_DIR}/TaskParallelLibrary.1.0.2856.0/lib/Net35/System.Threading.dll" TaskParallelLibrary_PATH)
+file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}/src/packages/TaskParallelLibrary.1.0.2856.0/lib/Net35/System.Threading.dll" TaskParallelLibrary_PATH)
 
 set_target_properties(MSCMPClient
 	PROPERTIES

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 project(MySummerCarMP LANGUAGES CSharp CXX ASM_MASM)
 
 include(CSharpUtilities)
+include(cmake/NugetRestore.cmake)
 
 option(MSCMP_GAME_PATH "Path to Installed My Summer Car" OFF)
 
@@ -22,6 +23,8 @@ set(CMAKE_CSharp_FLAGS "/langversion:latest /platform:anycpu")
 
 add_subdirectory(src/MSCMPMessages)
 add_subdirectory(src/MSCMPClient)
+
+add_dependencies(MSCMPClient NugetRestore)
 
 install(
 	TARGETS MSCMP MSCMPInjector MSCMPClient
