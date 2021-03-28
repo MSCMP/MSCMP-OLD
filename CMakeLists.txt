@@ -4,6 +4,7 @@ project(MySummerCarMP LANGUAGES CSharp CXX ASM_MASM)
 
 include(CSharpUtilities)
 include(cmake/NugetRestore.cmake)
+include(cmake/pdb2mdb.cmake)
 
 option(MSCMP_GAME_PATH "Path to Installed My Summer Car" OFF)
 
@@ -25,6 +26,7 @@ add_subdirectory(src/MSCMPMessages)
 add_subdirectory(src/MSCMPClient)
 
 add_dependencies(MSCMPClient NugetRestore)
+add_dependencies(PDB2MDB_MSCMPClient MSCMPClient)
 
 install(
 	TARGETS MSCMP MSCMPInjector MSCMPClient
@@ -38,6 +40,7 @@ install(
 	FILES 
 		${STEAMAPI_DLL}
 		${STEAM_APPID}
+		${MSCMPClient_MDB_DEBUGINFO_PATH}
 	DESTINATION
 		${CMAKE_INSTALL_PREFIX}
 )
