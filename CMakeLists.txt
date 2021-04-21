@@ -17,29 +17,22 @@ endif()
 
 add_subdirectory(3rdparty)
 
-add_subdirectory(src/MSCMP)
-add_subdirectory(src/MSCMPInjector)
 
 set(CMAKE_CSharp_FLAGS "/langversion:latest /platform:anycpu")
 
 add_subdirectory(src/MSCMPMessages)
 add_subdirectory(src/MSCMPClient)
 
-add_dependencies(MSCMPClient NugetRestore)
-add_dependencies(PDB2MDB_MSCMPClient MSCMPClient)
+add_dependencies(MPMOD NugetRestore)
+add_dependencies(PDB2MDB_MPMOD MPMOD)
 
 install(
-	TARGETS MSCMP MSCMPInjector MSCMPClient
-	DESTINATION ${CMAKE_INSTALL_PREFIX}
+	TARGETS MPMOD
+	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
-
-get_target_property(STEAMAPI_DLL steamapi IMPORTED_LOCATION)
-set(STEAM_APPID ${CMAKE_SOURCE_DIR}/data/steam_appid.txt)
 
 install(
 	FILES 
-		${STEAMAPI_DLL}
-		${STEAM_APPID}
 		${MSCMPClient_MDB_DEBUGINFO_PATH}
 	DESTINATION
 		${CMAKE_INSTALL_PREFIX}
@@ -52,5 +45,5 @@ install(
 		${CMAKE_SOURCE_DIR}/data/mpdata
 		${CMAKE_SOURCE_DIR}/data/mpdata.manifest
 	DESTINATION
-		${CMAKE_INSTALL_PREFIX}/data
+		${CMAKE_INSTALL_PREFIX}/Assests/MPMod
 )

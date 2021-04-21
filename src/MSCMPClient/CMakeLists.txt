@@ -1,4 +1,4 @@
-add_library(MSCMPClient SHARED)
+add_library(MPMOD SHARED)
 
 add_custom_target(
 	GenerateNetworkMessages
@@ -9,11 +9,13 @@ add_custom_target(
 	DEPENDS MSCMPMessages
 	)
 
-add_dependencies(MSCMPClient GenerateNetworkMessages)
+add_dependencies(MPMOD GenerateNetworkMessages)
 
-target_sources(MSCMPClient
+target_sources(MPMOD
 	PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/Client.cs
+	${CMAKE_CURRENT_SOURCE_DIR}/Command.cs
+	${CMAKE_CURRENT_SOURCE_DIR}/Mod.cs
 	${CMAKE_CURRENT_SOURCE_DIR}/Development/WorldDumper.cs
 	${CMAKE_CURRENT_SOURCE_DIR}/DevTools.cs
 	${CMAKE_CURRENT_SOURCE_DIR}/Game/Components/ObjectSyncComponent.cs
@@ -73,8 +75,8 @@ target_sources(MSCMPClient
 	${CMAKE_CURRENT_SOURCE_DIR}/Utils.cs
 )
 
-set_property(TARGET MSCMPClient PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v3.5")
-set_property(TARGET MSCMPClient PROPERTY WIN32_EXECUTABLE TRUE)
+set_property(TARGET MPMOD PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v3.5")
+set_property(TARGET MPMOD PROPERTY WIN32_EXECUTABLE TRUE)
 
 set(ASSEMBLY_REFS 
 	"System"
@@ -96,9 +98,11 @@ file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-UnityScript-firstpas
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/PlayMaker.dll" Assembly_PlayMaker_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/UnityEngine.dll" Assembly_UnityEngine_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/UnityEngine.UI.dll" Assembly_UnityEngine_UI_PATH )
+file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/MSCLoader.dll" MSCLoader_PATH )
+
 file(TO_NATIVE_PATH "${CMAKE_SOURCE_DIR}/src/packages/TaskParallelLibrary.1.0.2856.0/lib/Net35/System.Threading.dll" TaskParallelLibrary_PATH)
 
-set_target_properties(MSCMPClient
+set_target_properties(MPMOD
 	PROPERTIES
 	VS_DOTNET_REFERENCES ${ASSEMBLY_REFS}
 	VS_DOTNET_REFERENCE_Assembly_CSharp ${Assembly_CSharp_PATH}
@@ -109,4 +113,5 @@ set_target_properties(MSCMPClient
 	VS_DOTNET_REFERENCE_Assembly_UnityEngine ${Assembly_UnityEngine_PATH}
 	VS_DOTNET_REFERENCE_Assembly_UnityEngine_UI ${Assembly_UnityEngine_UI_PATH}
 	VS_DOTNET_REFERENCE_TaskParralelLibrary ${TaskParallelLibrary_PATH}
+	VS_DOTNET_REFERENCE_MSCLoader ${MSCLoader_PATH}
 )
