@@ -45,5 +45,5 @@ install(
 		${CMAKE_SOURCE_DIR}/data/mpdata
 		${CMAKE_SOURCE_DIR}/data/mpdata.manifest
 	DESTINATION
-		${CMAKE_INSTALL_PREFIX}/Assests/MPMod
+		${CMAKE_INSTALL_PREFIX}/Assets/MPMod
 )
