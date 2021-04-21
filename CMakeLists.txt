@@ -6,12 +6,12 @@ include(CSharpUtilities)
 include(cmake/NugetRestore.cmake)
 include(cmake/pdb2mdb.cmake)
 
-option(MSCMP_GAME_PATH "Path to Installed My Summer Car" OFF)
+option(MSC_GAME_PATH "Path to Installed My Summer Car" OFF)
 
-if(NOT MSCMP_GAME_PATH)
-	message(FATAL_ERROR "MSCMP_GAME_PATH Must be set")
+if(NOT MSC_GAME_PATH)
+	message(FATAL_ERROR "MSC_GAME_PATH Must be set")
 else()
-	message("MSCMP_GAME_PATH is ${MSCMP_GAME_PATH}")
+	message("MSC_GAME_PATH is ${MSC_GAME_PATH}")
 endif()
 
 

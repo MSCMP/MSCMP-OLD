@@ -2,8 +2,8 @@
 
 ## How to work on the mod?
 
-### 1. Configure build with CMake. Set path ot steam installation of My Summer Car with MSCMP_GAME_PATH option
-`cmake -S . -B build -DMSCMP_GAME_PATH="PATH_TO_STEAM_INSTALLATION_OF_MY_SUMMER_CAR" -DCMAKE_INSTALL_PREFIX="PATH_TO_INSTALL_BUILDED_DIST_OF_MOD"`
+### 1. Configure build with CMake. Set path ot steam installation of My Summer Car with MSC_GAME_PATH option
+`cmake -S . -B build -DMSC_GAME_PATH="PATH_TO_STEAM_INSTALLATION_OF_MY_SUMMER_CAR" -DCMAKE_INSTALL_PREFIX="PATH_TO_INSTALL_BUILDED_DIST_OF_MOD"`
 
 ### 2. Build with CMake.
 `cmake --build build --target [optional_target_name] --config BUILD_TYPE -j thread_count`

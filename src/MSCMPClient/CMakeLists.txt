@@ -88,8 +88,7 @@ set(ASSEMBLY_REFS
 	"System.Xml"
 )
 
-file(TO_NATIVE_PATH "${MSCMP_GAME_PATH}/mysummercar_Data/Managed" MSCMP_GAME_ASSEMBLIES_PATH)
-file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-CSharp.dll" Assembly_CSharp_PATH )
+file(TO_NATIVE_PATH "${MSC_GAME_PATH}/mysummercar_Data/Managed" MSCMP_GAME_ASSEMBLIES_PATH)
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-CSharp.dll" Assembly_CSharp_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-CSharp-firstpass.dll" Assembly_CSharp_firstpass_PATH )
 file(TO_NATIVE_PATH "${MSCMP_GAME_ASSEMBLIES_PATH}/Assembly-UnityScript.dll" Assembly_UnityScript_PATH )
