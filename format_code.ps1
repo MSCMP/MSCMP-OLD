@@ -1,0 +1,1 @@
+Get-ChildItem -Recurse -File -Filter *.cs | ForEach-Object -Process { clang-format -i $_.FullName }
