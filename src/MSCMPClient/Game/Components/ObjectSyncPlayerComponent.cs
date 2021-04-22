@@ -3,15 +3,14 @@ using System.Threading.Tasks;
 
 namespace MSCMP.Game.Components {
 	/// <summary>
-	/// Attached to player, uses radius around player to determine object sync frequency.
+	/// Attached to player, uses radius around player to determine object sync
+	/// frequency.
 	/// </summary>
 	class ObjectSyncPlayerComponent : MonoBehaviour {
 		/// <summary>
 		/// Ran on script start.
 		/// </summary>
-		void Start() {
-
-		}
+		void Start() {}
 
 		/// <summary>
 		/// Called on object entering trigger.

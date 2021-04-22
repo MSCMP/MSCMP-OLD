@@ -28,9 +28,7 @@ namespace MSCMP.Utilities {
 		/// </summary>
 		/// <param name="rct">Where rectangle should be drawn.</param>
 		public static void DrawPlainColorRect(Rect rct) {
-			if (fillText != null) {
-				GUI.DrawTexture(rct, fillText);
-			}
+			if (fillText != null) { GUI.DrawTexture(rct, fillText); }
 		}
 
 		/// <summary>
@@ -40,7 +38,8 @@ namespace MSCMP.Utilities {
 		/// <param name="rct">The rectangle where label should be drawn.</param>
 		/// <param name="color">Color of the label.</param>
 		/// <param name="shadow">Should the method also draw shadow?</param>
-		public static void DrawSmallLabel(string text, Rect rct, Color color, bool shadow = false) {
+		public static void DrawSmallLabel(
+				string text, Rect rct, Color color, bool shadow = false) {
 			if (shadow) {
 				rct.y += 1;
 				rct.x += 1;

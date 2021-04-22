@@ -3,7 +3,8 @@ namespace MSCMPMessages.Messages {
 	/// Network ids.
 	/// </summary>
 	/// <remarks>
-	/// When adding new message ids add them at the bottom of the enum to keep protocol backward compatibility.
+	/// When adding new message ids add them at the bottom of the enum to keep protocol
+	/// backward compatibility.
 	/// </remarks>
 	public enum MessageIds {
 		Handshake,

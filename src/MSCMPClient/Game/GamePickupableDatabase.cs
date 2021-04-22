@@ -7,12 +7,10 @@ namespace MSCMP.Game {
 	/// <summary>
 	/// Database containing prefabs of all pickupables.
 	/// </summary>
-	class GamePickupableDatabase : IGameObjectCollector  {
+	class GamePickupableDatabase : IGameObjectCollector {
 		static GamePickupableDatabase instance;
 		public static GamePickupableDatabase Instance {
-			get {
-				return instance;
-			}
+			get { return instance; }
 		}
 
 		/// <summary>
@@ -30,19 +28,19 @@ namespace MSCMP.Game {
 		public GamePickupableDatabase() {
 			instance = this;
 
-			GameCallbacks.onPlayMakerObjectCreate += (GameObject instance, GameObject prefab) => {
-				PrefabDesc descriptor = GetPrefabDesc(prefab);
-				if (descriptor != null) {
-					var metaDataComponent = instance.AddComponent<Components.PickupableMetaDataComponent>();
-					metaDataComponent.prefabId = descriptor.id;
+			GameCallbacks.onPlayMakerObjectCreate +=
+					(GameObject instance, GameObject prefab) => {
+						PrefabDesc descriptor = GetPrefabDesc(prefab);
+						if (descriptor != null) {
+							var metaDataComponent =
+									instance.AddComponent<Components.PickupableMetaDataComponent>();
+							metaDataComponent.prefabId = descriptor.id;
 
-					Logger.Log($"Pickupable has been spawned. ({instance.name})");
-				}
-			};
+							Logger.Log($"Pickupable has been spawned. ({instance.name})");
+						}
+					};
 		}
-		~GamePickupableDatabase() {
-			instance = null;
-		}
+		~GamePickupableDatabase() { instance = null; }
 
 		/// <summary>
 		/// Pickupable prefab descriptor.
@@ -66,12 +64,14 @@ namespace MSCMP.Game {
 			/// <returns>Newly spawned pickupable game object.</returns>
 			public GameObject Spawn(Vector3 position, Quaternion rotation) {
 				// HACK: Jonnez is already spawned and there can be only one of it.
-				// TODO: Get rid of it, it's ugly hack. Perhaps JONNEZ should behave like pickupable.
+				// TODO: Get rid of it, it's ugly hack. Perhaps JONNEZ should behave like
+				// pickupable.
 				if (gameObject.name.StartsWith("JONNEZ ES")) {
 					return GameObject.Find("JONNEZ ES(Clone)");
 				}
 
-				GameObject pickupable = (GameObject)Object.Instantiate(gameObject, position, rotation);
+				GameObject pickupable =
+						(GameObject)Object.Instantiate(gameObject, position, rotation);
 				pickupable.SetActive(true);
 				pickupable.transform.SetParent(null);
 
@@ -92,7 +92,6 @@ namespace MSCMP.Game {
 					} else {
 						Logger.Log("Failed to find state on " + pickupable.name);
 					}
-
 				}
 
 				return pickupable;
@@ -108,66 +107,62 @@ namespace MSCMP.Game {
 		/// Rebuild pickupables database.
 		/// </summary>
 		public void CollectGameObject(GameObject gameObject) {
-			if (!IsPickupable(gameObject)) {
-				return;
-			}
+			if (!IsPickupable(gameObject)) { return; }
 
 			int prefabId = prefabs.Count;
-			var metaDataComponent = gameObject.AddComponent<Components.PickupableMetaDataComponent>();
+			var metaDataComponent =
+					gameObject.AddComponent<Components.PickupableMetaDataComponent>();
 			metaDataComponent.prefabId = prefabId;
 
 			PrefabDesc desc = new PrefabDesc();
 			desc.gameObject = gameObject;
 			desc.id = prefabId;
 
-			// Activate game object if it's not active to make sure we can access all play maker fsm.
+			// Activate game object if it's not active to make sure we can access all play
+			// maker fsm.
 
 			bool wasActive = desc.gameObject.activeSelf;
-			if (!wasActive) {
-				desc.gameObject.SetActive(true);
-			}
+			if (!wasActive) { desc.gameObject.SetActive(true); }
 
 			// Add ObjectSyncComponent.
 			if (desc.gameObject.GetComponent<Components.ObjectSyncComponent>() == null) {
-				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, -1);
-			}
-			else {
-				GameObject.Destroy(desc.gameObject.GetComponent<Components.ObjectSyncComponent>());
-				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(ObjectSyncManager.ObjectTypes.Pickupable, -1);
+				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(
+						ObjectSyncManager.ObjectTypes.Pickupable, -1);
+			} else {
+				GameObject.Destroy(
+						desc.gameObject.GetComponent<Components.ObjectSyncComponent>());
+				desc.gameObject.AddComponent<Components.ObjectSyncComponent>().Setup(
+						ObjectSyncManager.ObjectTypes.Pickupable, -1);
 			}
 
 			// Deactivate game object back if needed.
 
-			if (!wasActive) {
-				desc.gameObject.SetActive(false);
-			}
+			if (!wasActive) { desc.gameObject.SetActive(false); }
 
 			prefabs.Add(desc);
 
-			Logger.Debug($"Registered new prefab {gameObject.name} ({gameObject.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId})");
+			Logger.Debug(
+					$"Registered new prefab {gameObject.name} ({gameObject.GetInstanceID()}) into pickupable database. (Prefab ID: {prefabId})");
 		}
 
 		/// <summary>
 		/// Handle collected objects destroy.
 		/// </summary>
-		public void DestroyObjects() {
-			prefabs.Clear();
-		}
+		public void DestroyObjects() { prefabs.Clear(); }
 
 		/// <summary>
 		/// Handle destroy of game object.
 		/// </summary>
 		/// <param name="gameObject">The destroyed game object.</param>
 		public void DestroyObject(GameObject gameObject) {
-			if (!IsPickupable(gameObject)) {
-				return;
-			}
+			if (!IsPickupable(gameObject)) { return; }
 
 			var prefab = GetPrefabDesc(gameObject);
 			if (prefab != null) {
 				Logger.Debug($"Deleting prefab descriptor - {gameObject.name}.");
 
-				// Cannot use Remove() because GetPickupablePrefab() depends on indices to stay untouched.
+				// Cannot use Remove() because GetPickupablePrefab() depends on indices to
+				// stay untouched.
 				prefabs[prefab.id] = null;
 			}
 		}
@@ -178,9 +173,7 @@ namespace MSCMP.Game {
 		/// <param name="prefabId">The id of the prefab to get.</param>
 		/// <returns>The pickupable prefab descriptor.</returns>
 		public PrefabDesc GetPickupablePrefab(int prefabId) {
-			if (prefabId < prefabs.Count) {
-				return prefabs[prefabId];
-			}
+			if (prefabId < prefabs.Count) { return prefabs[prefabId]; }
 			return null;
 		}
 
@@ -191,9 +184,7 @@ namespace MSCMP.Game {
 		/// <returns>Prefab descriptor if given prefab is valid.</returns>
 		public PrefabDesc GetPrefabDesc(GameObject prefab) {
 			foreach (var desc in prefabs) {
-				if (desc != null && desc.gameObject == prefab) {
-					return desc;
-				}
+				if (desc != null && desc.gameObject == prefab) { return desc; }
 			}
 			return null;
 		}
@@ -208,9 +199,7 @@ namespace MSCMP.Game {
 				return false;
 			}
 
-			if (!gameObject.GetComponent<Rigidbody>()) {
-				return false;
-			}
+			if (!gameObject.GetComponent<Rigidbody>()) { return false; }
 			return true;
 		}
 	}

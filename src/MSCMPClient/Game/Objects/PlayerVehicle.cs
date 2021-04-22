@@ -18,11 +18,7 @@ namespace MSCMP.Game.Objects {
 		public Transform SeatTransform;
 		public Transform PassengerSeatTransform;
 
-		public enum DrivingStates {
-			Driver,
-			Passenger,
-			None
-		}
+		public enum DrivingStates { Driver, Passenger, None }
 
 		public bool DriverIsLocal = false;
 		public DrivingStates CurrentDrivingState = DrivingStates.None;
@@ -122,7 +118,9 @@ namespace MSCMP.Game.Objects {
 			public bool remoteStartEngineInput = false;
 			public int remoteTargetGear = 0;
 
-			protected override void GetInput(out float throttleInput, out float brakeInput, out float steerInput, out float handbrakeInput, out float clutchInput, out bool startEngineInput, out int targetGear) {
+			protected override void GetInput(out float throttleInput, out float brakeInput,
+					out float steerInput, out float handbrakeInput, out float clutchInput,
+					out bool startEngineInput, out int targetGear) {
 				throttleInput = remoteThrottleInput;
 				brakeInput = remoteBrakeInput;
 				steerInput = remoteSteerInput;
@@ -134,27 +132,17 @@ namespace MSCMP.Game.Objects {
 		}
 
 		public float Steering {
-			get {
-				return dynamics.carController.steering;
-			}
-			set {
-				mpCarController.remoteSteerInput = value;
-			}
+			get { return dynamics.carController.steering; }
+			set { mpCarController.remoteSteerInput = value; }
 		}
 
 		public float Throttle {
-			get {
-				return dynamics.carController.throttleInput;
-			}
-			set {
-				mpCarController.remoteThrottleInput = value;
-			}
+			get { return dynamics.carController.throttleInput; }
+			set { mpCarController.remoteThrottleInput = value; }
 		}
 
 		public float Brake {
-			get {
-				return dynamics.carController.brakeInput;
-			}
+			get { return dynamics.carController.brakeInput; }
 			set {
 				mpCarController.remoteBrakeInput = value;
 				dynamics.carController.brakeInput = value;
@@ -162,34 +150,21 @@ namespace MSCMP.Game.Objects {
 		}
 
 		public float ClutchInput {
-			get {
-				return driveTrain.clutch.GetClutchPosition();
-			}
-			set {
-				driveTrain.clutch.SetClutchPosition(value);
-			}
+			get { return driveTrain.clutch.GetClutchPosition(); }
+			set { driveTrain.clutch.SetClutchPosition(value); }
 		}
 
 		public int Gear {
-			get {
-				return driveTrain.gear;
-			}
-			set {
-				mpCarController.remoteTargetGear = value;
-			}
+			get { return driveTrain.gear; }
+			set { mpCarController.remoteTargetGear = value; }
 		}
 
 		public float Fuel {
-			get {
-				return fuelTankFsm.Fsm.GetFsmFloat("FuelLevel").Value;
-			}
-			set {
-				fuelTankFsm.Fsm.GetFsmFloat("FuelLevel").Value = value;
-			}
+			get { return fuelTankFsm.Fsm.GetFsmFloat("FuelLevel").Value; }
+			set { fuelTankFsm.Fsm.GetFsmFloat("FuelLevel").Value = value; }
 		}
 
 		float steamID = Steamworks.SteamUser.GetSteamID().m_SteamID;
-
 
 		/// <summary>
 		/// Constructor.
@@ -223,7 +198,8 @@ namespace MSCMP.Game.Objects {
 
 			passengerSeat.transform.GetComponent<BoxCollider>().isTrigger = true;
 
-			PassengerSeat pSeatScript = passengerSeat.AddComponent(typeof(PassengerSeat)) as PassengerSeat;
+			PassengerSeat pSeatScript =
+					passengerSeat.AddComponent(typeof(PassengerSeat)) as PassengerSeat;
 			pSeatScript.VehicleType = ParentGameObject.name;
 			pSeatScript.DriversSeat = fsm.gameObject;
 		}
@@ -241,17 +217,13 @@ namespace MSCMP.Game.Objects {
 		/// Get object's Transform.
 		/// </summary>
 		/// <returns>Object's Transform.</returns>
-		public Transform ObjectTransform() {
-			return ParentGameObject.transform;
-		}
+		public Transform ObjectTransform() { return ParentGameObject.transform; }
 
 		/// <summary>
 		/// Check is periodic sync of the object is enabled.
 		/// </summary>
 		/// <returns>Periodic sync enabled or disabled.</returns>
-		public bool PeriodicSyncEnabled() {
-			return true;
-		}
+		public bool PeriodicSyncEnabled() { return true; }
 
 		/// <summary>
 		/// Determines if the object should be synced.
@@ -261,12 +233,10 @@ namespace MSCMP.Game.Objects {
 			if (CurrentDrivingState == DrivingStates.Driver && DriverIsLocal) {
 				isSyncing = true;
 				return true;
-			}
-			else if (rigidbody.velocity.sqrMagnitude >= 0.01f) {
+			} else if (rigidbody.velocity.sqrMagnitude >= 0.01f) {
 				isSyncing = true;
 				return true;
-			}
-			else {
+			} else {
 				isSyncing = false;
 				return false;
 			}
@@ -276,9 +246,7 @@ namespace MSCMP.Game.Objects {
 		/// Called when a player enters range of an object.
 		/// </summary>
 		/// <returns>True if the player should tkae ownership of the object.</returns>
-		public bool ShouldTakeOwnership() {
-			return true;
-		}
+		public bool ShouldTakeOwnership() { return true; }
 
 		/// <summary>
 		/// Returns variables to be sent to the remote client.
@@ -288,8 +256,7 @@ namespace MSCMP.Game.Objects {
 			if (isSyncing == true) {
 				float[] variables = { Steering, Throttle, Brake, ClutchInput, Gear, Fuel };
 				return variables;
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
@@ -311,31 +278,24 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Called when sync control is taken by force.
 		/// </summary>
-		public void SyncTakenByForce() {
-			SetRemoteSteering(true);
-		}
+		public void SyncTakenByForce() { SetRemoteSteering(true); }
 
 		/// <summary>
 		/// Called when owner is set to the remote client.
 		/// </summary>
-		public void OwnerSetToRemote() {
-			SetRemoteSteering(true);
-		}
+		public void OwnerSetToRemote() { SetRemoteSteering(true); }
 
 		/// <summary>
 		/// Called when owner is removed.
 		/// </summary>
-		public void OwnerRemoved() {
-			SetRemoteSteering(false);
-		}
+		public void OwnerRemoved() { SetRemoteSteering(false); }
 
 		/// <summary>
-		/// Called when an object is constantly syncing. (Usually when a pickupable is picked up, or when a vehicle is being driven)
+		/// Called when an object is constantly syncing. (Usually when a pickupable is
+		/// picked up, or when a vehicle is being driven)
 		/// </summary>
 		/// <param name="newValue">If object is being constantly synced.</param>
-		public void ConstantSyncChanged(bool newValue) {
-
-		}
+		public void ConstantSyncChanged(bool newValue) {}
 
 		/// <summary>
 		/// Find required FSMs in the game object.
@@ -393,22 +353,27 @@ namespace MSCMP.Game.Objects {
 				}
 
 				// Lights
-				else if (fsm.gameObject.name == "Lights" && fsm.FsmName == "Use" || fsm.gameObject.name == "ButtonLights" && fsm.FsmName == "Use" || fsm.gameObject.name == "knob" && fsm.FsmName == "Use") {
+				else if (fsm.gameObject.name == "Lights" && fsm.FsmName == "Use" ||
+						fsm.gameObject.name == "ButtonLights" && fsm.FsmName == "Use" ||
+						fsm.gameObject.name == "knob" && fsm.FsmName == "Use") {
 					lightsFsm = fsm;
 				}
 
 				// Wipers
-				else if (fsm.gameObject.name == "Wipers" && fsm.FsmName == "Use" || fsm.gameObject.name == "ButtonWipers" && fsm.FsmName == "Use") {
+				else if (fsm.gameObject.name == "Wipers" && fsm.FsmName == "Use" ||
+						fsm.gameObject.name == "ButtonWipers" && fsm.FsmName == "Use") {
 					wipersFsm = fsm;
 				}
 
 				// Interior light Truck
-				else if (fsm.gameObject.name == "ButtonInteriorLight" && fsm.FsmName == "Use") {
+				else if (fsm.gameObject.name == "ButtonInteriorLight" &&
+						fsm.FsmName == "Use") {
 					interiorLightFsm = fsm;
 				}
 
 				// Interior light Van/Ferndale
-				else if (fsm.gameObject.name == "Use" && fsm.FsmName == "Use" && fsm.Fsm.GetState("Flip 2") != null) {
+				else if (fsm.gameObject.name == "Use" && fsm.FsmName == "Use" &&
+						fsm.Fsm.GetState("Flip 2") != null) {
 					interiorLightFsm = fsm;
 				}
 
@@ -471,20 +436,19 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		void HookEvents() {
 			// Engine states
-			string[] ignitionStateNames = { "Wait button", "Motor starting", "Motor OFF", "Test", "Shut off", "ACC on", "ACC on 2" };
+			string[] ignitionStateNames = { "Wait button", "Motor starting", "Motor OFF",
+				"Test", "Shut off", "ACC on", "ACC on 2" };
 
 			foreach (string name in ignitionStateNames) {
 				EventHook.AddWithSync(ignitionFsm, name);
 			}
 
-
 			// Dashboard states
-			string[] dashboardStateNames = { "ACC on", "Test", "ACC on 2", "Motor starting", "Shut off", "Motor OFF", "Wait button", "Wait player" };
+			string[] dashboardStateNames = { "ACC on", "Test", "ACC on 2",
+				"Motor starting", "Shut off", "Motor OFF", "Wait button", "Wait player" };
 
 			foreach (string name in dashboardStateNames) {
-				EventHook.Add(dashboardFsm, name, new Func<bool>(() => {
-					return false;
-				}));
+				EventHook.Add(dashboardFsm, name, new Func<bool>(() => { return false; }));
 			}
 
 			// Vehicle switches
@@ -493,8 +457,7 @@ namespace MSCMP.Game.Objects {
 			if (hasRange) {
 				if (isTruck) {
 					EventHook.AddWithSync(rangeFsm, "Switch");
-				}
-				else if (isTractor) {
+				} else if (isTractor) {
 					EventHook.AddWithSync(rangeFsm, "Flip");
 				}
 			}
@@ -502,19 +465,27 @@ namespace MSCMP.Game.Objects {
 			// Push parking brake
 			if (hasPushParkingBrake) {
 				EventHook.Add(handbrakeFsm, "DECREASE", new Func<bool>(() => {
-					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.HandbrakePull, false, this.handbrakeFsm.Fsm.GetFsmFloat("KnobPos").Value);
+					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+							SwitchIDs.HandbrakePull, false,
+							this.handbrakeFsm.Fsm.GetFsmFloat("KnobPos").Value);
 					return false;
-				}), actionOnExit: true);
+				}),
+						actionOnExit: true);
 				EventHook.Add(handbrakeFsm, "INCREASE", new Func<bool>(() => {
-					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.HandbrakePull, false, this.handbrakeFsm.Fsm.GetFsmFloat("KnobPos").Value);
+					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+							SwitchIDs.HandbrakePull, false,
+							this.handbrakeFsm.Fsm.GetFsmFloat("KnobPos").Value);
 					return false;
-				}), actionOnExit: true);
+				}),
+						actionOnExit: true);
 			}
 
 			// Truck parking brake
 			if (hasLeverParkingBrake) {
 				EventHook.Add(handbrakeFsm, "Flip", new Func<bool>(() => {
-					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.HandbrakeLever, !this.handbrakeFsm.Fsm.GetFsmBool("Brake").Value, -1);
+					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+							SwitchIDs.HandbrakeLever,
+							!this.handbrakeFsm.Fsm.GetFsmBool("Brake").Value, -1);
 					return false;
 				}));
 			}
@@ -522,7 +493,9 @@ namespace MSCMP.Game.Objects {
 			// Fuel tap
 			if (fuelTapFsm != null) {
 				EventHook.Add(fuelTapFsm, "Test", new Func<bool>(() => {
-					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.FuelTap, !this.fuelTapFsm.Fsm.GetFsmBool("FuelOn").Value, -1);
+					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+							SwitchIDs.FuelTap, !this.fuelTapFsm.Fsm.GetFsmBool("FuelOn").Value,
+							-1);
 					return false;
 				}));
 			}
@@ -539,50 +512,49 @@ namespace MSCMP.Game.Objects {
 				EventHook.AddWithSync(indicatorsFsm, "Activate dash");
 				EventHook.AddWithSync(indicatorsFsm, "Activate dash 2");
 				EventHook.AddWithSync(indicatorsFsm, "On", action: new Func<bool>(() => {
-					if (this.DriverIsLocal == false) {
-						return true;
-					}
+					if (this.DriverIsLocal == false) { return true; }
 					return false;
 				}));
 				EventHook.AddWithSync(indicatorsFsm, "On 2", action: new Func<bool>(() => {
-					if (this.DriverIsLocal == false) {
-						return true;
-					}
+					if (this.DriverIsLocal == false) { return true; }
 					return false;
 				}));
 				EventHook.AddWithSync(indicatorsFsm, "Off", action: new Func<bool>(() => {
-					if (this.DriverIsLocal == false) {
-						return true;
-					}
+					if (this.DriverIsLocal == false) { return true; }
 					return false;
 				}));
 				EventHook.AddWithSync(indicatorsFsm, "Off 2", action: new Func<bool>(() => {
-					if (this.DriverIsLocal == false) {
-						return true;
-					}
+					if (this.DriverIsLocal == false) { return true; }
 					return false;
 				}));
 
-				EventHook.AddWithSync(indicatorsFsm, "State 3", action: new Func<bool>(() => {
-					if (this.DriverIsLocal == false) {
-						Logger.Log("Turning off indicators!");
-						GameObject left;
-						GameObject right;
-						left = this.gameObject.transform.FindChild("LOD/Electricity/PowerON/Blinkers/Left").gameObject;
-						right = this.gameObject.transform.FindChild("LOD/Electricity/PowerON/Blinkers/Right").gameObject;
-						// Ferndale has a different hierarchy. Why not, right?
-						if (left == null) {
-							left = this.gameObject.transform.FindChild("LOD/Electricity 1/PowerON/Blinkers/Left").gameObject;
-							right = this.gameObject.transform.FindChild("LOD/Electricity 1/PowerON/Blinkers/Right").gameObject;
-						}
-						left.SetActive(false);
-						right.SetActive(false);
-						if (left == null) {
-							Logger.Log("Left indicator not found!");
-						}
-					}
-					return false;
-				}));
+				EventHook.AddWithSync(
+						indicatorsFsm, "State 3", action: new Func<bool>(() => {
+							if (this.DriverIsLocal == false) {
+								Logger.Log("Turning off indicators!");
+								GameObject left;
+								GameObject right;
+								left = this.gameObject.transform
+													 .FindChild("LOD/Electricity/PowerON/Blinkers/Left")
+													 .gameObject;
+								right = this.gameObject.transform
+														.FindChild("LOD/Electricity/PowerON/Blinkers/Right")
+														.gameObject;
+								// Ferndale has a different hierarchy. Why not, right?
+								if (left == null) {
+									left = this.gameObject.transform
+														 .FindChild("LOD/Electricity 1/PowerON/Blinkers/Left")
+														 .gameObject;
+									right = this.gameObject.transform
+															.FindChild("LOD/Electricity 1/PowerON/Blinkers/Right")
+															.gameObject;
+								}
+								left.SetActive(false);
+								right.SetActive(false);
+								if (left == null) { Logger.Log("Left indicator not found!"); }
+							}
+							return false;
+						}));
 			}
 
 			// Wipers
@@ -591,12 +563,12 @@ namespace MSCMP.Game.Objects {
 					int selection = this.wipersFsm.Fsm.GetFsmInt("Selection").Value;
 					if (selection == 2) {
 						selection = 0;
-					}
-					else {
+					} else {
 						selection++;
 					}
 
-					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.Wipers, false, selection);
+					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(
+							syncComponent, SwitchIDs.Wipers, false, selection);
 					return false;
 				}));
 			}
@@ -605,13 +577,16 @@ namespace MSCMP.Game.Objects {
 			if (lightsFsm != null) {
 				if (isTruck) {
 					EventHook.Add(interiorLightFsm, "Switch", new Func<bool>(() => {
-						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.InteriorLight, !this.interiorLightFsm.Fsm.GetFsmBool("On").Value, -1);
+						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+								SwitchIDs.InteriorLight,
+								!this.interiorLightFsm.Fsm.GetFsmBool("On").Value, -1);
 						return false;
 					}));
-				}
-				else {
+				} else {
 					EventHook.Add(interiorLightFsm, "Flip 2", new Func<bool>(() => {
-						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.InteriorLight, !this.interiorLightFsm.Fsm.GetFsmBool("LightON").Value, -1);
+						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+								SwitchIDs.InteriorLight,
+								!this.interiorLightFsm.Fsm.GetFsmBool("LightON").Value, -1);
 						return false;
 					}));
 				}
@@ -622,9 +597,10 @@ namespace MSCMP.Game.Objects {
 				// Hydraulic pump
 				EventHook.Add(hydraulicPumpFsm, "Test", new Func<bool>(() => {
 					if (this.hydraulicPumpFirstRun == false) {
-						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.HydraulicPump, !this.hydraulicPumpFsm.Fsm.GetFsmBool("On").Value, -1);
-					}
-					else {
+						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+								SwitchIDs.HydraulicPump,
+								!this.hydraulicPumpFsm.Fsm.GetFsmBool("On").Value, -1);
+					} else {
 						this.hydraulicPumpFirstRun = false;
 					}
 					return false;
@@ -632,16 +608,19 @@ namespace MSCMP.Game.Objects {
 
 				// Spill valve
 				EventHook.Add(spillValveFsm, "Switch", new Func<bool>(() => {
-					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.SpillValve, !this.spillValveFsm.Fsm.GetFsmBool("Open").Value, -1);
+					Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+							SwitchIDs.SpillValve, !this.spillValveFsm.Fsm.GetFsmBool("Open").Value,
+							-1);
 					return false;
 				}));
 
 				// Axle lift
 				EventHook.Add(axleLiftFsm, "Test", new Func<bool>(() => {
 					if (this.axleLiftFirstRun == false) {
-						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.AxleLift, !this.axleLiftFsm.Fsm.GetFsmBool("Up").Value, -1);
-					}
-					else {
+						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+								SwitchIDs.AxleLift, !this.axleLiftFsm.Fsm.GetFsmBool("Up").Value,
+								-1);
+					} else {
 						this.axleLiftFirstRun = false;
 					}
 					return false;
@@ -650,9 +629,10 @@ namespace MSCMP.Game.Objects {
 				// Diff lock
 				EventHook.Add(diffLockFsm, "Test", new Func<bool>(() => {
 					if (this.diffLockFirstRun == false) {
-						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent, SwitchIDs.DiffLock, !this.diffLockFsm.Fsm.GetFsmBool("Lock").Value, -1);
-					}
-					else {
+						Network.NetLocalPlayer.Instance.WriteVehicleSwitchMessage(syncComponent,
+								SwitchIDs.DiffLock, !this.diffLockFsm.Fsm.GetFsmBool("Lock").Value,
+								-1);
+					} else {
 						this.diffLockFirstRun = false;
 					}
 					return false;
@@ -664,12 +644,11 @@ namespace MSCMP.Game.Objects {
 			}
 
 			// Wasp nest
-			if (waspNestFsm != null) {
-				EventHook.AddWithSync(waspNestFsm, "State 2");
-			}
+			if (waspNestFsm != null) { EventHook.AddWithSync(waspNestFsm, "State 2"); }
 
 			// Sync vehicle data with the host on spawn.
-			if (Network.NetManager.Instance.IsOnline && !Network.NetManager.Instance.IsHost) {
+			if (Network.NetManager.Instance.IsOnline &&
+					!Network.NetManager.Instance.IsHost) {
 				syncComponent.RequestObjectSync();
 			}
 		}
@@ -679,13 +658,13 @@ namespace MSCMP.Game.Objects {
 		/// </summary>
 		/// <param name="fsm">Player trigger FSM on vehicle drivers seat.</param>
 		void PlayerEventHooks(PlayMakerFSM fsm) {
-			// Temp - use player trigger. (No idea what this comment meant, it's now many months later. :P)
-			// It's now 6+ months later, no idea what this means at all now. :p -Curtis
+			// Temp - use player trigger. (No idea what this comment meant, it's now many
+			// months later. :P) It's now 6+ months later, no idea what this means at all
+			// now. :p -Curtis
 			EventHook.Add(fsm, "Player in car", new Func<bool>(() => {
 				if (CurrentDrivingState == DrivingStates.Driver && !DriverIsLocal) {
 					return true;
-				}
-				else {
+				} else {
 					CurrentDrivingState = DrivingStates.Driver;
 					DriverIsLocal = true;
 					SetRemoteSteering(false);
@@ -703,16 +682,20 @@ namespace MSCMP.Game.Objects {
 			}));
 			SeatTransform = fsm.gameObject.transform;
 
-			if (SeatTransform.gameObject.name == "DriveTrigger" && !ParentGameObject.name.StartsWith("JONNEZ") && !ParentGameObject.name.StartsWith("KEKMET")) {
+			if (SeatTransform.gameObject.name == "DriveTrigger" &&
+					!ParentGameObject.name.StartsWith("JONNEZ") &&
+					!ParentGameObject.name.StartsWith("KEKMET")) {
 				AddPassengerSeat(fsm);
 			}
 		}
 
 		/// <summary>
-		/// Set vehicle state (This system of setting states needs to be changed some day)
+		/// Set vehicle state (This system of setting states needs to be changed some
+		/// day)
 		/// </summary>
-		public void SetEngineState(EngineStates state, DashboardStates dashstate, float startTime) {
-			//Start time
+		public void SetEngineState(
+				EngineStates state, DashboardStates dashstate, float startTime) {
+			// Start time
 			if (startTime != -1) {
 				starterFsm.Fsm.GetFsmFloat("StartTime").Value = startTime;
 			}
@@ -720,58 +703,42 @@ namespace MSCMP.Game.Objects {
 			// Engine states
 			if (state == EngineStates.WaitForStart) {
 				starterFsm.SendEvent("MP_Wait for start");
-			}
-			else if (state == EngineStates.ACC) {
+			} else if (state == EngineStates.ACC) {
 				starterFsm.SendEvent("MP_ACC");
-			}
-			else if (state == EngineStates.TurnKey) {
+			} else if (state == EngineStates.TurnKey) {
 				starterFsm.SendEvent("MP_Turn key");
-			}
-			else if (state == EngineStates.StartingEngine) {
+			} else if (state == EngineStates.StartingEngine) {
 				starterFsm.SendEvent("MP_Starting engine");
-			}
-			else if (state == EngineStates.StartEngine) {
+			} else if (state == EngineStates.StartEngine) {
 				starterFsm.SendEvent("MP_Start engine");
-			}
-			else if (state == EngineStates.MotorRunning) {
+			} else if (state == EngineStates.MotorRunning) {
 				starterFsm.SendEvent("MP_Motor running");
-			}
-			else if (state == EngineStates.Wait) {
+			} else if (state == EngineStates.Wait) {
 				starterFsm.SendEvent("MP_Wait");
-			}
-			else if (state == EngineStates.CheckClutch) {
+			} else if (state == EngineStates.CheckClutch) {
 				starterFsm.SendEvent("MP_Check clutch");
-			}
-			else if (state == EngineStates.StartOrNot) {
+			} else if (state == EngineStates.StartOrNot) {
 				starterFsm.SendEvent("MP_Start or not");
-			}
-			else if (state == EngineStates.Glowplug) {
+			} else if (state == EngineStates.Glowplug) {
 				starterFsm.SendEvent("MP_ACC / Glowplug");
 			}
 
 			// Dashboard states
 			if (dashstate == DashboardStates.ACCon) {
 				dashboardFsm.SendEvent("MP_ACC on");
-			}
-			else if (dashstate == DashboardStates.Test) {
+			} else if (dashstate == DashboardStates.Test) {
 				dashboardFsm.SendEvent("MP_Test");
-			}
-			else if (dashstate == DashboardStates.ACCon2) {
+			} else if (dashstate == DashboardStates.ACCon2) {
 				dashboardFsm.SendEvent("MP_ACC on 2");
-			}
-			else if (dashstate == DashboardStates.MotorStarting) {
+			} else if (dashstate == DashboardStates.MotorStarting) {
 				dashboardFsm.SendEvent("MP_Motor starting");
-			}
-			else if (dashstate == DashboardStates.ShutOff) {
+			} else if (dashstate == DashboardStates.ShutOff) {
 				dashboardFsm.SendEvent("MP_Shut off");
-			}
-			else if (dashstate == DashboardStates.MotorOff) {
+			} else if (dashstate == DashboardStates.MotorOff) {
 				dashboardFsm.SendEvent("MP_Motor OFF");
-			}
-			else if (dashstate == DashboardStates.WaitButton) {
+			} else if (dashstate == DashboardStates.WaitButton) {
 				dashboardFsm.SendEvent("MP_Wait button");
-			}
-			else if (dashstate == DashboardStates.WaitPlayer) {
+			} else if (dashstate == DashboardStates.WaitPlayer) {
 				dashboardFsm.SendEvent("MP_Wait player");
 			}
 		}
@@ -782,7 +749,8 @@ namespace MSCMP.Game.Objects {
 		/// <param name="state">Switch to change.</param>
 		/// <param name="newValue">New value as a bool.</param>
 		/// <param name="newValueFloat">New value as a float.</param>
-		public void SetVehicleSwitch(SwitchIDs state, bool newValue, float newValueFloat) {
+		public void SetVehicleSwitch(
+				SwitchIDs state, bool newValue, float newValueFloat) {
 			// Parking brake
 			if (state == SwitchIDs.HandbrakePull) {
 				handbrakeFsm.Fsm.GetFsmFloat("KnobPos").Value = newValueFloat;
@@ -822,8 +790,7 @@ namespace MSCMP.Game.Objects {
 					if (interiorLightFsm.Fsm.GetFsmBool("On").Value != newValue) {
 						interiorLightFsm.SendEvent("MP_Switch");
 					}
-				}
-				else {
+				} else {
 					if (interiorLightFsm.Fsm.GetFsmBool("LightON").Value != newValue) {
 						interiorLightFsm.SendEvent("MP_Flip 2");
 					}

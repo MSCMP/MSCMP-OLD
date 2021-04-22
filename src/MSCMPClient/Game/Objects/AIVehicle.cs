@@ -41,7 +41,9 @@ namespace MSCMP.Game.Objects {
 			public bool remoteStartEngineInput = false;
 			public int remoteTargetGear = 0;
 
-			protected override void GetInput(out float throttleInput, out float brakeInput, out float steerInput, out float handbrakeInput, out float clutchInput, out bool startEngineInput, out int targetGear) {
+			protected override void GetInput(out float throttleInput, out float brakeInput,
+					out float steerInput, out float handbrakeInput, out float clutchInput,
+					out bool startEngineInput, out int targetGear) {
 				throttleInput = remoteThrottleInput;
 				brakeInput = remoteBrakeInput;
 				steerInput = remoteSteerInput;
@@ -53,102 +55,71 @@ namespace MSCMP.Game.Objects {
 		}
 
 		public float Steering {
-			get {
-				return dynamics.carController.steering;
-			}
-			set {
-				dynamics.carController.steering = value;
-			}
+			get { return dynamics.carController.steering; }
+			set { dynamics.carController.steering = value; }
 		}
 
 		public float Throttle {
-			get {
-				return dynamics.carController.throttleInput;
-			}
-			set {
-				dynamics.carController.throttleInput = value;
-			}
+			get { return dynamics.carController.throttleInput; }
+			set { dynamics.carController.throttleInput = value; }
 		}
 
 		public float Brake {
-			get {
-				return dynamics.carController.brakeInput;
-			}
-			set {
-				dynamics.carController.brakeInput = value;
-			}
+			get { return dynamics.carController.brakeInput; }
+			set { dynamics.carController.brakeInput = value; }
 		}
 
 		public float TargetSpeed {
-			get {
-				return throttleFsm.FsmVariables.GetFsmFloat("TargetSpeed").Value;
-			}
-			set {
-				remoteTargetSpeed = value;
-			}
+			get { return throttleFsm.FsmVariables.GetFsmFloat("TargetSpeed").Value; }
+			set { remoteTargetSpeed = value; }
 		}
 
 		public int Waypoint {
 			get {
-				return Convert.ToInt32(navigationFsm.FsmVariables.GetFsmGameObject("Waypoint").Value.name);
+				return Convert.ToInt32(
+						navigationFsm.FsmVariables.GetFsmGameObject("Waypoint").Value.name);
 			}
 		}
 
 		public GameObject WaypointSet {
-			set {
-				navigationFsm.FsmVariables.GetFsmGameObject("Waypoint").Value = value;
-			}
+			set { navigationFsm.FsmVariables.GetFsmGameObject("Waypoint").Value = value; }
 		}
 
 		public int Route {
 			get {
-				string route = navigationFsm.FsmVariables.GetFsmGameObject("Waypoint").Value.transform.parent.name;
+				string route = navigationFsm.FsmVariables.GetFsmGameObject("Waypoint")
+													 .Value.transform.parent.name;
 				if (route == "BusRoute") {
 					return 0;
-				}
-				else if (route == "DirtRoad") {
+				} else if (route == "DirtRoad") {
 					return 1;
-				}
-				else if (route == "Highway") {
+				} else if (route == "Highway") {
 					return 2;
-				}
-				else if (route == "HomeRoad") {
+				} else if (route == "HomeRoad") {
 					return 3;
-				}
-				else if (route == "RoadRace") {
+				} else if (route == "RoadRace") {
 					return 4;
-				}
-				else if (route == "Trackfield") {
+				} else if (route == "Trackfield") {
 					return 5;
-				}
-				else {
+				} else {
 					return 6;
 				}
 			}
 		}
 
 		public int WaypointStart {
-			get {
-				return navigationFsm.FsmVariables.GetFsmInt("WaypointStart").Value;
-			}
-			set {
-				navigationFsm.FsmVariables.GetFsmInt("WaypointStart").Value = value;
-			}
+			get { return navigationFsm.FsmVariables.GetFsmInt("WaypointStart").Value; }
+			set { navigationFsm.FsmVariables.GetFsmInt("WaypointStart").Value = value; }
 		}
 
 		public int WaypointEnd {
-			get {
-				return navigationFsm.FsmVariables.GetFsmInt("WaypointEnd").Value;
-			}
-			set {
-				navigationFsm.FsmVariables.GetFsmInt("WaypointEnd").Value = value;
-			}
+			get { return navigationFsm.FsmVariables.GetFsmInt("WaypointEnd").Value; }
+			set { navigationFsm.FsmVariables.GetFsmInt("WaypointEnd").Value = value; }
 		}
 
 		float remoteTargetSpeed;
 
 		float steamID = Steamworks.SteamUser.GetSteamID().m_SteamID;
-
 
 		/// <summary>
 		/// Constructor.
@@ -163,17 +134,15 @@ namespace MSCMP.Game.Objects {
 			string goName = gameObject.transform.parent.gameObject.name;
 			if (goName == "AMIS2" || goName == "KYLAJANI") {
 				type = VehicleTypes.Amis;
-			}
-			else if (goName == "BUS") {
+			} else if (goName == "BUS") {
 				type = VehicleTypes.Bus;
-			}
-			else if (goName == "FITTAN" && parentGameObject.transform.FindChild("Navigation") != null) {
+			} else if (goName == "FITTAN" &&
+					parentGameObject.transform.FindChild("Navigation") != null) {
 				type = VehicleTypes.Fitan;
-			}
-			else if (parentGameObject.transform.FindChild("NavigationCW") != null || parentGameObject.transform.FindChild("NavigationCCW") != null) {
+			} else if (parentGameObject.transform.FindChild("NavigationCW") != null ||
+					parentGameObject.transform.FindChild("NavigationCCW") != null) {
 				type = VehicleTypes.TrafficDirectional;
-			}
-			else {
+			} else {
 				type = VehicleTypes.Traffic;
 			}
 
@@ -185,17 +154,21 @@ namespace MSCMP.Game.Objects {
 
 			if (type == VehicleTypes.TrafficDirectional) {
 				if (parentGameObject.transform.FindChild("NavigationCW") != null) {
-					navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCW").gameObject, "Navigation");
+					navigationFsm = Utils.GetPlaymakerScriptByName(
+							parentGameObject.transform.FindChild("NavigationCW").gameObject,
+							"Navigation");
 					isClockwise = 1;
-				}
-				else {
-					navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCCW").gameObject, "Navigation");
+				} else {
+					navigationFsm = Utils.GetPlaymakerScriptByName(
+							parentGameObject.transform.FindChild("NavigationCCW").gameObject,
+							"Navigation");
 					isClockwise = 0;
 				}
 				directionFsm = Utils.GetPlaymakerScriptByName(parentGameObject, "Direction");
-			}
-			else {
-				navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("Navigation").gameObject, "Navigation");
+			} else {
+				navigationFsm = Utils.GetPlaymakerScriptByName(
+						parentGameObject.transform.FindChild("Navigation").gameObject,
+						"Navigation");
 			}
 
 			EventHooks();
@@ -205,17 +178,13 @@ namespace MSCMP.Game.Objects {
 		/// Get object's Transform.
 		/// </summary>
 		/// <returns>Object's Transform.</returns>
-		public Transform ObjectTransform() {
-			return parentGameObject.transform;
-		}
+		public Transform ObjectTransform() { return parentGameObject.transform; }
 
 		/// <summary>
 		/// Check is periodic sync of the object is enabled.
 		/// </summary>
 		/// <returns>Periodic sync enabled or disabled.</returns>
-		public bool PeriodicSyncEnabled() {
-			return true;
-		}
+		public bool PeriodicSyncEnabled() { return true; }
 
 		/// <summary>
 		/// Determines if the object should be synced.
@@ -225,8 +194,7 @@ namespace MSCMP.Game.Objects {
 			if (rigidbody.velocity.sqrMagnitude >= 0.01f) {
 				isSyncing = true;
 				return true;
-			}
-			else {
+			} else {
 				isSyncing = false;
 				return false;
 			}
@@ -236,9 +204,7 @@ namespace MSCMP.Game.Objects {
 		/// Called when a player enters range of an object.
 		/// </summary>
 		/// <returns>True if the player should tkae ownership of the object.</returns>
-		public bool ShouldTakeOwnership() {
-			return true;
-		}
+		public bool ShouldTakeOwnership() { return true; }
 
 		/// <summary>
 		/// Returns variables to be sent to the remote client.
@@ -246,10 +212,10 @@ namespace MSCMP.Game.Objects {
 		/// <returns>Variables to be sent to the remote client.</returns>
 		public float[] ReturnSyncedVariables(bool sendAllVariables) {
 			if (isSyncing == true) {
-				float[] variables = { Steering, Throttle, Brake, TargetSpeed, Waypoint, Route, WaypointStart, WaypointEnd, isClockwise };
+				float[] variables = { Steering, Throttle, Brake, TargetSpeed, Waypoint,
+					Route, WaypointStart, WaypointEnd, isClockwise };
 				return variables;
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
@@ -269,10 +235,13 @@ namespace MSCMP.Game.Objects {
 				if (isClockwise != variables[8]) {
 					isClockwise = variables[8];
 					if (isClockwise == 1) {
-						navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCW").gameObject, "Navigation");
-					}
-					else {
-						navigationFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("NavigationCCW").gameObject, "Navigation");
+						navigationFsm = Utils.GetPlaymakerScriptByName(
+								parentGameObject.transform.FindChild("NavigationCW").gameObject,
+								"Navigation");
+					} else {
+						navigationFsm = Utils.GetPlaymakerScriptByName(
+								parentGameObject.transform.FindChild("NavigationCCW").gameObject,
+								"Navigation");
 					}
 				}
 			}
@@ -281,38 +250,32 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Called when sync control is taken by force.
 		/// </summary>
-		public void SyncTakenByForce() {
-
-		}
+		public void SyncTakenByForce() {}
 
 		/// <summary>
 		/// Called when owner is set to the remote client.
 		/// </summary>
-		public void OwnerSetToRemote() {
-			gameObject.SetActive(true);
-		}
+		public void OwnerSetToRemote() { gameObject.SetActive(true); }
 
 		/// <summary>
 		/// Called when owner is removed.
 		/// </summary>
-		public void OwnerRemoved() {
-
-		}
+		public void OwnerRemoved() {}
 
 		/// <summary>
-		/// Called when an object is constantly syncing. (Usually when a pickupable is picked up, or when a vehicle is being driven)
+		/// Called when an object is constantly syncing. (Usually when a pickupable is
+		/// picked up, or when a vehicle is being driven)
 		/// </summary>
 		/// <param name="newValue">If object is being constantly synced.</param>
-		public void ConstantSyncChanged(bool newValue) {
-
-		}
+		public void ConstantSyncChanged(bool newValue) {}
 
 		// Event hooks
 		public void EventHooks() {
 			// Generic vehicle FSMs.
 			throttleFsm = Utils.GetPlaymakerScriptByName(parentGameObject, "Throttle");
 			EventHook.SyncAllEvents(throttleFsm, new Func<bool>(() => {
-				if (syncComponent.Owner != steamID && syncComponent.Owner != 0 || syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
+				if (syncComponent.Owner != steamID && syncComponent.Owner != 0 ||
+						syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
 					return true;
 				}
 				return false;
@@ -330,18 +293,22 @@ namespace MSCMP.Game.Objects {
 
 			// Bus specific FSMs.
 			if (type == VehicleTypes.Bus) {
-				PlayMakerFSM doorFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("Route").gameObject, "Door");
-				PlayMakerFSM startFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("Route").gameObject, "Start");
+				PlayMakerFSM doorFsm = Utils.GetPlaymakerScriptByName(
+						parentGameObject.transform.FindChild("Route").gameObject, "Door");
+				PlayMakerFSM startFsm = Utils.GetPlaymakerScriptByName(
+						parentGameObject.transform.FindChild("Route").gameObject, "Start");
 
 				EventHook.SyncAllEvents(doorFsm, new Func<bool>(() => {
-					if (syncComponent.Owner != steamID && syncComponent.Owner != 0 || syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
+					if (syncComponent.Owner != steamID && syncComponent.Owner != 0 ||
+							syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
 						return true;
 					}
 					return false;
 				}));
 
 				EventHook.SyncAllEvents(startFsm, new Func<bool>(() => {
-					if (syncComponent.Owner != steamID && syncComponent.Owner != 0 || syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
+					if (syncComponent.Owner != steamID && syncComponent.Owner != 0 ||
+							syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
 						return true;
 					}
 					return false;
@@ -350,10 +317,12 @@ namespace MSCMP.Game.Objects {
 
 			// None traffic cars specific FSMs.
 			if (type == VehicleTypes.Amis || type == VehicleTypes.Fitan) {
-				PlayMakerFSM crashFsm = Utils.GetPlaymakerScriptByName(parentGameObject.transform.FindChild("CrashEvent").gameObject, "Crash");
+				PlayMakerFSM crashFsm = Utils.GetPlaymakerScriptByName(
+						parentGameObject.transform.FindChild("CrashEvent").gameObject, "Crash");
 
 				EventHook.SyncAllEvents(crashFsm, new Func<bool>(() => {
-					if (syncComponent.Owner != steamID && syncComponent.Owner != 0 || syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
+					if (syncComponent.Owner != steamID && syncComponent.Owner != 0 ||
+							syncComponent.Owner == 0 && !Network.NetManager.Instance.IsHost) {
 						return true;
 					}
 					return false;
@@ -361,7 +330,8 @@ namespace MSCMP.Game.Objects {
 			}
 
 			// Sync vehicle data with the host on spawn.
-			if (Network.NetManager.Instance.IsOnline && !Network.NetManager.Instance.IsHost) {
+			if (Network.NetManager.Instance.IsOnline &&
+					!Network.NetManager.Instance.IsHost) {
 				syncComponent.RequestObjectSync();
 			}
 		}

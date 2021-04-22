@@ -38,17 +38,14 @@ namespace MSCMP.Game.Objects {
 			foreach (PlayMakerFSM fsm in fsms) {
 				if (fsm.Fsm.Name == "Jank" && fsm.gameObject.name == "Ignition") {
 					jankFSM = fsm;
-				}
-				else if (fsm.Fsm.Name == "Use" && fsm.gameObject.name == "Ignition") {
+				} else if (fsm.Fsm.Name == "Use" && fsm.gameObject.name == "Ignition") {
 					ignitionFSM = fsm;
-				}
-				else if (fsm.Fsm.Name == "Use" && fsm.gameObject.name == "ShutOff") {
+				} else if (fsm.Fsm.Name == "Use" && fsm.gameObject.name == "ShutOff") {
 					shutOffFSM = fsm;
-				}
-				else if (fsm.Fsm.Name == "Use" && fsm.gameObject.name == "Gear") {
+				} else if (fsm.Fsm.Name == "Use" && fsm.gameObject.name == "Gear") {
 					gearFSM = fsm;
-				}
-				else if (fsm.Fsm.Name == "PlayerTrigger" && fsm.gameObject.name == "DriveTrigger") {
+				} else if (fsm.Fsm.Name == "PlayerTrigger" &&
+						fsm.gameObject.name == "DriveTrigger") {
 					driveFSM = fsm;
 				}
 			}
@@ -58,22 +55,20 @@ namespace MSCMP.Game.Objects {
 			foreach (PlayMakerFSM fsm in allFsms) {
 				if (fsm.Fsm.Name == "ThrottleSteer" && fsm.gameObject.name == "Controls") {
 					throttleSteerFSM = fsm;
-					if (foundOther) {
-						break;
-					}
+					if (foundOther) { break; }
 					foundOther = true;
-				}
-				else if (fsm.Fsm.Name == "Simulation" && fsm.gameObject.name == "Engine") {
+				} else if (fsm.Fsm.Name == "Simulation" && fsm.gameObject.name == "Engine") {
 					engineFSM = fsm;
 					engineGO = fsm.gameObject;
-					if (foundOther) {
-						break;
-					}
+					if (foundOther) { break; }
 					foundOther = true;
 				}
 			}
 
-			motorGO = boatGO.transform.FindChild("GFX").FindChild("Motor").FindChild("Pivot").gameObject;
+			motorGO = boatGO.transform.FindChild("GFX")
+										.FindChild("Motor")
+										.FindChild("Pivot")
+										.gameObject;
 
 			HookEvents();
 		}
@@ -109,17 +104,13 @@ namespace MSCMP.Game.Objects {
 		/// Get object's Transform.
 		/// </summary>
 		/// <returns>Object's Transform.</returns>
-		public Transform ObjectTransform() {
-			return boatGO.transform;
-		}
+		public Transform ObjectTransform() { return boatGO.transform; }
 
 		/// <summary>
 		/// Check is periodic sync of the object is enabled.
 		/// </summary>
 		/// <returns>Periodic sync enabled or disabled.</returns>
-		public bool PeriodicSyncEnabled() {
-			return true;
-		}
+		public bool PeriodicSyncEnabled() { return true; }
 
 		/// <summary>
 		/// Determines if the object should be synced.
@@ -128,8 +119,7 @@ namespace MSCMP.Game.Objects {
 		public bool CanSync() {
 			if (rigidbody.velocity.sqrMagnitude >= 0.01f) {
 				return true;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -137,24 +127,19 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Called when a player enters range of an object.
 		/// </summary>
-		/// <returns>True if the player should try to take ownership of the object.</returns>
-		public bool ShouldTakeOwnership() {
-			return true;
-		}
+		/// <returns>True if the player should try to take ownership of the
+		/// object.</returns>
+		public bool ShouldTakeOwnership() { return true; }
 
 		/// <summary>
 		/// Returns variables to be sent to the remote client.
 		/// </summary>
 		/// <returns>Variables to be sent to the remote client.</returns>
 		public float[] ReturnSyncedVariables(bool sendAllVariables) {
-			if (!engineGO.activeSelf) {
-				engineGO.SetActive(true);
-			}
-			float[] variables = {
-				engineFSM.FsmVariables.GetFsmFloat("Throttle").Value,
+			if (!engineGO.activeSelf) { engineGO.SetActive(true); }
+			float[] variables = { engineFSM.FsmVariables.GetFsmFloat("Throttle").Value,
 				engineFSM.FsmVariables.GetFsmFloat("RPMmax").Value,
-				motorGO.transform.localRotation.y
-			};
+				motorGO.transform.localRotation.y };
 			return variables;
 		}
 
@@ -162,41 +147,34 @@ namespace MSCMP.Game.Objects {
 		/// Handle variables sent from the remote client.
 		/// </summary>
 		public void HandleSyncedVariables(float[] variables) {
-			if (!engineGO.activeSelf) {
-				engineGO.SetActive(true);
-			}
+			if (!engineGO.activeSelf) { engineGO.SetActive(true); }
 			engineFSM.FsmVariables.GetFsmFloat("Throttle").Value = variables[0];
 			engineFSM.FsmVariables.GetFsmFloat("RPMmax").Value = variables[1];
-			motorGO.transform.localRotation = new Quaternion(motorGO.transform.localRotation.x, variables[2], motorGO.transform.localRotation.z, motorGO.transform.localRotation.w);
+			motorGO.transform.localRotation =
+					new Quaternion(motorGO.transform.localRotation.x, variables[2],
+							motorGO.transform.localRotation.z, motorGO.transform.localRotation.w);
 		}
 
 		/// <summary>
 		/// Called when owner is set to the remote client.
 		/// </summary>
-		public void OwnerSetToRemote() {
-
-		}
+		public void OwnerSetToRemote() {}
 
 		/// <summary>
 		/// Called when owner is removed.
 		/// </summary>
-		public void OwnerRemoved() {
-
-		}
+		public void OwnerRemoved() {}
 
 		/// <summary>
 		/// Called when sync control is taken by force.
 		/// </summary>
-		public void SyncTakenByForce() {
-
-		}
+		public void SyncTakenByForce() {}
 
 		/// <summary>
-		/// Called when an object is constantly syncing. (Usually when a pickupable is picked up, or when a vehicle is being driven)
+		/// Called when an object is constantly syncing. (Usually when a pickupable is
+		/// picked up, or when a vehicle is being driven)
 		/// </summary>
 		/// <param name="newValue">If object is being constantly synced.</param>
-		public void ConstantSyncChanged(bool newValue) {
-
-		}
+		public void ConstantSyncChanged(bool newValue) {}
 	}
 }

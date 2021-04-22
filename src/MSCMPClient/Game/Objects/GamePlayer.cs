@@ -25,14 +25,13 @@ namespace MSCMP.Game.Objects {
 		/// Get object player has picked up.
 		/// </summary>
 		public GameObject PickedUpObject {
-			get { return pickedUpGameObject;  }
+			get { return pickedUpGameObject; }
 		}
 
 		/// <summary>
 		/// Instance.
 		/// </summary>
 		public static GamePlayer Instance;
-
 
 		/// <summary>
 		/// Constructor.
@@ -41,7 +40,7 @@ namespace MSCMP.Game.Objects {
 		public GamePlayer(GameObject gameObject) {
 			this.gameObject = gameObject;
 			Instance = this;
-			
+
 			pickupFsm = Utils.GetPlaymakerScriptByName(gameObject, "PickUp");
 
 			if (pickupFsm != null) {
@@ -75,16 +74,17 @@ namespace MSCMP.Game.Objects {
 
 			trigger.transform.position = gameObject.transform.position;
 			trigger.transform.parent = gameObject.transform;
-			ObjectSyncPlayerComponent ospc = trigger.AddComponent<ObjectSyncPlayerComponent>();
+			ObjectSyncPlayerComponent ospc =
+					trigger.AddComponent<ObjectSyncPlayerComponent>();
 		}
-
 
 		/// <summary>
 		/// Handle pickup of the object.
 		/// </summary>
 		private void PickupObject() {
 			pickedUpGameObject = pickupFsm.Fsm.GetFsmGameObject("PickedObject").Value;
-			ObjectSyncComponent osc = pickedUpGameObject.GetComponent<ObjectSyncComponent>();
+			ObjectSyncComponent osc =
+					pickedUpGameObject.GetComponent<ObjectSyncComponent>();
 			osc.TakeSyncControl();
 			osc.SendConstantSync(true);
 
@@ -112,8 +112,6 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Drops object when it has been stolen from the player.
 		/// </summary>
-		public void DropStolenObject() {
-			pickupFsm.SendEvent("MP_Drop part");
-		}
+		public void DropStolenObject() { pickupFsm.SendEvent("MP_Drop part"); }
 	}
 }

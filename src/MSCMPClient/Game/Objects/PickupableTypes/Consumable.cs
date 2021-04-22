@@ -22,9 +22,7 @@ namespace MSCMP.Game.Objects.PickupableTypes {
 		/// </summary>
 		public void HookEvents() {
 			foreach (PlayMakerFSM fsm in itemGO.GetComponents<PlayMakerFSM>()) {
-				if (fsm.Fsm.Name == "Use") {
-					EventHook.AddWithSync(fsm, "Destroy");
-				}
+				if (fsm.Fsm.Name == "Use") { EventHook.AddWithSync(fsm, "Destroy"); }
 			}
 		}
 	}

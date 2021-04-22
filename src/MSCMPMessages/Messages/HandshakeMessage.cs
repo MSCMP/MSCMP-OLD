@@ -7,11 +7,11 @@ namespace MSCMPMessages.Messages {
 		/// <summary>
 		/// Protocol version of the client that sent this message.
 		/// </summary>
-		int					protocolVersion;
+		int protocolVersion;
 
 		/// <summary>
 		/// Network clock of the client that sent this message.
 		/// </summary>
-		UInt64				clock;
+		UInt64 clock;
 	}
 }

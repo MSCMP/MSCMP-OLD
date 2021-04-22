@@ -6,20 +6,16 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 namespace MSCMP {
-	public enum MessageSeverity {
-		Info,
-		Error
-	}
+	public enum MessageSeverity { Info, Error }
 
 	/// <summary>
 	/// Basic message hud.
 	/// </summary>
 	class MessagesList {
 
-		const int MESSAGES_COUNT	= 5;
-		static Color[] colors				= new Color[MESSAGES_COUNT];
-		static string[] messages			= new string[MESSAGES_COUNT];
-
+		const int MESSAGES_COUNT = 5;
+		static Color[] colors = new Color[MESSAGES_COUNT];
+		static string[] messages = new string[MESSAGES_COUNT];
 
 		/// <summary>
 		/// Add message to the hud.
@@ -36,13 +32,9 @@ namespace MSCMP {
 			messages[MESSAGES_COUNT - 1] = message;
 			Color color = Color.white;
 			switch (severity) {
-				case MessageSeverity.Info:
-					color = Color.white;
-					break;
+			case MessageSeverity.Info: color = Color.white; break;
 
-				case MessageSeverity.Error:
-					color = Color.red;
-					break;
+			case MessageSeverity.Error: color = Color.red; break;
 			}
 
 			colors[MESSAGES_COUNT - 1] = color;
@@ -52,11 +44,8 @@ namespace MSCMP {
 		/// Clear chat.
 		/// </summary>
 		public static void ClearMessages() {
-			for (int i = 0; i < MESSAGES_COUNT; ++i) {
-				messages[i] = "";
-			}
+			for (int i = 0; i < MESSAGES_COUNT; ++i) { messages[i] = ""; }
 		}
-
 
 		/// <summary>
 		/// Draw message list.

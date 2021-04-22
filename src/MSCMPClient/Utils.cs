@@ -29,9 +29,7 @@ namespace MSCMP {
 		/// <param name="obj">The base typed object contaning action.</param>
 		/// <param name="print">The delegate to call to print value.</param>
 		private static void PrintObjectFields(int level, object obj, PrintInfo print) {
-			if (obj == null) {
-				return;
-			}
+			if (obj == null) { return; }
 
 			if (level > 10) {
 				print(level + 1, "Out of depth limit.");
@@ -39,7 +37,9 @@ namespace MSCMP {
 			}
 
 			Type type = obj.GetType();
-			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+			FieldInfo[] fields =
+					type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic |
+							BindingFlags.Public | BindingFlags.FlattenHierarchy);
 
 			foreach (var fi in fields) {
 				var val = fi.GetValue(obj);
@@ -56,14 +56,17 @@ namespace MSCMP {
 					additionalString += $" [Named variable: {((NamedVariable)val).Name}]";
 				}
 
-				print(level, fieldType.FullName + " " + fi.Name + " = " + val.ToString() + additionalString);
+				print(level,
+						fieldType.FullName + " " + fi.Name + " = " + val.ToString() +
+								additionalString);
 
-				if (fieldType.IsClass && (fieldType.Namespace == null || !fieldType.Namespace.StartsWith("System"))) {
+				if (fieldType.IsClass &&
+						(fieldType.Namespace == null ||
+								!fieldType.Namespace.StartsWith("System"))) {
 					PrintObjectFields(level + 1, val, print);
 				}
 			}
 		}
-
 
 		/// <summary>
 		/// Helper getting named variable valeu as string.
@@ -88,12 +91,9 @@ namespace MSCMP {
 			if (var is FsmVector2) { value = ((FsmVector2)var).Value; }
 			if (var is FsmVector3) { value = ((FsmVector3)var).Value; }
 
-			if (value == null) {
-				return "null";
-			}
+			if (value == null) { return "null"; }
 			return value.ToString();
 		}
-
 
 		/// <summary>
 		/// Prints play maker fsm component details.
@@ -101,7 +101,8 @@ namespace MSCMP {
 		/// <param name="pmfsm">The component to print detals for.</param>
 		/// <param name="level">The level of print.</param>
 		/// <param name="print">The method used to print the details.</param>
-		private static void PrintPlaymakerFsmComponent(PlayMakerFSM pmfsm, int level, PrintInfo print) {
+		private static void PrintPlaymakerFsmComponent(
+				PlayMakerFSM pmfsm, int level, PrintInfo print) {
 			// Make sure FSM is initialized.
 			pmfsm.Fsm.Init(pmfsm);
 
@@ -142,7 +143,6 @@ namespace MSCMP {
 						continue;
 					}
 
-
 					print(level + 1, "Transition: " + t.EventName + " > " + t.ToState);
 				}
 				Logger.Log("POST TRANS");
@@ -153,7 +153,8 @@ namespace MSCMP {
 						continue;
 					}
 
-					print(level + 1, "Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
+					print(level + 1,
+							"Action Name: " + a.Name + " (" + a.GetType().FullName + ")");
 					PrintObjectFields(level + 2, a, print);
 				}
 				Logger.Log("POST ACTIONS");
@@ -172,21 +173,21 @@ namespace MSCMP {
 		/// <param name="trans">The transform object to print components of.</param>
 		/// <param name="level">The level of print.</param>
 		/// <param name="print">The delegate to call to print value.</param>
-		private static void PrintTransformComponents(Transform trans, int level, PrintInfo print) {
+		private static void PrintTransformComponents(
+				Transform trans, int level, PrintInfo print) {
 			Component[] components = trans.GetComponents<Component>();
 			foreach (Component component in components) {
-				print(level + 1, "C " + component.GetType().FullName + " [" + component.tag + "]");
+				print(level + 1,
+						"C " + component.GetType().FullName + " [" + component.tag + "]");
 
 				if (component is PlayMakerFSM) {
 					try {
 						PrintPlaymakerFsmComponent((PlayMakerFSM)component, level + 2, print);
-					}
-					catch (Exception e) {
+					} catch (Exception e) {
 						Logger.Log("XXX");
 						Logger.Log(e.StackTrace);
 					}
-				}
-				else if (component is Animation) {
+				} else if (component is Animation) {
 					var anim = (Animation)component;
 					foreach (AnimationState state in anim) {
 						print(level + 2, "Animation state: " + state.name);
@@ -201,7 +202,8 @@ namespace MSCMP {
 		/// <param name="trans">The transform object to print children of.</param>
 		/// <param name="level">The level of print.</param>
 		/// <param name="print">The delegate to call to print value.</param>
-		private static void PrintTransformChildren(Transform trans, int level, PrintInfo print) {
+		private static void PrintTransformChildren(
+				Transform trans, int level, PrintInfo print) {
 			for (int i = 0; i < trans.childCount; ++i) {
 				Transform child = trans.GetChild(i);
 				PrintTransformTree(child, level + 1, print);
@@ -212,32 +214,31 @@ namespace MSCMP {
 		/// Prints unity Transform tree starting from trans.
 		/// </summary>
 		/// <param name="trans">The transform object to start print of the tree.</param>
-		/// <param name="level">The level of print. When starting printing it should be 0.</param>
-		/// <param name="print">The delegate to call to print value.</param>
-		public static void PrintTransformTree(Transform trans, int level, PrintInfo print) {
-			if (trans == null) {
-				return;
-			}
+		/// <param name="level">The level of print. When starting printing it should be
+		/// 0.</param> <param name="print">The delegate to call to print value.</param>
+		public static void PrintTransformTree(
+				Transform trans, int level, PrintInfo print) {
+			if (trans == null) { return; }
 
-			print(level, $"> {trans.name} [{trans.tag}, {(trans.gameObject.activeSelf ? "active" : "inactive")}, {trans.gameObject.GetInstanceID()}]");
+			print(level,
+					$"> {trans.name} [{trans.tag}, {(trans.gameObject.activeSelf ? "active" : "inactive")}, {trans.gameObject.GetInstanceID()}]");
 
 			PrintTransformComponents(trans, level, print);
 			PrintTransformChildren(trans, level, print);
-
 		}
 
 		/// <summary>
-		/// Get PlayMaker finite-state-matching from the game objects tree starting from game object.
+		/// Get PlayMaker finite-state-matching from the game objects tree starting from
+		/// game object.
 		/// </summary>
 		/// <param name="go">The game object to start searching at.</param>
 		/// <param name="name">The name of finite-state-machine to find.</param>
-		/// <returns>Finite state machine matching the name or null if no such state machine is found.</returns>
+		/// <returns>Finite state machine matching the name or null if no such state
+		/// machine is found.</returns>
 		public static PlayMakerFSM GetPlaymakerScriptByName(GameObject go, string name) {
 			PlayMakerFSM[] fsms = go.GetComponentsInChildren<PlayMakerFSM>();
 			foreach (PlayMakerFSM fsm in fsms) {
-				if (fsm.FsmName == name) {
-					return fsm;
-				}
+				if (fsm.FsmName == name) { return fsm; }
 			}
 			return null;
 		}
@@ -283,7 +284,8 @@ namespace MSCMP {
 		}
 
 		/// <summary>
-		/// Convert network message containing quaternion into game representation of quaternion.
+		/// Convert network message containing quaternion into game representation of
+		/// quaternion.
 		/// </summary>
 		/// <param name="msg">The message to convert.</param>
 		/// <returns>Converted quaternion.</returns>
@@ -302,7 +304,8 @@ namespace MSCMP {
 		public delegate void SafeCall();
 
 		/// <summary>
-		/// Perform safe call catching all exceptions that could happen within it's scope.
+		/// Perform safe call catching all exceptions that could happen within it's
+		/// scope.
 		/// </summary>
 		/// <param name="name">The name of the safe call scope.</param>
 		/// <param name="call">The code to execute.</param>
@@ -316,12 +319,11 @@ namespace MSCMP {
 
 			try {
 				call();
-			}
-			catch (Exception e) {
-				Client.FatalError("Safe call " + name + " failed.\n" + e.Message + "\n" + e.StackTrace);
+			} catch (Exception e) {
+				Client.FatalError(
+						"Safe call " + name + " failed.\n" + e.Message + "\n" + e.StackTrace);
 			}
 		}
-
 
 		/// <summary>
 		/// Calculate jenkins hash of the given string.
@@ -348,41 +350,39 @@ namespace MSCMP {
 		/// <param name="obj">The game object.</param>
 		/// <param name="hierarchy">The hierarchy pattern to check.</param>
 		/// <returns>true if hierarchy is matching, false otherwise</returns>
-		public static bool IsGameObjectHierarchyMatching(GameObject obj, string hierarchy) {
+		public static bool IsGameObjectHierarchyMatching(
+				GameObject obj, string hierarchy) {
 			Transform current = obj.transform;
 			var names = hierarchy.Split('/');
 			for (int i = names.Length; i > 0; --i) {
-				if (current == null) {
-					return false;
-				}
+				if (current == null) { return false; }
 
-				if (names[i - 1] == "*") {
-					continue;
-				}
+				if (names[i - 1] == "*") { continue; }
 
-				if (current.name != names[i - 1]) {
-					return false;
-				}
+				if (current.name != names[i - 1]) { return false; }
 
 				current = current.parent;
 			}
 			return true;
 		}
 
-
 		/// <summary>
 		/// Convert p2p session error to string.
 		/// </summary>
 		/// <param name="sessionError">The session error.</param>
 		/// <returns>Session error string.</returns>
-		public static string P2PSessionErrorToString(Steamworks.EP2PSessionError sessionError) {
+		public static string P2PSessionErrorToString(
+				Steamworks.EP2PSessionError sessionError) {
 			switch (sessionError) {
-				case Steamworks.EP2PSessionError.k_EP2PSessionErrorNone: return "none";
-				case Steamworks.EP2PSessionError.k_EP2PSessionErrorNotRunningApp: return "not running app";
-				case Steamworks.EP2PSessionError.k_EP2PSessionErrorNoRightsToApp: return "no rights to app";
-				case Steamworks.EP2PSessionError.k_EP2PSessionErrorDestinationNotLoggedIn: return "user not logged in";
-				case Steamworks.EP2PSessionError.k_EP2PSessionErrorTimeout: return "timeout";
-				default:return  "unknown";
+			case Steamworks.EP2PSessionError.k_EP2PSessionErrorNone: return "none";
+			case Steamworks.EP2PSessionError.k_EP2PSessionErrorNotRunningApp:
+				return "not running app";
+			case Steamworks.EP2PSessionError.k_EP2PSessionErrorNoRightsToApp:
+				return "no rights to app";
+			case Steamworks.EP2PSessionError.k_EP2PSessionErrorDestinationNotLoggedIn:
+				return "user not logged in";
+			case Steamworks.EP2PSessionError.k_EP2PSessionErrorTimeout: return "timeout";
+			default: return "unknown";
 			}
 		}
 	}

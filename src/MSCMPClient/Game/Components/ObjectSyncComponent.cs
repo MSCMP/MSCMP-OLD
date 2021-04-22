@@ -5,7 +5,8 @@ using MSCMP.Game.Objects;
 namespace MSCMP.Game.Components {
 	/// <summary>
 	/// Attached to objects that require position/rotation sync.
-	/// Sync is provided based on distance from the player and paramters inside an ISyncedObject.
+	/// Sync is provided based on distance from the player and paramters inside an
+	/// ISyncedObject.
 	/// </summary>
 	class ObjectSyncComponent : MonoBehaviour {
 		// If sync is enabled.
@@ -30,7 +31,8 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void Setup(ObjectSyncManager.ObjectTypes type, int objectID) {
 			if (!NetWorld.Instance.playerIsLoading) {
-				if (!NetManager.Instance.IsHost && objectID == ObjectSyncManager.AUTOMATIC_ID) {
+				if (!NetManager.Instance.IsHost &&
+						objectID == ObjectSyncManager.AUTOMATIC_ID) {
 					Logger.Debug("Ignoring spawned object as client is not host!");
 					GameObject.Destroy(gameObject);
 					return;
@@ -43,18 +45,14 @@ namespace MSCMP.Game.Components {
 			// Assign object's ID.
 			ObjectID = ObjectSyncManager.Instance.AddNewObject(this, ObjectID);
 
-			if (!NetWorld.Instance.playerIsLoading && !isSetup) {
-				CreateObjectSubtype();
-			}
+			if (!NetWorld.Instance.playerIsLoading && !isSetup) { CreateObjectSubtype(); }
 		}
 
 		/// <summary>
 		/// Called on start.
 		/// </summary>
 		void Start() {
-			if (NetWorld.Instance.playerIsLoading && !isSetup) {
-				CreateObjectSubtype();
-			}
+			if (NetWorld.Instance.playerIsLoading && !isSetup) { CreateObjectSubtype(); }
 		}
 
 		/// <summary>
@@ -63,26 +61,26 @@ namespace MSCMP.Game.Components {
 		void CreateObjectSubtype() {
 			// Set object type.
 			switch (ObjectType) {
-				// Pickupable.
-				case ObjectSyncManager.ObjectTypes.Pickupable:
-					syncedObject = new Pickupable(this.gameObject);
-					break;
-				// AI Vehicle.
-				case ObjectSyncManager.ObjectTypes.AIVehicle:
-					syncedObject = new AIVehicle(this.gameObject, this);
-					break;
-				// Boat.
-				case ObjectSyncManager.ObjectTypes.Boat:
-					syncedObject = new Boat(this.gameObject);
-					break;
-				// Garage door.
-				case ObjectSyncManager.ObjectTypes.GarageDoor:
-					syncedObject = new GarageDoor(this.gameObject);
-					break;
-				// Player vehicle.
-				case ObjectSyncManager.ObjectTypes.PlayerVehicle:
-					syncedObject = new PlayerVehicle(this.gameObject, this);
-					break;
+			// Pickupable.
+			case ObjectSyncManager.ObjectTypes.Pickupable:
+				syncedObject = new Pickupable(this.gameObject);
+				break;
+			// AI Vehicle.
+			case ObjectSyncManager.ObjectTypes.AIVehicle:
+				syncedObject = new AIVehicle(this.gameObject, this);
+				break;
+			// Boat.
+			case ObjectSyncManager.ObjectTypes.Boat:
+				syncedObject = new Boat(this.gameObject);
+				break;
+			// Garage door.
+			case ObjectSyncManager.ObjectTypes.GarageDoor:
+				syncedObject = new GarageDoor(this.gameObject);
+				break;
+			// Player vehicle.
+			case ObjectSyncManager.ObjectTypes.PlayerVehicle:
+				syncedObject = new PlayerVehicle(this.gameObject, this);
+				break;
 			}
 			isSetup = true;
 		}
@@ -94,7 +92,8 @@ namespace MSCMP.Game.Components {
 			if (isSetup) {
 				if (SyncEnabled) {
 					// Updates object's position continuously.
-					// (Typically used when player is holding a pickupable, or driving a vehicle)
+					// (Typically used when player is holding a pickupable, or driving a
+					// vehicle)
 					if (sendConstantSync) {
 						SendObjectSync(ObjectSyncManager.SyncTypes.GenericSync, true, false);
 					}
@@ -106,7 +105,8 @@ namespace MSCMP.Game.Components {
 				}
 
 				// Periodically update the object's position if periodic sync is enabled.
-				if (syncedObject.PeriodicSyncEnabled() && ObjectSyncManager.Instance.ShouldPeriodicSync(Owner, SyncEnabled)) {
+				if (syncedObject.PeriodicSyncEnabled() &&
+						ObjectSyncManager.Instance.ShouldPeriodicSync(Owner, SyncEnabled)) {
 					SendObjectSync(ObjectSyncManager.SyncTypes.PeriodicSync, true, false);
 				}
 			}
@@ -115,12 +115,17 @@ namespace MSCMP.Game.Components {
 		/// <summary>
 		/// Sends a sync update of the object.
 		/// </summary>
-		public void SendObjectSync(ObjectSyncManager.SyncTypes type, bool sendVariables, bool syncWasRequested) {
+		public void SendObjectSync(ObjectSyncManager.SyncTypes type, bool sendVariables,
+				bool syncWasRequested) {
 			if (sendVariables) {
-				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, syncedObject.ReturnSyncedVariables(true));
-			}
-			else {
-				NetLocalPlayer.Instance.SendObjectSync(ObjectID, syncedObject.ObjectTransform().position, syncedObject.ObjectTransform().rotation, type, null);
+				NetLocalPlayer.Instance.SendObjectSync(ObjectID,
+						syncedObject.ObjectTransform().position,
+						syncedObject.ObjectTransform().rotation, type,
+						syncedObject.ReturnSyncedVariables(true));
+			} else {
+				NetLocalPlayer.Instance.SendObjectSync(ObjectID,
+						syncedObject.ObjectTransform().position,
+						syncedObject.ObjectTransform().rotation, type, null);
 			}
 		}
 
@@ -144,7 +149,8 @@ namespace MSCMP.Game.Components {
 		/// Called when the player enter sync range of the object.
 		/// </summary>
 		public void SendEnterSync() {
-			if (Owner == ObjectSyncManager.NO_OWNER && syncedObject.ShouldTakeOwnership()) {
+			if (Owner == ObjectSyncManager.NO_OWNER &&
+					syncedObject.ShouldTakeOwnership()) {
 				SendObjectSync(ObjectSyncManager.SyncTypes.SetOwner, true, false);
 			}
 		}
@@ -174,9 +180,7 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void OwnerSetToRemote(ulong newOwner) {
 			Owner = newOwner;
-			if (syncedObject != null) {
-				syncedObject.OwnerSetToRemote();
-			}
+			if (syncedObject != null) { syncedObject.OwnerSetToRemote(); }
 		}
 
 		/// <summary>
@@ -184,18 +188,14 @@ namespace MSCMP.Game.Components {
 		/// </summary>
 		public void OwnerRemoved() {
 			Owner = ObjectSyncManager.NO_OWNER;
-			if (syncedObject != null) {
-				syncedObject.OwnerRemoved();
-			}
+			if (syncedObject != null) { syncedObject.OwnerRemoved(); }
 		}
 
 		/// <summary>
 		/// Called when sync control of an object has been taken from local player.
 		/// </summary>
 		public void SyncTakenByForce() {
-			if (syncedObject != null) {
-				syncedObject.SyncTakenByForce();
-			}
+			if (syncedObject != null) { syncedObject.SyncTakenByForce(); }
 		}
 
 		/// <summary>
@@ -204,9 +204,7 @@ namespace MSCMP.Game.Components {
 		/// <param name="newValue">If object should be constantly synced.</param>
 		public void SendConstantSync(bool newValue) {
 			sendConstantSync = newValue;
-			if (syncedObject != null) {
-				syncedObject.ConstantSyncChanged(newValue);
-			}
+			if (syncedObject != null) { syncedObject.ConstantSyncChanged(newValue); }
 		}
 
 		/// <summary>
@@ -226,8 +224,7 @@ namespace MSCMP.Game.Components {
 		public bool IsOwnerSelf() {
 			if (Owner != Steamworks.SteamUser.GetSteamID().m_SteamID) {
 				return false;
-			}
-			else {
+			} else {
 				return true;
 			}
 		}
@@ -239,9 +236,11 @@ namespace MSCMP.Game.Components {
 		/// <param name="rot"></param>
 		public void SetPositionAndRotation(Vector3 pos, Quaternion rot) {
 			if (syncedObject == null) {
-				// Can be caused by moving an object whilst the remote client is still loading.
-				// Object should become synced after the client has finished loading anyway.
-				Logger.Debug($"Tried to set position of object '{gameObject.name}' but object isn't setup. (This is usually fine)");
+				// Can be caused by moving an object whilst the remote client is still
+				// loading. Object should become synced after the client has finished loading
+				// anyway.
+				Logger.Debug(
+						$"Tried to set position of object '{gameObject.name}' but object isn't setup. (This is usually fine)");
 				return;
 			}
 			if (syncedObject != null) {
@@ -254,8 +253,6 @@ namespace MSCMP.Game.Components {
 		/// Return the object subtype componennt.
 		/// </summary>
 		/// <returns>Synced object component.</returns>
-		public ISyncedObject GetObjectSubtype() {
-			return syncedObject;
-		}
+		public ISyncedObject GetObjectSubtype() { return syncedObject; }
 	}
 }

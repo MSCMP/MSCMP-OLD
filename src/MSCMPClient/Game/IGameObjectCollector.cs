@@ -6,8 +6,9 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Called when there is a new game object that can be collected.
 		/// </summary>
-		/// <remarks>Remember that this method may be called multiple times for the same game object!</remarks>
-		/// <param name="gameObject">The game object that can be collected.</param>
+		/// <remarks>Remember that this method may be called multiple times for the same
+		/// game object!</remarks> <param name="gameObject">The game object that can be
+		/// collected.</param>
 		void CollectGameObject(GameObject gameObject);
 
 		/// <summary>

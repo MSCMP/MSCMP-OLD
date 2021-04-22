@@ -7,8 +7,10 @@ namespace MSCMP.Network {
 	/// </summary>
 	class NetMessageHandler {
 
-		delegate void HandleMessageLowLevel(Steamworks.CSteamID sender, BinaryReader reader);
-		private Dictionary<byte, HandleMessageLowLevel> messageHandlers = new Dictionary<byte, HandleMessageLowLevel>();
+		delegate void HandleMessageLowLevel(
+				Steamworks.CSteamID sender, BinaryReader reader);
+		private Dictionary<byte, HandleMessageLowLevel> messageHandlers =
+				new Dictionary<byte, HandleMessageLowLevel>();
 
 		/// <summary>
 		/// Delegate type for network messages handler.
@@ -28,20 +30,24 @@ namespace MSCMP.Network {
 		}
 
 		/// <summary>
-		/// Binds handler for the given message. (There can be only one handler per message)
+		/// Binds handler for the given message. (There can be only one handler per
+		/// message)
 		/// </summary>
 		/// <typeparam name="T">The type of message to register handler for.</typeparam>
 		/// <param name="Handler">The handler lambda.</param>
-		public void BindMessageHandler<T>(MessageHandler<T> Handler) where T : INetMessage, new() {
+		public void BindMessageHandler<T>(MessageHandler<T> Handler)
+				where T : INetMessage, new() {
 			T message = new T();
 
-			messageHandlers.Add(message.MessageId, (Steamworks.CSteamID sender, BinaryReader reader) => {
-				if (!message.Read(reader)) {
-					Logger.Log("Failed to read network message " + message.MessageId + " received from " + sender.ToString());
-					return;
-				}
-				Handler(sender, message);
-			});
+			messageHandlers.Add(
+					message.MessageId, (Steamworks.CSteamID sender, BinaryReader reader) => {
+						if (!message.Read(reader)) {
+							Logger.Log("Failed to read network message " + message.MessageId +
+									" received from " + sender.ToString());
+							return;
+						}
+						Handler(sender, message);
+					});
 		}
 
 		/// <summary>
@@ -50,7 +56,8 @@ namespace MSCMP.Network {
 		/// <param name="messageId">The id of the message.</param>
 		/// <param name="senderSteamId">Steamid of the sender client.</param>
 		/// <param name="reader">The binary reader contaning message data.</param>
-		public void ProcessMessage(byte messageId, Steamworks.CSteamID senderSteamId, BinaryReader reader) {
+		public void ProcessMessage(
+				byte messageId, Steamworks.CSteamID senderSteamId, BinaryReader reader) {
 			if (messageHandlers.ContainsKey(messageId)) {
 				messageHandlers[messageId](senderSteamId, reader);
 			}

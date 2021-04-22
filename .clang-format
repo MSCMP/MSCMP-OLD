@@ -1,0 +1,21 @@
+---	
+BasedOnStyle: LLVM
+---
+Language: CSharp
+UseTab: Always
+IndentWidth: 2
+TabWidth: 2
+ColumnLimit: 85
+
+AlignAfterOpenBracket: DontAlign
+AlignOperands: DontAlign
+
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine : Always
+AllowShortLoopsOnASingleLine: true
+BreakBeforeBraces: Attach
+FixNamespaceComments: true
+NamespaceIndentation: All

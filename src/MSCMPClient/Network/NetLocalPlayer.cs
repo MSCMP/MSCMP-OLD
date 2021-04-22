@@ -35,7 +35,9 @@ namespace MSCMP.Network {
 		/// <param name="netManager">The network manager owning this player.</param>
 		/// <param name="netWorld">Network world owning this player.</param>
 		/// <param name="steamId">The steam id of the player.</param>
-		public NetLocalPlayer(NetManager netManager, NetWorld netWorld, Steamworks.CSteamID steamId) : base(netManager, netWorld, steamId) {
+		public NetLocalPlayer(
+				NetManager netManager, NetWorld netWorld, Steamworks.CSteamID steamId)
+				: base(netManager, netWorld, steamId) {
 			Instance = this;
 			steamID = steamId;
 
@@ -53,12 +55,13 @@ namespace MSCMP.Network {
 				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 			};
 
-			LightSwitchManager.Instance.onLightSwitchUsed = (GameObject lswitch, bool turnedOn) => {
-				Messages.LightSwitchMessage msg = new Messages.LightSwitchMessage();
-				msg.pos = Utils.GameVec3ToNet(lswitch.transform.position);
-				msg.toggle = turnedOn;
-				netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
-			};
+			LightSwitchManager.Instance.onLightSwitchUsed =
+					(GameObject lswitch, bool turnedOn) => {
+						Messages.LightSwitchMessage msg = new Messages.LightSwitchMessage();
+						msg.pos = Utils.GameVec3ToNet(lswitch.transform.position);
+						msg.toggle = turnedOn;
+						netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
+					};
 
 			if (animManager == null) animManager = new PlayerAnimManager();
 		}
@@ -85,9 +88,7 @@ namespace MSCMP.Network {
 				}
 
 				switch (state) {
-					case State.OnFoot:
-						SendOnFootSync();
-						break;
+				case State.OnFoot: SendOnFootSync(); break;
 				}
 			}
 		}
@@ -98,13 +99,9 @@ namespace MSCMP.Network {
 		/// <returns>true if sync message was sent false otherwise</returns>
 		private bool SendOnFootSync() {
 			GamePlayer player = GameWorld.Instance.Player;
-			if (player == null) {
-				return false;
-			}
+			if (player == null) { return false; }
 			GameObject playerObject = player.Object;
-			if (playerObject == null) {
-				return false;
-			}
+			if (playerObject == null) { return false; }
 
 			Messages.PlayerSyncMessage message = new Messages.PlayerSyncMessage();
 
@@ -120,7 +117,8 @@ namespace MSCMP.Network {
 				message.PickedUpData = data;
 			}
 
-			if (!netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
+			if (!netManager.BroadcastMessage(
+							message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
 				return false;
 			}
 
@@ -139,41 +137,69 @@ namespace MSCMP.Network {
 			GameObject playerObject = player.Object;
 			if (playerObject == null) return false;
 
-			if (playerObject.GetComponentInChildren<CharacterMotor>() == null) return false; //Player is dying!
+			if (playerObject.GetComponentInChildren<CharacterMotor>() == null)
+				return false; // Player is dying!
 
 			Messages.AnimSyncMessage message = new Messages.AnimSyncMessage();
 
-			message.isRunning = (Utils.GetPlaymakerScriptByName(playerObject, "Running").Fsm.ActiveStateName == "Run");
+			message.isRunning = (Utils.GetPlaymakerScriptByName(playerObject, "Running")
+															 .Fsm.ActiveStateName == "Run");
 
-			float leanRotation = Utils.GetPlaymakerScriptByName(playerObject, "Reach").Fsm.GetFsmFloat("Position").Value;
+			float leanRotation = Utils.GetPlaymakerScriptByName(playerObject, "Reach")
+															 .Fsm.GetFsmFloat("Position")
+															 .Value;
 			if (leanRotation != 0.0f) message.isLeaning = true;
-			else message.isLeaning = false;
+			else
+				message.isLeaning = false;
 
-			message.isGrounded = playerObject.GetComponentInChildren<CharacterMotor>().grounded;
+			message.isGrounded =
+					playerObject.GetComponentInChildren<CharacterMotor>().grounded;
 
 			message.activeHandState = animManager.GetActiveHandState(playerObject);
 
 			message.swearId = int.MaxValue;
-			if (animManager.GetHandState(message.activeHandState) == PlayerAnimManager.HandStateId.MiddleFingering) {
-				message.swearId = Utils.GetPlaymakerScriptByName(playerObject, "PlayerFunctions").Fsm.GetFsmInt("RandomInt").Value;
+			if (animManager.GetHandState(message.activeHandState) ==
+					PlayerAnimManager.HandStateId.MiddleFingering) {
+				message.swearId =
+						Utils.GetPlaymakerScriptByName(playerObject, "PlayerFunctions")
+								.Fsm.GetFsmInt("RandomInt")
+								.Value;
 			}
-			PlayMakerFSM speechFsm = Utils.GetPlaymakerScriptByName(playerObject, "Speech");
-			if (speechFsm.ActiveStateName == "Swear") message.swearId = animManager.Swears_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
-			else if (speechFsm.ActiveStateName == "Drunk speech") message.swearId = animManager.DrunkSpeaking_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
-			else if (speechFsm.ActiveStateName == "Yes gestures") message.swearId = animManager.Agreeing_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
+			PlayMakerFSM speechFsm =
+					Utils.GetPlaymakerScriptByName(playerObject, "Speech");
+			if (speechFsm.ActiveStateName == "Swear")
+				message.swearId =
+						animManager.Swears_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
+			else if (speechFsm.ActiveStateName == "Drunk speech")
+				message.swearId = animManager.DrunkSpeaking_Offset +
+						speechFsm.Fsm.GetFsmInt("RandomInt").Value;
+			else if (speechFsm.ActiveStateName == "Yes gestures")
+				message.swearId =
+						animManager.Agreeing_Offset + speechFsm.Fsm.GetFsmInt("RandomInt").Value;
 
-			message.aimRot = playerObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera").transform.rotation.eulerAngles.x;
-			message.crouchPosition = Utils.GetPlaymakerScriptByName(playerObject, "Crouch").Fsm.GetFsmFloat("Position").Value;
+			message.aimRot =
+					playerObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera")
+							.transform.rotation.eulerAngles.x;
+			message.crouchPosition = Utils.GetPlaymakerScriptByName(playerObject, "Crouch")
+																	 .Fsm.GetFsmFloat("Position")
+																	 .Value;
 
-			GameObject DrunkObject = playerObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera").gameObject;
-			float DrunkValue = Utils.GetPlaymakerScriptByName(DrunkObject, "Drunk Mode").Fsm.GetFsmFloat("DrunkYmax").Value;
+			GameObject DrunkObject =
+					playerObject.transform.FindChild("Pivot/AnimPivot/Camera/FPSCamera")
+							.gameObject;
+			float DrunkValue = Utils.GetPlaymakerScriptByName(DrunkObject, "Drunk Mode")
+														 .Fsm.GetFsmFloat("DrunkYmax")
+														 .Value;
 			if (DrunkValue >= 4.5f) message.isDrunk = true;
-			else message.isDrunk = false;
+			else
+				message.isDrunk = false;
 
-			if (!animManager.AreDrinksPreloaded()) animManager.PreloadDrinkObjects(playerObject);
+			if (!animManager.AreDrinksPreloaded())
+				animManager.PreloadDrinkObjects(playerObject);
 			message.drinkId = animManager.GetDrinkingObject(playerObject);
 
-			if (!netManager.BroadcastMessage(message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
+			if (!netManager.BroadcastMessage(
+							message, Steamworks.EP2PSend.k_EP2PSendUnreliable)) {
 				return false;
 			}
 
@@ -185,7 +211,8 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="vehicle">The vehicle to enter.</param>
 		/// <param name="passenger">Is player entering vehicle as passenger?</param>
-		public override void EnterVehicle(Game.Components.ObjectSyncComponent vehicle, bool passenger) {
+		public override void EnterVehicle(
+				Game.Components.ObjectSyncComponent vehicle, bool passenger) {
 			base.EnterVehicle(vehicle, passenger);
 
 			Messages.VehicleEnterMessage msg = new Messages.VehicleEnterMessage();
@@ -201,21 +228,22 @@ namespace MSCMP.Network {
 		public override void LeaveVehicle() {
 			base.LeaveVehicle();
 
-			netManager.BroadcastMessage(new Messages.VehicleLeaveMessage(), Steamworks.EP2PSend.k_EP2PSendReliable);
+			netManager.BroadcastMessage(new Messages.VehicleLeaveMessage(),
+					Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
 		/// <summary>
 		/// Write vehicle engine state into state message.
 		/// </summary>
 		/// <param name="state">The engine state to write.</param>
-		public void WriteVehicleStateMessage(Game.Components.ObjectSyncComponent vehicle, PlayerVehicle.EngineStates state, PlayerVehicle.DashboardStates dashstate, float startTime) {
+		public void WriteVehicleStateMessage(Game.Components.ObjectSyncComponent vehicle,
+				PlayerVehicle.EngineStates state, PlayerVehicle.DashboardStates dashstate,
+				float startTime) {
 			Messages.VehicleStateMessage msg = new Messages.VehicleStateMessage();
 			msg.objectID = vehicle.ObjectID;
 			msg.state = (int)state;
 			msg.dashstate = (int)dashstate;
-			if (startTime != -1) {
-				msg.StartTime = startTime;
-			}
+			if (startTime != -1) { msg.StartTime = startTime; }
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
@@ -223,14 +251,14 @@ namespace MSCMP.Network {
 		/// Write vehicle switch changes into vehicle switch message.
 		/// </summary>
 		/// <param name="state">The engine state to write.</param>
-		public void WriteVehicleSwitchMessage(Game.Components.ObjectSyncComponent vehicle, PlayerVehicle.SwitchIDs switchID, bool newValue, float newValueFloat) {
+		public void WriteVehicleSwitchMessage(
+				Game.Components.ObjectSyncComponent vehicle,
+				PlayerVehicle.SwitchIDs switchID, bool newValue, float newValueFloat) {
 			Messages.VehicleSwitchMessage msg = new Messages.VehicleSwitchMessage();
 			msg.objectID = vehicle.ObjectID;
 			msg.switchID = (int)switchID;
 			msg.switchValue = newValue;
-			if (newValueFloat != -1) {
-				msg.SwitchValueFloat = newValueFloat;
-			}
+			if (newValueFloat != -1) { msg.SwitchValueFloat = newValueFloat; }
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
@@ -250,15 +278,14 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="objectID">The Object ID of the object.</param>
 		/// <param name="setOwner">Set owner of the object.</param>
-		public void SendObjectSync(int objectID, Vector3 pos, Quaternion rot, ObjectSyncManager.SyncTypes syncType, float[] syncedVariables) {
+		public void SendObjectSync(int objectID, Vector3 pos, Quaternion rot,
+				ObjectSyncManager.SyncTypes syncType, float[] syncedVariables) {
 			Messages.ObjectSyncMessage msg = new Messages.ObjectSyncMessage();
 			msg.objectID = objectID;
 			msg.position = Utils.GameVec3ToNet(pos);
 			msg.rotation = Utils.GameQuatToNet(rot);
 			msg.SyncType = (int)syncType;
-			if (syncedVariables != null) {
-				msg.SyncedVariables = syncedVariables;
-			}
+			if (syncedVariables != null) { msg.SyncedVariables = syncedVariables; }
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
@@ -267,7 +294,8 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="objectID">The Object ID of the object.</param>
 		public void RequestObjectSync(int objectID) {
-			Messages.ObjectSyncRequestMessage msg = new Messages.ObjectSyncRequestMessage();
+			Messages.ObjectSyncRequestMessage msg =
+					new Messages.ObjectSyncRequestMessage();
 			msg.objectID = objectID;
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
@@ -276,28 +304,29 @@ namespace MSCMP.Network {
 		/// Send object sync.
 		/// </summary>
 		/// <param name="objectID">The Object ID of the object.</param>
-		/// <param name="accepted">If request to take sync ownership was accepted.</param>
+		/// <param name="accepted">If request to take sync ownership was
+		/// accepted.</param>
 		public void SendObjectSyncResponse(int objectID, bool accepted) {
-			Messages.ObjectSyncResponseMessage msg = new Messages.ObjectSyncResponseMessage();
+			Messages.ObjectSyncResponseMessage msg =
+					new Messages.ObjectSyncResponseMessage();
 			msg.objectID = objectID;
 			msg.accepted = accepted;
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
-		
+
 		/// <summary>
 		/// Send EventHook sync message.
 		/// </summary>
 		/// <param name="fsmID">FSM ID</param>
 		/// <param name="fsmEventID">FSM Event ID</param>
 		/// <param name="fsmEventName">Optional FSM Event name</param>
-		public void SendEventHookSync(int fsmID, int fsmEventID, string fsmEventName = "none") {
+		public void SendEventHookSync(
+				int fsmID, int fsmEventID, string fsmEventName = "none") {
 			Messages.EventHookSyncMessage msg = new Messages.EventHookSyncMessage();
 			msg.fsmID = fsmID;
 			msg.fsmEventID = fsmEventID;
 			msg.request = false;
-			if (fsmEventName != "none") {
-				msg.FsmEventName = fsmEventName;
-			}
+			if (fsmEventName != "none") { msg.FsmEventName = fsmEventName; }
 			netManager.BroadcastMessage(msg, Steamworks.EP2PSend.k_EP2PSendReliable);
 		}
 
@@ -319,9 +348,7 @@ namespace MSCMP.Network {
 		/// </summary>
 		/// <param name="newState">The state to switch to.</param>
 		protected override void SwitchState(State newState) {
-			if (state == newState) {
-				return;
-			}
+			if (state == newState) { return; }
 
 			base.SwitchState(newState);
 
@@ -335,13 +362,9 @@ namespace MSCMP.Network {
 		/// <returns>World position of the player character.</returns>
 		public override Vector3 GetPosition() {
 			GamePlayer player = GameWorld.Instance.Player;
-			if (player == null) {
-				return Vector3.zero;
-			}
+			if (player == null) { return Vector3.zero; }
 			var playerObject = player.Object;
-			if (playerObject == null) {
-				return Vector3.zero;
-			}
+			if (playerObject == null) { return Vector3.zero; }
 			return playerObject.transform.position;
 		}
 
@@ -351,13 +374,9 @@ namespace MSCMP.Network {
 		/// <returns>World rotation of the player character.</returns>
 		public override Quaternion GetRotation() {
 			GamePlayer player = GameWorld.Instance.Player;
-			if (player == null) {
-				return Quaternion.identity;
-			}
+			if (player == null) { return Quaternion.identity; }
 			var playerObject = player.Object;
-			if (playerObject == null) {
-				return Quaternion.identity;
-			}
+			if (playerObject == null) { return Quaternion.identity; }
 			return playerObject.transform.rotation;
 		}
 
@@ -376,13 +395,9 @@ namespace MSCMP.Network {
 		/// <param name="rot">The rotation to teleport to.</param>
 		public override void Teleport(Vector3 pos, Quaternion rot) {
 			GamePlayer player = GameWorld.Instance.Player;
-			if (player == null) {
-				return;
-			}
+			if (player == null) { return; }
 			var playerObject = player.Object;
-			if (playerObject == null) {
-				return;
-			}
+			if (playerObject == null) { return; }
 			playerObject.transform.position = pos;
 			playerObject.transform.rotation = rot;
 		}

@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using System;
 
-namespace MSCMP.Network
-{
+namespace MSCMP.Network {
 	/// <summary>
 	/// Network object using for synchronization of pickupable.
 	/// </summary>
@@ -22,9 +21,7 @@ namespace MSCMP.Network
 		/// Network id of this pickupable.
 		/// </summary>
 		public ushort NetId {
-			get {
-				return netId;
-			}
+			get { return netId; }
 		}
 
 		/// <summary>

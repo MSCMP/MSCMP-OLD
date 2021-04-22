@@ -63,17 +63,13 @@ namespace MSCMP.Game.Objects {
 		/// Get object's Transform.
 		/// </summary>
 		/// <returns>Object's Transform.</returns>
-		public Transform ObjectTransform() {
-			return gameObject.transform;
-		}
+		public Transform ObjectTransform() { return gameObject.transform; }
 
 		/// <summary>
 		/// Check is periodic sync of the object is enabled.
 		/// </summary>
 		/// <returns>Periodic sync enabled or disabled.</returns>
-		public bool PeriodicSyncEnabled() {
-			return false;
-		}
+		public bool PeriodicSyncEnabled() { return false; }
 
 		/// <summary>
 		/// Determines if the object should be synced.
@@ -82,8 +78,7 @@ namespace MSCMP.Game.Objects {
 		public bool CanSync() {
 			if (rigidbody.velocity.sqrMagnitude >= 0.01f) {
 				return true;
-			}
-			else {
+			} else {
 				return false;
 			}
 		}
@@ -91,10 +86,9 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Called when a player enters range of an object.
 		/// </summary>
-		/// <returns>True if the player should try to take ownership of the object.</returns>
-		public bool ShouldTakeOwnership() {
-			return true;
-		}
+		/// <returns>True if the player should try to take ownership of the
+		/// object.</returns>
+		public bool ShouldTakeOwnership() { return true; }
 
 		/// <summary>
 		/// Returns variables to be sent to the remote client.
@@ -104,8 +98,7 @@ namespace MSCMP.Game.Objects {
 			List<float> variables = new List<float>();
 			if (holdingObject) {
 				variables.Add(1);
-			}
-			else {
+			} else {
 				variables.Add(0);
 			}
 
@@ -128,8 +121,7 @@ namespace MSCMP.Game.Objects {
 				if (variables[0] == 1) {
 					// Object is being held.
 					rigidbody.useGravity = false;
-				}
-				else {
+				} else {
 					// Object is not being held.
 					rigidbody.useGravity = true;
 				}
@@ -148,16 +140,12 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Called when owner is set to the remote client.
 		/// </summary>
-		public void OwnerSetToRemote() {
-
-		}
+		public void OwnerSetToRemote() {}
 
 		/// <summary>
 		/// Called when owner is removed.
 		/// </summary>
-		public void OwnerRemoved() {
-			rigidbody.useGravity = true;
-		}
+		public void OwnerRemoved() { rigidbody.useGravity = true; }
 
 		/// <summary>
 		/// Called when sync control is taken by force.
@@ -170,14 +158,13 @@ namespace MSCMP.Game.Objects {
 		}
 
 		/// <summary>
-		/// Called when an object is constantly syncing. (Usually when a pickupable is picked up, or when a vehicle is being driven)
+		/// Called when an object is constantly syncing. (Usually when a pickupable is
+		/// picked up, or when a vehicle is being driven)
 		/// </summary>
 		/// <param name="newValue">If object is being constantly synced.</param>
 		public void ConstantSyncChanged(bool newValue) {
 			holdingObject = newValue;
-			if (!holdingObject) {
-				rigidbody.useGravity = true;
-			}
+			if (!holdingObject) { rigidbody.useGravity = true; }
 		}
 	}
 }

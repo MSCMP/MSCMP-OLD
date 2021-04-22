@@ -3,8 +3,9 @@
 namespace MSCMP.Game.Objects {
 	/// <summary>
 	/// Handles passenger seats.
-	/// 
-	/// This method appears to be easier than modifying current passenger seats of vehicles.
+	///
+	/// This method appears to be easier than modifying current passenger seats of
+	/// vehicles.
 	/// </summary>
 	/// <param name="other"></param>
 	public class PassengerSeat : MonoBehaviour {
@@ -29,10 +30,10 @@ namespace MSCMP.Game.Objects {
 		public delegate void OnEnter();
 		public delegate void OnLeave();
 		public OnEnter onEnter = () => {
-			
+
 		};
 		public OnLeave onLeave = () => {
-		
+
 		};
 
 		Vector3 currentPosition;
@@ -50,14 +51,12 @@ namespace MSCMP.Game.Objects {
 				if (fsm.FsmName == "Logic") {
 					iconsFsm = fsm;
 					continue;
-				}
-				else if (fsm.FsmName == "SetText" && fsm.gameObject.name == "Interaction") {
+				} else if (fsm.FsmName == "SetText" &&
+						fsm.gameObject.name == "Interaction") {
 					textFsm = fsm;
 					continue;
 				}
-				if (iconsFsm != null && textFsm != null) {
-					break;
-				}
+				if (iconsFsm != null && textFsm != null) { break; }
 			}
 
 			// Set seat position and size based on vehicle
@@ -65,27 +64,42 @@ namespace MSCMP.Game.Objects {
 
 			// Van
 			if (VehicleType.StartsWith("HAYOSIKO")) {
-				trigger.transform.localPosition = new Vector3(-DriversSeat.transform.localPosition.x + 0.1f, -DriversSeat.transform.localPosition.y + 0.35f,  -DriversSeat.transform.localPosition.z - 0.7f);
+				trigger.transform.localPosition =
+						new Vector3(-DriversSeat.transform.localPosition.x + 0.1f,
+								-DriversSeat.transform.localPosition.y + 0.35f,
+								-DriversSeat.transform.localPosition.z - 0.7f);
 			}
 
 			// Truck
 			if (VehicleType.StartsWith("GIFU")) {
-				trigger.transform.localPosition = new Vector3(-DriversSeat.transform.localPosition.x, -DriversSeat.transform.localPosition.y, -DriversSeat.transform.localPosition.z + 0.15f);
+				trigger.transform.localPosition =
+						new Vector3(-DriversSeat.transform.localPosition.x,
+								-DriversSeat.transform.localPosition.y,
+								-DriversSeat.transform.localPosition.z + 0.15f);
 			}
 
 			// Old car
 			if (VehicleType.StartsWith("RCO_RUSCKO")) {
-				trigger.transform.localPosition = new Vector3(-DriversSeat.transform.localPosition.x, -DriversSeat.transform.localPosition.y, -DriversSeat.transform.localPosition.z - 0.15f);
+				trigger.transform.localPosition =
+						new Vector3(-DriversSeat.transform.localPosition.x,
+								-DriversSeat.transform.localPosition.y,
+								-DriversSeat.transform.localPosition.z - 0.15f);
 			}
 
 			// The impossible to drive car
 			if (VehicleType.StartsWith("FERNDALE")) {
-				trigger.transform.localPosition = new Vector3(-DriversSeat.transform.localPosition.x + 0.1f, -DriversSeat.transform.localPosition.y, -DriversSeat.transform.localPosition.z - 0.6f);
+				trigger.transform.localPosition =
+						new Vector3(-DriversSeat.transform.localPosition.x + 0.1f,
+								-DriversSeat.transform.localPosition.y,
+								-DriversSeat.transform.localPosition.z - 0.6f);
 			}
 
 			// Satsuma
 			if (VehicleType.StartsWith("SATSUMA")) {
-				trigger.transform.localPosition = new Vector3(-DriversSeat.transform.localPosition.x, -DriversSeat.transform.localPosition.y, -DriversSeat.transform.localPosition.z + 0.15f);
+				trigger.transform.localPosition =
+						new Vector3(-DriversSeat.transform.localPosition.x,
+								-DriversSeat.transform.localPosition.y,
+								-DriversSeat.transform.localPosition.z + 0.15f);
 			}
 
 			// Destroys the cube mesh render
@@ -100,9 +114,7 @@ namespace MSCMP.Game.Objects {
 			if (other.gameObject.name == "PLAYER") {
 				canSit = true;
 
-				if (isSitting == false) {
-					showGUI = true;
-				}
+				if (isSitting == false) { showGUI = true; }
 
 				if (player == null) {
 					player = other.gameObject;
@@ -149,16 +161,16 @@ namespace MSCMP.Game.Objects {
 					currentPosition = player.transform.localPosition;
 					motor.enabled = false;
 
-					player.transform.FindChild("Sphere").GetComponentInChildren<SphereCollider>().enabled = false;
+					player.transform.FindChild("Sphere")
+							.GetComponentInChildren<SphereCollider>()
+							.enabled = false;
 
 					showGUI = false;
 					iconsFsm.Fsm.GetFsmBool("GUIpassenger").Value = false;
 					textFsm.Fsm.GetFsmString("GUIinteraction").Value = "";
 
 					Collider[] colliders = player.GetComponents<Collider>();
-					foreach (Collider col in colliders) {
-						col.enabled = false;
-					}
+					foreach (Collider col in colliders) { col.enabled = false; }
 
 					onEnter();
 				}
@@ -167,14 +179,13 @@ namespace MSCMP.Game.Objects {
 					isSitting = false;
 
 					Collider[] colliders = player.GetComponents<Collider>();
-					foreach (Collider col in colliders) {
-						col.enabled = true;
-					}
+					foreach (Collider col in colliders) { col.enabled = true; }
 
 					player.transform.parent = null;
 
 					// Resets player rotation on leaving the seat
-					player.transform.rotation = new Quaternion(0, player.transform.rotation.y, 0, player.transform.rotation.w);
+					player.transform.rotation = new Quaternion(
+							0, player.transform.rotation.y, 0, player.transform.rotation.w);
 
 					motor.enabled = true;
 
@@ -185,9 +196,7 @@ namespace MSCMP.Game.Objects {
 			}
 
 			// Keep player in the correct position in the seat.
-			if (isSitting == true) {
-				player.transform.localPosition = currentPosition;
-			}
+			if (isSitting == true) { player.transform.localPosition = currentPosition; }
 		}
 	}
 }

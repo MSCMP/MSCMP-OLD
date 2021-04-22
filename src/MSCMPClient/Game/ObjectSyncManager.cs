@@ -15,7 +15,8 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Dictionary of ObjectIDs.
 		/// </summary>
-		public ConcurrentDictionary<int, ObjectSyncComponent> ObjectIDs = new ConcurrentDictionary<int, ObjectSyncComponent>();
+		public ConcurrentDictionary<int, ObjectSyncComponent> ObjectIDs =
+				new ConcurrentDictionary<int, ObjectSyncComponent>();
 
 		/// <summary>
 		/// Type of objects.
@@ -40,7 +41,8 @@ namespace MSCMP.Game {
 		}
 
 		/// <summary>
-		/// Used when adding an ObjectSyncComponent for an ObjectID to be automatically assigned.
+		/// Used when adding an ObjectSyncComponent for an ObjectID to be automatically
+		/// assigned.
 		/// </summary>
 		public static int AUTOMATIC_ID = -1;
 
@@ -57,9 +59,7 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		public ObjectSyncManager() {
-			Instance = this;
-		}
+		public ObjectSyncManager() { Instance = this; }
 
 		/// <summary>
 		/// Adds new object to the ObjectIDs Dictionary.
@@ -70,9 +70,7 @@ namespace MSCMP.Game {
 		public int AddNewObject(ObjectSyncComponent osc, int objectID) {
 			// Assign ObjectID automatically.
 			if (objectID == AUTOMATIC_ID) {
-				if (steamID.m_SteamID == 0) {
-					steamID = Steamworks.SteamUser.GetSteamID();
-				}
+				if (steamID.m_SteamID == 0) { steamID = Steamworks.SteamUser.GetSteamID(); }
 				Logger.Debug($"Added new ObjectID at: {ObjectIDs.Count + 1}");
 				ObjectIDs.GetOrAdd(ObjectIDs.Count + 1, osc);
 				return ObjectIDs.Count;
@@ -82,8 +80,7 @@ namespace MSCMP.Game {
 				Logger.Debug($"Force adding new ObjectID at: {objectID}");
 				if (ObjectIDs.ContainsKey(objectID)) {
 					ObjectIDs[objectID] = osc;
-				}
-				else {
+				} else {
 					ObjectIDs.GetOrAdd(objectID, osc);
 				}
 				return objectID;

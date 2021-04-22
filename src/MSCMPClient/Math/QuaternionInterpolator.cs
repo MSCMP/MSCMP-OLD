@@ -8,9 +8,7 @@ namespace MSCMP.Math {
 		Quaternion target = new Quaternion();
 
 		public Quaternion Current {
-			get {
-				return current;
-			}
+			get { return current; }
 		}
 
 		public void SetTarget(Quaternion quat) {
@@ -19,9 +17,7 @@ namespace MSCMP.Math {
 			Evaluate(0.0f);
 		}
 
-		public void Teleport(Quaternion quat) {
-			current = source = target = quat;
-		}
+		public void Teleport(Quaternion quat) { current = source = target = quat; }
 
 		public Quaternion Evaluate(float alpha) {
 			current = Quaternion.Slerp(source, target, alpha);

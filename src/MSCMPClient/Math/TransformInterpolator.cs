@@ -6,15 +6,11 @@ namespace MSCMP.Math {
 		Vector3Interpolator position = new Vector3Interpolator();
 
 		public Vector3 CurrentPosition {
-			get {
-				return position.Current;
-			}
+			get { return position.Current; }
 		}
 
 		public Quaternion CurrentRotation {
-			get {
-				return rotation.Current;
-			}
+			get { return rotation.Current; }
 		}
 
 		public void Teleport(Vector3 pos, Quaternion rot) {

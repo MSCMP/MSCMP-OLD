@@ -1,6 +1,5 @@
 ﻿using System;
 
 namespace MSCMPMessages {
-	class Optional : Attribute {
-	}
+	class Optional : Attribute {}
 }

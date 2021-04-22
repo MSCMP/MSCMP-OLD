@@ -31,20 +31,14 @@ namespace MSCMP.Game {
 		/// </summary>
 		public OnDoorsClose onDoorsClose;
 
-		public GameDoorsManager() {
-			Instance = this;
-		}
+		public GameDoorsManager() { Instance = this; }
 
-		~GameDoorsManager() {
-			Instance = null;
-		}
+		~GameDoorsManager() { Instance = null; }
 
 		/// <summary>
 		/// Handle collected objects destroy.
 		/// </summary>
-		public void DestroyObjects() {
-			doors.Clear();
-		}
+		public void DestroyObjects() { doors.Clear(); }
 
 		/// <summary>
 		/// Handle doors action.
@@ -54,8 +48,7 @@ namespace MSCMP.Game {
 		public void HandleDoorsAction(GameDoor door, bool open) {
 			if (open) {
 				onDoorsOpen?.Invoke(door.GameObject);
-			}
-			else {
+			} else {
 				onDoorsClose?.Invoke(door.GameObject);
 			}
 		}
@@ -66,23 +59,15 @@ namespace MSCMP.Game {
 		/// <param name="gameObject">The game object to check.</param>
 		/// <returns>true if game object is a door, false otherwise</returns>
 		bool IsDoorGameObject(GameObject gameObject) {
-			if (!gameObject.name.StartsWith("Door")) {
-				return false;
-			}
+			if (!gameObject.name.StartsWith("Door")) { return false; }
 
-			if (gameObject.transform.childCount == 0) {
-				return false;
-			}
+			if (gameObject.transform.childCount == 0) { return false; }
 
 			Transform pivot = gameObject.transform.GetChild(0);
-			if (pivot == null || pivot.name != "Pivot") {
-				return false;
-			}
+			if (pivot == null || pivot.name != "Pivot") { return false; }
 
 			var playMakerFsm = Utils.GetPlaymakerScriptByName(gameObject, "Use");
-			if (playMakerFsm == null) {
-				return false;
-			}
+			if (playMakerFsm == null) { return false; }
 
 			bool isValid = false;
 			foreach (var e in playMakerFsm.FsmEvents) {
@@ -98,7 +83,8 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Registers given gameObject as door if it's door.
 		/// </summary>
-		/// <param name="gameObject">The game object to check and eventually register.</param>
+		/// <param name="gameObject">The game object to check and eventually
+		/// register.</param>
 		public void CollectGameObject(GameObject gameObject) {
 			if (IsDoorGameObject(gameObject) && GetDoorByGameObject(gameObject) == null) {
 				GameDoor door = new GameDoor(this, gameObject);
@@ -113,16 +99,11 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="gameObject">The destroyed game object.</param>
 		public void DestroyObject(GameObject gameObject) {
-			if (!IsDoorGameObject(gameObject)) {
-				return;
-			}
+			if (!IsDoorGameObject(gameObject)) { return; }
 
 			var door = GetDoorByGameObject(gameObject);
-			if (door != null) {
-				doors.Remove(door);
-			}
+			if (door != null) { doors.Remove(door); }
 		}
-
 
 		/// <summary>
 		/// Find doors at given world location.
@@ -131,9 +112,7 @@ namespace MSCMP.Game {
 		/// <returns></returns>
 		public GameDoor FindGameDoors(Vector3 position) {
 			foreach (var door in doors) {
-				if (door.Position == position) {
-					return door;
-				}
+				if (door.Position == position) { return door; }
 			}
 			return null;
 		}
@@ -142,12 +121,11 @@ namespace MSCMP.Game {
 		/// Get game door by game object.
 		/// </summary>
 		/// <param name="gameObject">The game object.</param>
-		/// <returns>Game door instance or null if given game object is not a door.</returns>
+		/// <returns>Game door instance or null if given game object is not a
+		/// door.</returns>
 		public GameDoor GetDoorByGameObject(GameObject gameObject) {
 			foreach (var door in doors) {
-				if (door.GameObject == gameObject) {
-					return door;
-				}
+				if (door.GameObject == gameObject) { return door; }
 			}
 			return null;
 		}

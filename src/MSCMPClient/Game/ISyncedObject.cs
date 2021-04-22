@@ -16,9 +16,10 @@ namespace MSCMP.Game {
 		bool PeriodicSyncEnabled();
 
 		/// <summary>
-		/// Called to determine if the object should be synced. 
+		/// Called to determine if the object should be synced.
 		/// </summary>
-		/// <returns>True if object should be synced, false if object shouldn't be synced.</returns>
+		/// <returns>True if object should be synced, false if object shouldn't be
+		/// synced.</returns>
 		bool CanSync();
 
 		/// <summary>
@@ -31,7 +32,8 @@ namespace MSCMP.Game {
 		/// Called to return variables that need to be synced on the remote client.
 		/// </summary>
 		/// <returns>Variables to send to remote client.</returns>
-		/// <param name="sendFullSync">Send all variables regardless of conditions.</param>
+		/// <param name="sendFullSync">Send all variables regardless of
+		/// conditions.</param>
 		float[] ReturnSyncedVariables(bool sendFullSync);
 
 		/// <summary>
@@ -56,7 +58,8 @@ namespace MSCMP.Game {
 		void SyncTakenByForce();
 
 		/// <summary>
-		/// Called when an object is constantly syncing. (Usually when a pickupable is picked up, or when a vehicle is being driven)
+		/// Called when an object is constantly syncing. (Usually when a pickupable is
+		/// picked up, or when a vehicle is being driven)
 		/// </summary>
 		/// <param name="newValue"></param>
 		void ConstantSyncChanged(bool newValue);

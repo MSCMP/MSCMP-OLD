@@ -18,12 +18,11 @@ namespace MSCMP.Game {
 			traffic = trafficGo;
 			routes = traffic.transform.FindChild("Routes").gameObject;
 
-			GameObject triggerManager = traffic.transform.FindChild("TriggerManager").gameObject;
+			GameObject triggerManager =
+					traffic.transform.FindChild("TriggerManager").gameObject;
 
 			PlayMakerFSM[] fsms = triggerManager.GetComponentsInChildren<PlayMakerFSM>();
-			foreach (PlayMakerFSM fsm in fsms) {
-				EventHook.SyncAllEvents(fsm);
-			}
+			foreach (PlayMakerFSM fsm in fsms) { EventHook.SyncAllEvents(fsm); }
 		}
 
 		/// <summary>
@@ -35,34 +34,48 @@ namespace MSCMP.Game {
 			GameObject waypointGo = null;
 
 			switch (route) {
-				// BusRoute
-				case 0:
-					waypointGo = routes.transform.FindChild("BusRoute").FindChild("" + waypoint).gameObject;
-					break;
-				// DirtRoad
-				case 1:
-					waypointGo = routes.transform.FindChild("DirtRoad").FindChild("" + waypoint).gameObject;
-					break;
-				// Highway
-				case 2:
-					waypointGo = routes.transform.FindChild("Highway").FindChild("" + waypoint).gameObject;
-					break;
-				// HomeRoad
-				case 3:
-					waypointGo = routes.transform.FindChild("HomeRoad").FindChild("" + waypoint).gameObject;
-					break;
-				// RoadRace
-				case 4:
-					waypointGo = routes.transform.FindChild("RoadRace").FindChild("" + waypoint).gameObject;
-					break;
-				// Trackfield
-				case 5:
-					waypointGo = routes.transform.FindChild("Trackfield").FindChild("" + waypoint).gameObject;
-					break;
-				// Village
-				case 6:
-					waypointGo = routes.transform.FindChild("Village").FindChild("" + waypoint).gameObject;
-					break;
+			// BusRoute
+			case 0:
+				waypointGo = routes.transform.FindChild("BusRoute")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
+			// DirtRoad
+			case 1:
+				waypointGo = routes.transform.FindChild("DirtRoad")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
+			// Highway
+			case 2:
+				waypointGo = routes.transform.FindChild("Highway")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
+			// HomeRoad
+			case 3:
+				waypointGo = routes.transform.FindChild("HomeRoad")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
+			// RoadRace
+			case 4:
+				waypointGo = routes.transform.FindChild("RoadRace")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
+			// Trackfield
+			case 5:
+				waypointGo = routes.transform.FindChild("Trackfield")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
+			// Village
+			case 6:
+				waypointGo = routes.transform.FindChild("Village")
+												 .FindChild("" + waypoint)
+												 .gameObject;
+				break;
 			}
 
 			if (waypointGo == null) {

@@ -8,9 +8,7 @@ namespace MSCMP.Math {
 		Vector3 target = new Vector3();
 
 		public Vector3 Current {
-			get {
-				return current;
-			}
+			get { return current; }
 		}
 
 		public void SetTarget(Vector3 vec) {
@@ -19,9 +17,7 @@ namespace MSCMP.Math {
 			Evaluate(0.0f);
 		}
 
-		public void Teleport(Vector3 vec) {
-			current = source = target = vec;
-		}
+		public void Teleport(Vector3 vec) { current = source = target = vec; }
 
 		public Vector3 Evaluate(float alpha) {
 			current = Vector3.Lerp(source, target, alpha);

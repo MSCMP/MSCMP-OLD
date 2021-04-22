@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace MSCMP.UI {
 
-
 	/// <summary>
 	/// Console ui element.
 	/// </summary>
@@ -13,17 +12,20 @@ namespace MSCMP.UI {
 		/// <summary>
 		/// The command delegate.
 		/// </summary>
-		/// <param name="args">The arguments - first one will be name of the command.</param>
+		/// <param name="args">The arguments - first one will be name of the
+		/// command.</param>
 		public delegate void CommandDelegate(string[] args);
 
-		private static Dictionary<string, CommandDelegate> Commands = new Dictionary<string, CommandDelegate>();
+		private static Dictionary<string, CommandDelegate> Commands =
+				new Dictionary<string, CommandDelegate>();
 
 		/// <summary>
 		/// Register new console command.
 		/// </summary>
 		/// <param name="command">Command to register.</param>
 		/// <param name="commandDelegate">The command delegate.</param>
-		public static void RegisterCommand(string command, CommandDelegate commandDelegate) {
+		public static void RegisterCommand(
+				string command, CommandDelegate commandDelegate) {
 			Commands.Add(command, commandDelegate);
 		}
 
@@ -35,19 +37,16 @@ namespace MSCMP.UI {
 		public static bool ExecuteCommand(string command) {
 			try {
 				string[] args = command.Split(' ');
-				if (args.Length == 0) {
-					return false;
-				}
+				if (args.Length == 0) { return false; }
 
 				var commandDelegate = Commands[args[0]];
 				if (commandDelegate != null) {
 					commandDelegate.Invoke(args);
 					return true;
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				Client.ConsoleMessage($"COMMAND ERROR: {e}");
-				return true; //True, so it won't say Invalid Command
+				return true; // True, so it won't say Invalid Command
 			}
 			return false;
 		}
@@ -80,21 +79,19 @@ namespace MSCMP.UI {
 		/// <summary>
 		/// Get currently active instance of console.
 		/// </summary>
-		static public Console Instance { get { return instance; } }
+		static public Console Instance {
+			get { return instance; }
+		}
 
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		public Console() {
-			instance = this;
-		}
+		public Console() { instance = this; }
 
 		/// <summary>
 		/// Destructor.
 		/// </summary>
-		~Console() {
-			instance = null;
-		}
+		~Console() { instance = null; }
 
 		/// <summary>
 		/// The input history.
@@ -134,47 +131,36 @@ namespace MSCMP.UI {
 		public void Draw() {
 			HandleEvent();
 
-			if (!isVisible) {
-				return;
-			}
+			if (!isVisible) { return; }
 
 			GUI.color = Color.white;
-			consoleRect = GUI.Window(69, consoleRect, DrawConsole, "CONSOLE (Press ~ to hide)");
+			consoleRect =
+					GUI.Window(69, consoleRect, DrawConsole, "CONSOLE (Press ~ to hide)");
 		}
 
 		/// <summary>
 		/// Handle input event.
 		/// </summary>
 		private void HandleEvent() {
-			if (Event.current.rawType != EventType.KeyUp) {
-				return;
-			}
+			if (Event.current.rawType != EventType.KeyUp) { return; }
 
 			switch (Event.current.keyCode) {
-				case KeyCode.BackQuote:
-					isVisible = !isVisible;
-					if (isVisible) {
-						focusConsole = true;
-					}
-					break;
+			case KeyCode.BackQuote:
+				isVisible = !isVisible;
+				if (isVisible) { focusConsole = true; }
+				break;
 
-				case KeyCode.Return:
-					if (isVisible) {
-						HandleInput();
-					}
-					break;
+			case KeyCode.Return:
+				if (isVisible) { HandleInput(); }
+				break;
 
-				case KeyCode.UpArrow:
-					if (isVisible) {
-						CycleThroughInputHistory(false);
-					}
-					break;
+			case KeyCode.UpArrow:
+				if (isVisible) { CycleThroughInputHistory(false); }
+				break;
 
-				case KeyCode.DownArrow:
-					if (isVisible) {
-						CycleThroughInputHistory(true);
-					}
-					break;
+			case KeyCode.DownArrow:
+				if (isVisible) { CycleThroughInputHistory(true); }
+				break;
 			}
 		}
 
@@ -188,27 +174,25 @@ namespace MSCMP.UI {
 				if (currentHistoryEntryIndex == inputHistory.Count) {
 					currentHistoryEntryIndex = -1;
 				}
-			}
-			else {
+			} else {
 				if (currentHistoryEntryIndex == -1) {
 					if (inputHistory.Count > 0) {
 						currentHistoryEntryIndex = inputHistory.Count - 1;
 					}
-				}
-				else {
+				} else {
 					--currentHistoryEntryIndex;
 				}
 			}
 
 			if (currentHistoryEntryIndex == -1) {
 				inputText = "";
-			}
-			else {
+			} else {
 				inputText = inputHistory[currentHistoryEntryIndex];
 			}
 
-			//Moving the cursor to the last character
-			var editor = GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl) as TextEditor;
+			// Moving the cursor to the last character
+			var editor = GUIUtility.GetStateObject(
+					typeof(TextEditor), GUIUtility.keyboardControl) as TextEditor;
 			editor.selectPos = inputText.Length + 1;
 			editor.pos = inputText.Length + 1;
 		}
@@ -230,9 +214,11 @@ namespace MSCMP.UI {
 
 		void DrawConsole(int windowId) {
 			// Draw messages.
-			var scrollViewRect = new Rect(10, 20, consoleRect.width - 20, consoleRect.height - 55);
+			var scrollViewRect =
+					new Rect(10, 20, consoleRect.width - 20, consoleRect.height - 55);
 			int visibleMessagesCount = Mathf.Min(messages.Count, MAX_VISIBLE_MESSAGES);
-			var viewRect = new Rect(0, 0, scrollViewRect.width - 50, visibleMessagesCount * MESSAGE_HEIGHT);
+			var viewRect = new Rect(
+					0, 0, scrollViewRect.width - 50, visibleMessagesCount * MESSAGE_HEIGHT);
 
 			var messageRect = viewRect;
 			messageRect.height = MESSAGE_HEIGHT;
@@ -240,7 +226,8 @@ namespace MSCMP.UI {
 
 			scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
 
-			for (int i = messages.Count; i > (messages.Count - visibleMessagesCount); --i) {
+			for (int i = messages.Count; i > (messages.Count - visibleMessagesCount);
+					 --i) {
 				GUI.Label(messageRect, messages[i - 1]);
 				messageRect.y -= messageRect.height;
 			}
@@ -259,21 +246,16 @@ namespace MSCMP.UI {
 			inputRect.x += inputWidth + 10;
 			inputRect.width = BUTTON_WIDTH;
 
-			if (GUI.Button(inputRect, "SEND")) {
-				HandleInput();
-			}
+			if (GUI.Button(inputRect, "SEND")) { HandleInput(); }
 
 			inputRect.x += BUTTON_WIDTH + 10;
-			if (GUI.Button(inputRect, "CLEAR")) {
-				Clear();
-			}
+			if (GUI.Button(inputRect, "CLEAR")) { Clear(); }
 
-			if (focusConsole) {
-				GUI.FocusControl("ConsoleTextField");
-			}
+			if (focusConsole) { GUI.FocusControl("ConsoleTextField"); }
 
 			// Make console dragable.
-			// Must be called as last otherwise different IMGUI calls will have broken state.
+			// Must be called as last otherwise different IMGUI calls will have broken
+			// state.
 
 			GUI.DragWindow();
 		}

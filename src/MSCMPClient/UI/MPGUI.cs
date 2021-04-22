@@ -17,10 +17,7 @@ namespace MSCMP.UI {
 		/// </summary>
 		private Handlers.MessageBoxHandler messageBoxHandler = null;
 
-		public MPGUI() {
-			Instance = this;
-		}
-
+		public MPGUI() { Instance = this; }
 
 		/// <summary>
 		/// Setup UI.
@@ -41,10 +38,7 @@ namespace MSCMP.UI {
 			});
 		}
 
-		~MPGUI() {
-			Instance = null;
-		}
-
+		~MPGUI() { Instance = null; }
 
 		private int cursorCounter = 0;
 
@@ -55,11 +49,8 @@ namespace MSCMP.UI {
 		public void ShowCursor(bool show) {
 			if (show) {
 				++cursorCounter;
-				if (!Cursor.visible) {
-					Cursor.visible = true;
-				}
-			}
-			else {
+				if (!Cursor.visible) { Cursor.visible = true; }
+			} else {
 				Client.Assert(cursorCounter > 0, "Tried to hide cursor too many times.");
 				if (--cursorCounter == 0) {
 					if (Application.loadedLevelName == "GAME") {
@@ -75,8 +66,10 @@ namespace MSCMP.UI {
 		/// </summary>
 		/// <param name="text">The text to show.</param>
 		/// <param name="onClose">The callback to call when OK button is pressed.</param>
-		/// <returns>true if message box was shown false if there is already some message box and this one could not be showed.</returns>
-		public bool ShowMessageBox(string text, Handlers.MessageBoxHandler.OnClose onClose = null) {
+		/// <returns>true if message box was shown false if there is already some message
+		/// box and this one could not be showed.</returns>
+		public bool ShowMessageBox(
+				string text, Handlers.MessageBoxHandler.OnClose onClose = null) {
 			return messageBoxHandler.Show(text, onClose);
 		}
 	}

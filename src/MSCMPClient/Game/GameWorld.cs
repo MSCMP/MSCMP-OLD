@@ -60,9 +60,7 @@ namespace MSCMP.Game {
 		/// Get player game object.
 		/// </summary>
 		public GamePlayer Player {
-			get {
-				return player;
-			}
+			get { return player; }
 		}
 
 		private const string REFRESH_WORLD_TIME_EVENT = "MP_REFRESH_WORLD_TIME";
@@ -76,16 +74,12 @@ namespace MSCMP.Game {
 			set {
 				// Make sure value is reasonable. (0 - 24 range)
 
-				while (value > 24.0f) {
-					value -= 24.0f;
-				}
+				while (value > 24.0f) { value -= 24.0f; }
 
 				// Make sure reported time is power of two..
 				worldTimeCached = (float)((int)(value) / 2 * 2);
 
-				if (worldTimeCached <= 2.0f) {
-					worldTimeCached = 2.0f;
-				}
+				if (worldTimeCached <= 2.0f) { worldTimeCached = 2.0f; }
 
 				if (worldTimeFsm != null) {
 					worldTimeFsm.Fsm.GetFsmInt("Time").Value = (int)worldTimeCached;
@@ -118,9 +112,7 @@ namespace MSCMP.Game {
 		/// Current Host in game last name.
 		/// </summary>
 		public string PlayerLastName {
-			get {
-				return lastnameTextMesh.text;
-			}
+			get { return lastnameTextMesh.text; }
 
 			set {
 				lastnameFSM.enabled = false;
@@ -147,14 +139,13 @@ namespace MSCMP.Game {
 		public GameWorld() {
 			Instance = this;
 
-			// Make sure game world will get notified about play maker CreateObject/DestroyObject calls.
+			// Make sure game world will get notified about play maker
+			// CreateObject/DestroyObject calls.
 
-			GameCallbacks.onPlayMakerObjectCreate += (GameObject instance, GameObject prefab) => {
-				HandleNewObject(instance);
-			};
-			GameCallbacks.onPlayMakerObjectDestroy += (GameObject instance) => {
-				HandleObjectDestroy(instance);
-			};
+			GameCallbacks.onPlayMakerObjectCreate +=
+					(GameObject instance, GameObject prefab) => { HandleNewObject(instance); };
+			GameCallbacks.onPlayMakerObjectDestroy +=
+					(GameObject instance) => { HandleObjectDestroy(instance); };
 
 			// Register game objects users.
 
@@ -166,9 +157,7 @@ namespace MSCMP.Game {
 			gameObjectUsers.Add(gameVehicleDatabase);
 		}
 
-		~GameWorld() {
-			Instance = null;
-		}
+		~GameWorld() { Instance = null; }
 
 		/// <summary>
 		/// The current game world hash.
@@ -178,8 +167,7 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Get unique world hash.
 		/// </summary>
-		public int WorldHash
-		{
+		public int WorldHash {
 			get { return worldHash; }
 		}
 
@@ -196,37 +184,46 @@ namespace MSCMP.Game {
 			if (gameObject.name == "SUN" && worldTimeFsm == null) {
 				// Yep it's called "Color" :>
 				worldTimeFsm = Utils.GetPlaymakerScriptByName(gameObject, "Color");
-				if (worldTimeFsm == null) {
-					return;
-				}
+				if (worldTimeFsm == null) { return; }
 
 				// Register refresh world time event.
 				if (!worldTimeFsm.Fsm.HasEvent(REFRESH_WORLD_TIME_EVENT)) {
-					FsmEvent mpRefreshWorldTimeEvent = worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
-					PlayMakerUtils.AddNewGlobalTransition(worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
+					FsmEvent mpRefreshWorldTimeEvent =
+							worldTimeFsm.Fsm.GetEvent(REFRESH_WORLD_TIME_EVENT);
+					PlayMakerUtils.AddNewGlobalTransition(
+							worldTimeFsm, mpRefreshWorldTimeEvent, "State 1");
 				}
 
 				// Make sure world time is up-to-date with cache.
 				WorldTime = worldTimeCached;
-			}
-			else if (Utils.IsGameObjectHierarchyMatching(gameObject, "mailbox_bottom_player/Name")) {
+			} else if (Utils.IsGameObjectHierarchyMatching(
+										 gameObject, "mailbox_bottom_player/Name")) {
 				SetupMailbox(gameObject);
-			}
-			else if (gameObject.name == "TRAFFIC") {
+			} else if (gameObject.name == "TRAFFIC") {
 				new TrafficManager(gameObject);
-			}
-			else if (gameObject.name == "STORE") {
+			} else if (gameObject.name == "STORE") {
 				new Shop(gameObject);
-			}
-			else if (gameObject.name == "BOAT") {
-				ObjectSyncComponent osc = gameObject.transform.FindChild("GFX").FindChild("Colliders").FindChild("Collider").gameObject.AddComponent<ObjectSyncComponent>();
-				osc.Setup(ObjectSyncManager.ObjectTypes.Boat, ObjectSyncManager.AUTOMATIC_ID);
-			}
-			else if (gameObject.name == "GarageDoors") {
-				ObjectSyncComponent oscLeft = gameObject.transform.FindChild("DoorLeft").FindChild("Coll").gameObject.AddComponent<ObjectSyncComponent>();
-				oscLeft.Setup(ObjectSyncManager.ObjectTypes.GarageDoor, ObjectSyncManager.AUTOMATIC_ID);
-				ObjectSyncComponent oscRight = gameObject.transform.FindChild("DoorRight").FindChild("Coll").gameObject.AddComponent<ObjectSyncComponent>();
-				oscRight.Setup(ObjectSyncManager.ObjectTypes.GarageDoor, ObjectSyncManager.AUTOMATIC_ID);
+			} else if (gameObject.name == "BOAT") {
+				ObjectSyncComponent osc =
+						gameObject.transform.FindChild("GFX")
+								.FindChild("Colliders")
+								.FindChild("Collider")
+								.gameObject.AddComponent<ObjectSyncComponent>();
+				osc.Setup(
+						ObjectSyncManager.ObjectTypes.Boat, ObjectSyncManager.AUTOMATIC_ID);
+			} else if (gameObject.name == "GarageDoors") {
+				ObjectSyncComponent oscLeft =
+						gameObject.transform.FindChild("DoorLeft")
+								.FindChild("Coll")
+								.gameObject.AddComponent<ObjectSyncComponent>();
+				oscLeft.Setup(ObjectSyncManager.ObjectTypes.GarageDoor,
+						ObjectSyncManager.AUTOMATIC_ID);
+				ObjectSyncComponent oscRight =
+						gameObject.transform.FindChild("DoorRight")
+								.FindChild("Coll")
+								.gameObject.AddComponent<ObjectSyncComponent>();
+				oscRight.Setup(ObjectSyncManager.ObjectTypes.GarageDoor,
+						ObjectSyncManager.AUTOMATIC_ID);
 			}
 		}
 
@@ -246,8 +243,7 @@ namespace MSCMP.Game {
 		public void DestroyObject(GameObject gameObject) {
 			if (worldTimeFsm != null && worldTimeFsm.gameObject == gameObject) {
 				worldTimeFsm = null;
-			}
-			else if (lastnameFSM != null && lastnameFSM.gameObject == gameObject) {
+			} else if (lastnameFSM != null && lastnameFSM.gameObject == gameObject) {
 				lastnameFSM = null;
 				lastnameTextMesh = null;
 			}
@@ -306,9 +302,7 @@ namespace MSCMP.Game {
 
 			// Notify different parts of the mod about the world load.
 
-			if (GameCallbacks.onWorldLoad != null) {
-				GameCallbacks.onWorldLoad();
-			}
+			if (GameCallbacks.onWorldLoad != null) { GameCallbacks.onWorldLoad(); }
 		}
 
 		/// <summary>
@@ -321,9 +315,7 @@ namespace MSCMP.Game {
 				gameObjectUsers[i - 1].DestroyObjects();
 			}
 
-			if (GameCallbacks.onWorldUnload != null) {
-				GameCallbacks.onWorldUnload();
-			}
+			if (GameCallbacks.onWorldUnload != null) { GameCallbacks.onWorldUnload(); }
 
 			player = null;
 		}
@@ -348,10 +340,9 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// List of vehicle gameobject names.
 		/// </summary>
-		static readonly string[] vehicleGoNames = {
-			"JONNEZ ES(Clone)", "HAYOSIKO(1500kg, 250)", "SATSUMA(557kg, 248)",
-			"RCO_RUSCKO12(270)", "KEKMET(350-400psi)", "FLATBED", "FERNDALE(1630kg)", "GIFU(750/450psi)"
-		};
+		static readonly string[] vehicleGoNames = { "JONNEZ ES(Clone)",
+			"HAYOSIKO(1500kg, 250)", "SATSUMA(557kg, 248)", "RCO_RUSCKO12(270)",
+			"KEKMET(350-400psi)", "FLATBED", "FERNDALE(1630kg)", "GIFU(750/450psi)" };
 
 		public void UpdateIMGUI() {
 			// noop
@@ -365,9 +356,12 @@ namespace MSCMP.Game {
 		/// <param name="rotation">The spawn rotation.</param>
 		/// <param name="objectID">The ObjectID of the object.</param>
 		/// <returns>Spawned pickupable game object.</returns>
-		public GameObject SpawnPickupable(int prefabId, Vector3 position, Quaternion rotation, int objectID) {
-			GamePickupableDatabase.PrefabDesc prefabDescriptor = gamePickupableDatabase.GetPickupablePrefab(prefabId);
-			Client.Assert(prefabDescriptor != null, $"Unable to find pickupable prefab {prefabId}");
+		public GameObject SpawnPickupable(
+				int prefabId, Vector3 position, Quaternion rotation, int objectID) {
+			GamePickupableDatabase.PrefabDesc prefabDescriptor =
+					gamePickupableDatabase.GetPickupablePrefab(prefabId);
+			Client.Assert(
+					prefabDescriptor != null, $"Unable to find pickupable prefab {prefabId}");
 			return prefabDescriptor.Spawn(position, rotation);
 		}
 	}

@@ -15,9 +15,7 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		public EventHook() {
-			Instance = this;
-		}
+		public EventHook() { Instance = this; }
 
 		/// <summary>
 		/// Adds a PlayMaker Event hook.
@@ -25,15 +23,17 @@ namespace MSCMP.Game {
 		/// <param name="fsm">The PlayMakerFSM that contains the event to hook.</param>
 		/// <param name="eventName">The name of the event to hook.</param>
 		/// <param name="action">The action to perform on event firing.</param>
-		/// <param name="actionOnExit">Should action be put ran on exitting instead of entering event?</param>
-		public static void Add(PlayMakerFSM fsm, string eventName, Func<bool> action, bool actionOnExit = false) {
+		/// <param name="actionOnExit">Should action be put ran on exitting instead of
+		/// entering event?</param>
+		public static void Add(PlayMakerFSM fsm, string eventName, Func<bool> action,
+				bool actionOnExit = false) {
 			if (fsm == null) {
 				Client.Assert(true, "EventHook Add: Failed to hook event. (FSM is null)");
-			}
-			else {
+			} else {
 				FsmState state = fsm.Fsm.GetState(eventName);
 				if (state != null) {
-					PlayMakerUtils.AddNewAction(state, new CustomAction(action, eventName, actionOnExit));
+					PlayMakerUtils.AddNewAction(
+							state, new CustomAction(action, eventName, actionOnExit));
 					FsmEvent mpEvent = fsm.Fsm.GetEvent("MP_" + eventName);
 					PlayMakerUtils.AddNewGlobalTransition(fsm, mpEvent, eventName);
 				}
@@ -45,12 +45,14 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="fsm">The PlayMakerFSM that contains the event to hook.</param>
 		/// <param name="eventName">The name of the event to hook.</param>
-		/// <param name="action">Optional action to run. (Action runs before duplicate check!)</param>
-		public static void AddWithSync(PlayMakerFSM fsm, string eventName, Func<bool> action = null) {
+		/// <param name="action">Optional action to run. (Action runs before duplicate
+		/// check!)</param>
+		public static void AddWithSync(
+				PlayMakerFSM fsm, string eventName, Func<bool> action = null) {
 			if (fsm == null) {
-				Client.Assert(true, "EventHook AddWithSync: Failed to hook event. (FSM is null)");
-			}
-			else {
+				Client.Assert(
+						true, "EventHook AddWithSync: Failed to hook event. (FSM is null)");
+			} else {
 				FsmState state = fsm.Fsm.GetState(eventName);
 				if (state != null) {
 					bool duplicate = false;
@@ -68,12 +70,15 @@ namespace MSCMP.Game {
 					Instance.fsms.Add(Instance.fsms.Count + 1, fsm);
 					Instance.fsmEvents.Add(Instance.fsmEvents.Count + 1, eventName);
 
-					PlayMakerUtils.AddNewAction(state, new CustomActionSync(Instance.fsms.Count, Instance.fsmEvents.Count, action));
+					PlayMakerUtils.AddNewAction(state,
+							new CustomActionSync(
+									Instance.fsms.Count, Instance.fsmEvents.Count, action));
 					FsmEvent mpEvent = fsm.Fsm.GetEvent("MP_" + eventName);
 					PlayMakerUtils.AddNewGlobalTransition(fsm, mpEvent, eventName);
 
 					// Sync with host
-					if (!Network.NetManager.Instance.IsHost && Network.NetManager.Instance.IsOnline && duplicate == false) {
+					if (!Network.NetManager.Instance.IsHost &&
+							Network.NetManager.Instance.IsOnline && duplicate == false) {
 						Network.NetLocalPlayer.Instance.RequestEventHookSync(fsmId);
 					}
 				}
@@ -85,17 +90,17 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="fsmID">FSM ID.</param>
 		/// <param name="fsmEventID">FSM Event ID.</param>
-		public static void HandleEventSync(int fsmID, int fsmEventID, string fsmEventName = "none") {
+		public static void HandleEventSync(
+				int fsmID, int fsmEventID, string fsmEventName = "none") {
 			try {
 				if (fsmEventID == -1) {
 					Instance.fsms[fsmID].SendEvent("MP_" + fsmEventName);
-				}
-				else {
+				} else {
 					Instance.fsms[fsmID].SendEvent("MP_" + Instance.fsmEvents[fsmEventID]);
 				}
-			}
-			catch {
-				Client.Assert(true, $"Handle event sync failed! FSM not found at ID: {fsmID} - Ensure both players are using a new save created on the same version of My Summer Car. Any installed mods could also cause this error.");
+			} catch {
+				Client.Assert(true,
+						$"Handle event sync failed! FSM not found at ID: {fsmID} - Ensure both players are using a new save created on the same version of My Summer Car. Any installed mods could also cause this error.");
 			}
 		}
 
@@ -111,9 +116,9 @@ namespace MSCMP.Game {
 				if (currentState != "" || currentState != null) {
 					Network.NetLocalPlayer.Instance.SendEventHookSync(fsmID, -1, currentState);
 				}
-			}
-			catch {
-				Logger.Debug($"Sync was request for an event, but the FSM wasn't found on this client!");
+			} catch {
+				Logger.Debug(
+						$"Sync was request for an event, but the FSM wasn't found on this client!");
 			}
 		}
 
@@ -121,10 +126,12 @@ namespace MSCMP.Game {
 		/// Sync all events within a given FSM.
 		/// </summary>
 		/// <param name="fsm">FSM to sync Events of.</param>
-		/// <param name="action">Optional action, default will only run events for the sync owner, or host is no one owns the object.</param>
+		/// <param name="action">Optional action, default will only run events for the
+		/// sync owner, or host is no one owns the object.</param>
 		public static void SyncAllEvents(PlayMakerFSM fsm, Func<bool> action = null) {
 			if (fsm == null) {
-				Client.Assert(true, "EventHook SyncAllEvents: Failed to hook event. (FSM is null)");
+				Client.Assert(
+						true, "EventHook SyncAllEvents: Failed to hook event. (FSM is null)");
 				return;
 			}
 			FsmState[] states = fsm.FsmStates;
@@ -134,8 +141,7 @@ namespace MSCMP.Game {
 				EventHook.AddWithSync(fsm, states[i].Name, new Func<bool>(() => {
 					if (action != null) {
 						return action();
-					}
-					else {
+					} else {
 						return false;
 					}
 				}));
@@ -157,15 +163,11 @@ namespace MSCMP.Game {
 				actionOnExit = onExit;
 			}
 
-			public bool RunAction(Func<bool> action) {
-				return action();
-			}
+			public bool RunAction(Func<bool> action) { return action(); }
 
 			public override void OnEnter() {
 				if (actionOnExit == false) {
-					if (RunAction(action) == true) {
-						return;
-					}
+					if (RunAction(action) == true) { return; }
 				}
 
 				Finish();
@@ -173,9 +175,7 @@ namespace MSCMP.Game {
 
 			public override void OnExit() {
 				if (actionOnExit == true) {
-					if (RunAction(action) == true) {
-						return;
-					}
+					if (RunAction(action) == true) { return; }
 				}
 
 				Finish();
@@ -195,19 +195,16 @@ namespace MSCMP.Game {
 				fsmEventID = eventID;
 				action = a;
 			}
-			
-			public bool RunAction(Func<bool> action) {
-				return action();
-			}
+
+			public bool RunAction(Func<bool> action) { return action(); }
 
 			public override void OnEnter() {
 				if (action != null) {
-					if (RunAction(action) == true) {
-						return;
-					}
+					if (RunAction(action) == true) { return; }
 				}
 
-				if (Instance.fsms[fsmID].Fsm.LastTransition.EventName == "MP_" + Instance.fsmEvents[fsmEventID]) {
+				if (Instance.fsms[fsmID].Fsm.LastTransition.EventName ==
+						"MP_" + Instance.fsmEvents[fsmEventID]) {
 					return;
 				}
 

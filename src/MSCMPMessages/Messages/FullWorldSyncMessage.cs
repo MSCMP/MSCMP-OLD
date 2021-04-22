@@ -12,14 +12,14 @@
 
 	[NetMessageDesc(MessageIds.FullWorldSync)]
 	class FullWorldSyncMessage {
-		string						mailboxName;
-		int							day;
-		float						dayTime;
-		DoorsInitMessage[]			doors;
-		VehicleInitMessage[]		vehicles;
-		PickupableSpawnMessage[]	pickupables;
-		LightSwitchMessage[]		lights;
-		WeatherUpdateMessage		currentWeather;
+		string mailboxName;
+		int day;
+		float dayTime;
+		DoorsInitMessage[] doors;
+		VehicleInitMessage[] vehicles;
+		PickupableSpawnMessage[] pickupables;
+		LightSwitchMessage[] lights;
+		WeatherUpdateMessage currentWeather;
 
 		// Informations about player we have connected to.
 

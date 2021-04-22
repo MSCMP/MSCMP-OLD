@@ -11,14 +11,10 @@ namespace MSCMP.Game.Objects.PickupableTypes {
 		Game.Components.ObjectSyncComponent osc;
 		PlayMakerFSM beerCaseFSM;
 
-		//Get used bottles
+		// Get used bottles
 		public int UsedBottles {
-			get {
-				return beerCaseFSM.FsmVariables.FindFsmInt("DestroyedBottles").Value;
-			}
-			set {
-				beerCaseFSM.FsmVariables.FindFsmInt("DestroyedBottles").Value = value;
-			}
+			get { return beerCaseFSM.FsmVariables.FindFsmInt("DestroyedBottles").Value; }
+			set { beerCaseFSM.FsmVariables.FindFsmInt("DestroyedBottles").Value = value; }
 		}
 
 		/// <summary>
@@ -28,7 +24,8 @@ namespace MSCMP.Game.Objects.PickupableTypes {
 			beerCaseGO = go;
 			osc = beerCaseGO.GetComponent<Components.ObjectSyncComponent>();
 
-			Client.Assert(beerCaseFSM = Utils.GetPlaymakerScriptByName(go, "Use"), "Beer case FSM not found!");
+			Client.Assert(beerCaseFSM = Utils.GetPlaymakerScriptByName(go, "Use"),
+					"Beer case FSM not found!");
 			HookEvents();
 		}
 
@@ -39,14 +36,14 @@ namespace MSCMP.Game.Objects.PickupableTypes {
 			EventHook.AddWithSync(beerCaseFSM, "Remove bottle", new Func<bool>(() => {
 				if (beerCaseFSM.Fsm.LastTransition.EventName == "MP_Remove bottle") {
 					return true;
-				}
-				else {
+				} else {
 					return false;
 				}
 			}));
 
 			// Sync beer case bottle count with host.
-			if (Network.NetManager.Instance.IsOnline && !Network.NetManager.Instance.IsHost) {
+			if (Network.NetManager.Instance.IsOnline &&
+					!Network.NetManager.Instance.IsHost) {
 				osc.RequestObjectSync();
 			}
 		}
@@ -64,12 +61,10 @@ namespace MSCMP.Game.Objects.PickupableTypes {
 					if (bottle != null) {
 						GameObject.Destroy(bottle);
 						UsedBottles++;
-					}
-					else {
+					} else {
 						Logger.Error($"Failed to remove bottle! No bottle GameObjects found!");
 					}
-				}
-				else {
+				} else {
 					Logger.Error($"Failed to remove bottle! UsedBottles: {UsedBottles}");
 				}
 			}

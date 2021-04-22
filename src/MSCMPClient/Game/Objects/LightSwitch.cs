@@ -8,24 +8,22 @@ namespace MSCMP.Game.Objects {
 	/// </summary>
 	class LightSwitch {
 		GameObject go = null;
-		public GameObject GameObject { get { return go; } }
+		public GameObject GameObject {
+			get { return go; }
+		}
 
 		PlayMakerFSM fsm = null;
 
-		//Get switch status
+		// Get switch status
 		public bool SwitchStatus {
-			get {
-				return fsm.FsmVariables.FindFsmBool("Switch").Value;
-			}
+			get { return fsm.FsmVariables.FindFsmBool("Switch").Value; }
 		}
 
 		/// <summary>
 		/// Position of the switch in world.
 		/// </summary>
 		public Vector3 Position {
-			get {
-				return go.transform.position;
-			}
+			get { return go.transform.position; }
 		}
 
 		public delegate void OnLightSwitchUse(GameObject lswitch, bool turnOn);
@@ -37,19 +35,20 @@ namespace MSCMP.Game.Objects {
 		/// <summary>
 		/// Constructor.
 		/// </summary>
-		/// <param name="gameObject">Game object of the light switch to represent by this wrapper.</param>
+		/// <param name="gameObject">Game object of the light switch to represent by this
+		/// wrapper.</param>
 		public LightSwitch(GameObject gameObject) {
 			go = gameObject;
 
 			fsm = Utils.GetPlaymakerScriptByName(go, "Use");
 			if (fsm.Fsm.HasEvent(EVENT_NAME)) {
-				//Already hooked
+				// Already hooked
 				Logger.Log($"Light switch {go.name} is already hooked!");
-			}
-			else {
+			} else {
 				FsmEvent mpEventOn = fsm.Fsm.GetEvent(EVENT_NAME);
 				PlayMakerUtils.AddNewGlobalTransition(fsm, mpEventOn, "Switch");
-				PlayMakerUtils.AddNewAction(fsm.Fsm.GetState("Switch"), new OnLightSwitchUseAction(this));
+				PlayMakerUtils.AddNewAction(
+						fsm.Fsm.GetState("Switch"), new OnLightSwitchUseAction(this));
 			}
 		}
 
@@ -68,9 +67,7 @@ namespace MSCMP.Game.Objects {
 				Logger.Debug($"Light switch set to: {!lightSwitch.SwitchStatus}");
 
 				// If use was triggered from our custom event we do not send it.
-				if (State.Fsm.LastTransition.EventName == EVENT_NAME) {
-					return;
-				}
+				if (State.Fsm.LastTransition.EventName == EVENT_NAME) { return; }
 
 				lightSwitch.onLightSwitchUse(lightSwitch.go, !lightSwitch.SwitchStatus);
 			}
@@ -82,9 +79,7 @@ namespace MSCMP.Game.Objects {
 		/// <param name="on">On/Off</param>
 		public void TurnOn(bool on) {
 			Logger.Debug($"Toggled light switch, on: {on}");
-			if (SwitchStatus != on) {
-				fsm.SendEvent(EVENT_NAME);
-			}
+			if (SwitchStatus != on) { fsm.SendEvent(EVENT_NAME); }
 		}
 	}
 }

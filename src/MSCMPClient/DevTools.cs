@@ -32,7 +32,8 @@ namespace MSCMP {
 		static Rect devMenuButtonsRect = new Rect(5, 0.0f, DEV_MENU_BUTTON_WIDTH, 25.0f);
 
 		/// <summary>
-		/// List of spots to be used in /gotospot. List contains each spot's name, their XYZ Position, and W as Rotation
+		/// List of spots to be used in /gotospot. List contains each spot's name, their
+		/// XYZ Position, and W as Rotation
 		/// </summary>
 		static Dictionary<string, Vector4> Spots = new Dictionary<string, Vector4>() {
 			{ "Home", new Vector4(-10.0f, -0.3f, 7.6f, 180) },
@@ -46,9 +47,8 @@ namespace MSCMP {
 		};
 
 		public static void OnInit() {
-			//List of commands
-			UI.Console.RegisterCommand("help", (string[] args) =>
-			{
+			// List of commands
+			UI.Console.RegisterCommand("help", (string[] args) => {
 				Client.ConsoleMessage($"Available Commands:");
 				Client.ConsoleMessage($"   gotospot [spotName]");
 				Client.ConsoleMessage($"   gethere [gameObjectName]");
@@ -57,7 +57,7 @@ namespace MSCMP {
 				Client.ConsoleMessage($"   savepos");
 			});
 
-			//Teleports yourself to the given spot
+			// Teleports yourself to the given spot
 			UI.Console.RegisterCommand("gotospot", (string[] args) => {
 				if (args.Length == 1) {
 					string availableSpots = "";
@@ -81,13 +81,15 @@ namespace MSCMP {
 					}
 				}
 
-				Client.ConsoleMessage($"{args[1]} is an invalid spot. Type 'gotospot' with no parameters to see all the available spots!");
+				Client.ConsoleMessage(
+						$"{args[1]} is an invalid spot. Type 'gotospot' with no parameters to see all the available spots!");
 			});
 
-			//Teleports a game object to you
+			// Teleports a game object to you
 			UI.Console.RegisterCommand("gethere", (string[] args) => {
 				if (args.Length == 1) {
-					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'.");
+					Client.ConsoleMessage(
+							$"ERROR: Invalid syntax. Use 'gethere [gameObjectName]'.");
 					return;
 				}
 
@@ -104,14 +106,16 @@ namespace MSCMP {
 				}
 
 				ourObject.transform.rotation = localPlayer.transform.rotation;
-				ourObject.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * 5.0f;
+				ourObject.transform.position = localPlayer.transform.position +
+						localPlayer.transform.rotation * Vector3.forward * 5.0f;
 				Client.ConsoleMessage($"Teleported {ourObjectName} to you!");
 			});
 
-			//Teleports yourself to a game object
+			// Teleports yourself to a game object
 			UI.Console.RegisterCommand("goto", (string[] args) => {
 				if (args.Length == 1) {
-					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'goto [gameObjectName]'.");
+					Client.ConsoleMessage(
+							$"ERROR: Invalid syntax. Use 'goto [gameObjectName]'.");
 					return;
 				}
 
@@ -127,14 +131,16 @@ namespace MSCMP {
 					return;
 				}
 
-				localPlayer.transform.position = ourObject.transform.position + Vector3.up * 2.0f;
+				localPlayer.transform.position =
+						ourObject.transform.position + Vector3.up * 2.0f;
 				Client.ConsoleMessage($"Teleported to {ourObjectName} !");
 			});
 
-			//Teleports yourself to the specific coordinates
+			// Teleports yourself to the specific coordinates
 			UI.Console.RegisterCommand("gotoxyz", (string[] args) => {
 				if (args.Length < 4) {
-					Client.ConsoleMessage($"ERROR: Invalid syntax. Use 'gotoxyz [x] [y] [z] [Optional: Rotation]'.");
+					Client.ConsoleMessage(
+							$"ERROR: Invalid syntax. Use 'gotoxyz [x] [y] [z] [Optional: Rotation]'.");
 					return;
 				}
 
@@ -143,13 +149,16 @@ namespace MSCMP {
 					return;
 				}
 
-				localPlayer.transform.position = new Vector3(float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
+				localPlayer.transform.position = new Vector3(
+						float.Parse(args[1]), float.Parse(args[2]), float.Parse(args[3]));
 
-				if (args.Length == 5) localPlayer.transform.eulerAngles = new Vector3(0, float.Parse(args[4]), 0);
+				if (args.Length == 5)
+					localPlayer.transform.eulerAngles =
+							new Vector3(0, float.Parse(args[4]), 0);
 				Client.ConsoleMessage($"Teleported to {args[1]}, {args[2]}, {args[3]}!");
 			});
 
-			//Logs your position and rotation
+			// Logs your position and rotation
 			UI.Console.RegisterCommand("savepos", (string[] args) => {
 				if (localPlayer == null) {
 					Client.ConsoleMessage("ERROR: Couldn't find local player.");
@@ -164,14 +173,9 @@ namespace MSCMP {
 		}
 
 		public static void OnGUI() {
-			if (displayClosestObjectNames) {
-				DrawClosestObjectNames();
-			}
+			if (displayClosestObjectNames) { DrawClosestObjectNames(); }
 
-			if (!devView) {
-				return;
-			}
-
+			if (!devView) { return; }
 
 			devMenuButtonsRect.x = 5.0f;
 			devMenuButtonsRect.y = 0.0f;
@@ -184,13 +188,9 @@ namespace MSCMP {
 
 			NewSection("Actions:");
 
-			if (Action("Dump world")) {
-				DumpWorld(Application.loadedLevelName);
-			}
+			if (Action("Dump world")) { DumpWorld(Application.loadedLevelName); }
 
-			if (Action("Dump local player")) {
-				DumpLocalPlayer();
-			}
+			if (Action("Dump local player")) { DumpLocalPlayer(); }
 		}
 
 		static void NewSection(string title) {
@@ -204,9 +204,7 @@ namespace MSCMP {
 
 		static void Checkbox(string name, ref bool state) {
 			GUI.color = state ? Color.green : Color.white;
-			if (GUI.Button(devMenuButtonsRect, name)) {
-				state = !state;
-			}
+			if (GUI.Button(devMenuButtonsRect, name)) { state = !state; }
 			devMenuButtonsRect.x += DEV_MENU_BUTTON_WIDTH;
 		}
 
@@ -220,16 +218,14 @@ namespace MSCMP {
 		static void DrawClosestObjectNames() {
 			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
 				if (localPlayer) {
-					if ((go.transform.position - localPlayer.transform.position).sqrMagnitude > 10) {
+					if ((go.transform.position - localPlayer.transform.position).sqrMagnitude >
+							10) {
 						continue;
 					}
 				}
 
 				Vector3 pos = Camera.main.WorldToScreenPoint(go.transform.position);
-				if (pos.z < 0.0f) {
-					continue;
-				}
-
+				if (pos.z < 0.0f) { continue; }
 
 				GUI.Label(new Rect(pos.x, Screen.height - pos.y, 500, 20), go.name);
 			}
@@ -239,14 +235,11 @@ namespace MSCMP {
 			if (localPlayer == null) {
 				localPlayer = GameObject.Find("PLAYER");
 				playerCamera = GameObject.Find("FPSCamera");
-			}
-			else {
+			} else {
 				UpdatePlayer();
 			}
 
-			if (Input.GetKeyDown(KeyCode.F3)) {
-				devView = !devView;
-			}
+			if (Input.GetKeyDown(KeyCode.F3)) { devView = !devView; }
 		}
 
 		public static void UpdatePlayer() {
@@ -259,48 +252,56 @@ namespace MSCMP {
 				if (Input.GetKey(KeyCode.Mouse1)) speed -= 2.5f;
 
 				if (Input.GetKeyDown(KeyCode.Keypad5)) {
-					localPlayer.GetComponent<CharacterController>().enabled = !localPlayer.GetComponent<CharacterController>().enabled;
+					localPlayer.GetComponent<CharacterController>().enabled =
+							!localPlayer.GetComponent<CharacterController>().enabled;
 				}
 				if (Input.GetKey(KeyCode.KeypadPlus)) {
-					localPlayer.transform.position = localPlayer.transform.position + Vector3.up * speed;
+					localPlayer.transform.position =
+							localPlayer.transform.position + Vector3.up * speed;
 				}
 				if (Input.GetKey(KeyCode.KeypadMinus)) {
-					localPlayer.transform.position = localPlayer.transform.position - Vector3.up * speed;
+					localPlayer.transform.position =
+							localPlayer.transform.position - Vector3.up * speed;
 				}
 				if (Input.GetKey(KeyCode.Keypad8)) {
-					//localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.forward * speed;
-					localPlayer.transform.position = localPlayer.transform.position + playerCamera.transform.rotation * Vector3.forward * speed;
+					// localPlayer.transform.position = localPlayer.transform.position +
+					// localPlayer.transform.rotation * Vector3.forward * speed;
+					localPlayer.transform.position = localPlayer.transform.position +
+							playerCamera.transform.rotation * Vector3.forward * speed;
 				}
 				if (Input.GetKey(KeyCode.Keypad2)) {
-					//localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.forward * speed;
-					localPlayer.transform.position = localPlayer.transform.position - playerCamera.transform.rotation * Vector3.forward * speed;
+					// localPlayer.transform.position = localPlayer.transform.position -
+					// localPlayer.transform.rotation * Vector3.forward * speed;
+					localPlayer.transform.position = localPlayer.transform.position -
+							playerCamera.transform.rotation * Vector3.forward * speed;
 				}
 				if (Input.GetKey(KeyCode.Keypad4)) {
-					localPlayer.transform.position = localPlayer.transform.position - localPlayer.transform.rotation * Vector3.right * speed;
+					localPlayer.transform.position = localPlayer.transform.position -
+							localPlayer.transform.rotation * Vector3.right * speed;
 				}
 				if (Input.GetKey(KeyCode.Keypad6)) {
-					localPlayer.transform.position = localPlayer.transform.position + localPlayer.transform.rotation * Vector3.right * speed;
+					localPlayer.transform.position = localPlayer.transform.position +
+							localPlayer.transform.rotation * Vector3.right * speed;
 				}
 			}
 		}
 
 		static void DumpLocalPlayer() {
 			StringBuilder builder = new StringBuilder();
-			Utils.PrintTransformTree(localPlayer.transform, 0, (int level, string text) => {
-
-				for (int i = 0; i < level; ++i) builder.Append("    ");
-				builder.Append(text + "\n");
-			});
-			System.IO.File.WriteAllText(Client.GetPath("localPlayer.txt"), builder.ToString());
+			Utils.PrintTransformTree(
+					localPlayer.transform, 0, (int level, string text) => {
+						for (int i = 0; i < level; ++i) builder.Append("    ");
+						builder.Append(text + "\n");
+					});
+			System.IO.File.WriteAllText(
+					Client.GetPath("localPlayer.txt"), builder.ToString());
 		}
 
 		public static void DumpWorld(string levelName) {
-			Utils.CallSafe("DUmpWorld", ()=> {
+			Utils.CallSafe("DUmpWorld", () => {
 				Development.WorldDumper worldDumper = new Development.WorldDumper();
 				string dumpFolder = Client.GetPath($"HTMLWorldDump\\{levelName}");
-				if (Directory.Exists(dumpFolder)) {
-					Directory.Delete(dumpFolder, true);
-				}
+				if (Directory.Exists(dumpFolder)) { Directory.Delete(dumpFolder, true); }
 
 				Directory.CreateDirectory(dumpFolder);
 
@@ -333,7 +334,8 @@ namespace MSCMP {
 					Logger.Log(e.Message + "\n");
 				}
 
-				builder.Append(go.name + " (" + SanitizedName + "), Trans: " + trans.position.ToString() + "\n");
+				builder.Append(go.name + " (" + SanitizedName + "), Trans: " +
+			trans.position.ToString() + "\n");
 				++index;
 			}
 
@@ -351,7 +353,7 @@ namespace MSCMP {
 		}
 
 		static void SetPosition(float x, float y, float z, float rot = -1) {
-			localPlayer.transform.position = new Vector3 (x, y, z);
+			localPlayer.transform.position = new Vector3(x, y, z);
 			if (rot != -1) localPlayer.transform.eulerAngles = new Vector3(0, rot, 0);
 		}
 	}

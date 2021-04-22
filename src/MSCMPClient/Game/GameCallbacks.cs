@@ -29,7 +29,8 @@ namespace MSCMP.Game {
 
 		public delegate void OnLocalPlayerCreated();
 
-#pragma warning disable CS0649 // Temporarily disable CS0649 warning as onLocalPlayerCreated is never used.
+#pragma warning disable CS0649 // Temporarily disable CS0649 warning as
+															 // onLocalPlayerCreated is never used.
 		/// <summary>
 		/// Callback called when local player spawns.
 		/// </summary>
@@ -55,7 +56,8 @@ namespace MSCMP.Game {
 		/// </summary>
 		/// <param name="instance">The instance of the new object.</param>
 		/// <param name="prefab">The prefab used to instantiate this object.</param>
-		public delegate void OnPlayMakerObjectCreate(GameObject instance, GameObject prefab);
+		public delegate void OnPlayMakerObjectCreate(
+				GameObject instance, GameObject prefab);
 
 		/// <summary>
 		/// Callback called when PlayMaker creates new object.
@@ -65,7 +67,8 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Delegate of the callback called when PlayMaker destroys object.
 		/// </summary>
-		/// <param name="instance">The instance of the object that will be destroyed.</param>
+		/// <param name="instance">The instance of the object that will be
+		/// destroyed.</param>
 		public delegate void OnPlayMakerObjectDestroy(GameObject instance);
 
 		/// <summary>
@@ -76,23 +79,26 @@ namespace MSCMP.Game {
 		/// <summary>
 		/// Delegate of the callback called when PlayMaker activates game object.
 		/// </summary>
-		/// <param name="instance">The instance of the object that will be activated/deactivated.</param>
-		/// <param name="activate">Is the object activating?</param>
-		public delegate void OnPlayMakerObjectActivate(GameObject instance, bool activate);
+		/// <param name="instance">The instance of the object that will be
+		/// activated/deactivated.</param> <param name="activate">Is the object
+		/// activating?</param>
+		public delegate void OnPlayMakerObjectActivate(
+				GameObject instance, bool activate);
 
 		/// <summary>
 		/// Callback called when PlayMaker activates object.
 		/// </summary>
 		static public OnPlayMakerObjectActivate onPlayMakerObjectActivate = null;
 
-
 		/// <summary>
-		/// Delegate of the callback called when PlayMaker sets position of the game object.
+		/// Delegate of the callback called when PlayMaker sets position of the game
+		/// object.
 		/// </summary>
-		/// <param name="instance">The instance of the object this event is about.</param>
-		/// <param name="position">The position to set.</param>
-		/// <param name="space">The position space.</param>
-		public delegate void OnPlayMakerSetPosition(GameObject instance, Vector3 newPosition, Space space);
+		/// <param name="instance">The instance of the object this event is
+		/// about.</param> <param name="position">The position to set.</param> <param
+		/// name="space">The position space.</param>
+		public delegate void OnPlayMakerSetPosition(
+				GameObject instance, Vector3 newPosition, Space space);
 
 		/// <summary>
 		/// Callback called when PlayMaker sets position of an object.
