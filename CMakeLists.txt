@@ -21,19 +21,19 @@ add_subdirectory(3rdparty)
 set(CMAKE_CSharp_FLAGS "/langversion:latest /platform:anycpu")
 
 add_subdirectory(src/MSCMPMessages)
-add_subdirectory(src/MSCMPClient)
+add_subdirectory(src/MSCMPMod)
 
-add_dependencies(MPMOD NugetRestore)
-add_dependencies(PDB2MDB_MPMOD MPMOD)
+add_dependencies(MPMod NugetRestore)
+add_dependencies(PDB2MDB_MPMOD MPMod)
 
 install(
-	TARGETS MPMOD
+	TARGETS MPMod
 	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
 install(
 	FILES 
-		${MSCMPClient_MDB_DEBUGINFO_PATH}
+		${MSCMPMod_MDB_DEBUGINFO_PATH}
 	DESTINATION
 		${CMAKE_INSTALL_PREFIX}
 )
