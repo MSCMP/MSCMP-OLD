@@ -4,6 +4,7 @@ using System.Diagnostics;
 using UnityEngine;
 using System;
 using System.Runtime.CompilerServices;
+using MSCLoader;
 
 namespace MSCMP {
 	/// <summary>
@@ -30,9 +31,9 @@ namespace MSCMP {
 
 			Logger.SetAutoFlush(true);
 
-			Game.Hooks.PlayMakerActionHooks.Install();
+			// Game.Hooks.PlayMakerActionHooks.Install();
 
-			string assetBundlePath = GetPath("data/mpdata");
+			string assetBundlePath = GetPath("Mods/Assets/MPMod/mpdata");
 			if (!File.Exists(assetBundlePath)) {
 				FatalError("Cannot find mpdata asset bundle.");
 				return;
@@ -56,9 +57,14 @@ namespace MSCMP {
 		/// <param name="file">The file to get path for.</param>
 		/// <returns>Absolute path for the specified file relative to mod instalation
 		/// folder.</returns>
-		public static string GetPath(string file) {
-			return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\" +
-					file;
+		public static string GetPath(string path) {
+
+			string managed_folder =
+					Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			string game_folder =
+					System.IO.Directory.GetParent(managed_folder).Parent.ToString();
+			return System.IO.Path.Combine(game_folder, path);
+
 		}
 
 		/// <summary>
@@ -78,7 +84,7 @@ namespace MSCMP {
 		public static void FatalError(string message) {
 			Logger.Log(message);
 			Logger.Log(Environment.StackTrace);
-			ShowMessageBox(message, "MSCMP - Fatal error");
+			ModConsole.Error(message);
 
 #if DEBUG
 			if (Debugger.IsAttached) {
@@ -102,15 +108,6 @@ namespace MSCMP {
 			Logger.Log("[ASSERTION FAILED]");
 			FatalError(message);
 		}
-
-		/// <summary>
-		/// Shows system message box to the user. Should be used only during
-		/// initialization when no ui can be shown in game.
-		/// </summary>
-		/// <param name="message">The message to show.</param>
-		/// <param name="title">The title of the message box.</param>
-		[MethodImplAttribute(MethodImplOptions.InternalCall)]
-		extern static void ShowMessageBox(string message, string title);
 
 		/// <summary>
 		/// The current mod development stage.
