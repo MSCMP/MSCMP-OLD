@@ -25,7 +25,7 @@ namespace MSCMP {
 		// Called when the mod is loaded
 		public override void OnMenuLoad()
 		{
-			client.Start();
+			Client.Start();
 		}
 	}
 }
