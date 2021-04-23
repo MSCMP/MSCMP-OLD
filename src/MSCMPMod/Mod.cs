@@ -1,5 +1,4 @@
 using MSCLoader;
-using UnityEngine;
 
 namespace MSCMP {
 	public class MSCMPMod : Mod {
@@ -23,9 +22,16 @@ namespace MSCMP {
 		public override bool LoadInMenu => true;
 
 		// Called when the mod is loaded
-		public override void OnMenuLoad()
-		{
+		public override void OnMenuLoad() {
+			SetupLogger();
 			Client.Start();
+		}
+
+		private void SetupLogger() {
+			Logger.SetupLogger();
+			if (Logger.IsInitialized == false) {
+				Logger.Warning("Logger is not initialized correctly. All info will be displayed only in Console.");
+			}
 		}
 	}
 }

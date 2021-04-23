@@ -5,6 +5,8 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using MSCMP.Utilities;
 
 namespace MSCMP {
 #if !PUBLIC_RELEASE
@@ -12,7 +14,7 @@ namespace MSCMP {
 	/// Development tools.
 	/// </summary>
 	static class DevTools {
-
+		
 		static bool devView = false;
 
 		static bool displayClosestObjectNames = false;
@@ -287,20 +289,22 @@ namespace MSCMP {
 		}
 
 		static void DumpLocalPlayer() {
-			StringBuilder builder = new StringBuilder();
+			var localPlayerFileName = "localPlayer.txt";
+			var builder = new StringBuilder();
 			Utils.PrintTransformTree(
 					localPlayer.transform, 0, (int level, string text) => {
 						for (int i = 0; i < level; ++i) builder.Append("    ");
 						builder.Append(text + "\n");
 					});
-			System.IO.File.WriteAllText(
-					Client.GetPath("localPlayer.txt"), builder.ToString());
+			
+			var localPlayerPath = ModUtils.GetPath(localPlayerFileName);
+			File.WriteAllText(localPlayerPath, builder.ToString());
 		}
 
 		public static void DumpWorld(string levelName) {
 			Utils.CallSafe("DUmpWorld", () => {
 				Development.WorldDumper worldDumper = new Development.WorldDumper();
-				string dumpFolder = Client.GetPath($"HTMLWorldDump\\{levelName}");
+				var dumpFolder = ModUtils.GetPath($"HTMLWorldDump\\{levelName}");
 				if (Directory.Exists(dumpFolder)) { Directory.Delete(dumpFolder, true); }
 
 				Directory.CreateDirectory(dumpFolder);

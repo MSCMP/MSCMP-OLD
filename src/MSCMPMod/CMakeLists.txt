@@ -72,6 +72,7 @@ target_sources(MPMod
 	${CMAKE_CURRENT_SOURCE_DIR}/Properties/AssemblyInfo.cs
 	${CMAKE_CURRENT_SOURCE_DIR}/Utilities/HTMLWriter.cs
 	${CMAKE_CURRENT_SOURCE_DIR}/Utilities/IMGUIUtils.cs
+	${CMAKE_CURRENT_SOURCE_DIR}/Utilities/ModUtils.cs
 	${CMAKE_CURRENT_SOURCE_DIR}/Utils.cs
 )
 

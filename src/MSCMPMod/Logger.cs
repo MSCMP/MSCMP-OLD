@@ -1,42 +1,40 @@
+using System;
 using System.IO;
+using MSCLoader;
+using MSCMP.Utilities;
 
 namespace MSCMP {
-	static class Logger {
+	public static class Logger {
+
+		private const string LOG_FILE_NAME = "MSCMPClientLog.txt";
 
 		/// <summary>
 		/// The file used for logging.
 		/// </summary>
-		static StreamWriter logFile = null;
+		private static StreamWriter _logFile = null;
+		private static bool _isInitialized = false;
+		
+		public static bool IsInitialized => _isInitialized;
 
 		/// <summary>
 		/// Setup logger.
 		/// </summary>
 		/// <param name="logPath">The path where log file should be created</param>
 		/// <returns></returns>
-		public static bool SetupLogger(string logPath) {
+		public static void SetupLogger() {
+			var logPath = GetLogPath();
 			try {
-				logFile = new StreamWriter(logPath, false);
-			} catch {
-				// Unfortunately there is no place where we could send the failure.
-				return false;
+				_logFile = new StreamWriter(logPath) {AutoFlush = true};
+				_isInitialized = true;
+			} catch (Exception exception){
+				ModConsole.Error($"Cannot create log file because of error: {exception}");
+				_isInitialized = false;
 			}
-			return logFile != null;
 		}
 
-		/// <summary>
-		/// Set auto flush? (Remember! This is not good for FPS as each write to log is
-		/// automatically flushing the log file!)
-		/// </summary>
-		/// <param name="autoFlush"></param>
-		public static void SetAutoFlush(bool autoFlush) {
-			if (logFile != null) { logFile.AutoFlush = autoFlush; }
-		}
-
-		/// <summary>
-		/// Force flush of the log file.
-		/// </summary>
-		public static void ForceFlush() {
-			if (logFile != null) { logFile.Flush(); }
+		private static string GetLogPath() {
+			var logPath = Path.Combine(ModUtils.GetGamePath(), LOG_FILE_NAME);
+			return logPath;
 		}
 
 		/// <summary>
@@ -44,29 +42,48 @@ namespace MSCMP {
 		/// </summary>
 		/// <param name="message">Message to write.</param>
 		public static void Log(string message) {
-			if (logFile != null) { logFile.WriteLine(message); }
-			Client.ConsoleMessage(message);
+			WriteToLogFile(message);
+			ModConsole.Print(message);
 		}
 
 		/// <summary>
 		/// Write warning log message.
 		/// </summary>
 		/// <param name="message">Message to write.</param>
-		public static void Warning(string message) { Log("[WARN] " + message); }
+		public static void Warning(string message) {
+			_logFile?.WriteLine($"Warning: {message}");
+			ModConsole.Warning(message);
+		}
 
 		/// <summary>
 		/// Write error log message.
 		/// </summary>
 		/// <param name="message">Message to write.</param>
-		public static void Error(string message) { Log("[ERROR] " + message); }
+		public static void Error(string message) {
+			_logFile?.WriteLine($"Error: {message}");
+			ModConsole.Error(message);
+		}
+		
+		public static void Error(string message, Exception exception) {
+			_logFile?.WriteLine($"Error: {message}");
+			_logFile?.WriteLine(exception);
+			ModConsole.Error(message);
+			ModConsole.Error(exception.ToString());
+		}
 
+		private static void WriteToLogFile(string message) {
+			_logFile?.WriteLine(message);
+		}
+		
 		/// <summary>
 		/// Write debug message.
 		/// </summary>
 		/// <param name="message">Message to write.</param>
 		public static void Debug(string message) {
 #if !PUBLIC_RELEASE
-			Log("[DEBUG] " + message);
+			var debugMessage = $"[DEBUG] {message}";
+			ModConsole.Print(debugMessage);
+			_logFile?.WriteLine(debugMessage);
 #endif
 		}
 	}
